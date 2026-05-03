@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flint Hall Events — A hidden treasure in the heart of Suffolk</title>
+<meta name="description" content="A rustic outdoor events venue in the heart of Suffolk's countryside. Weddings, corporate retreats, proms and team building days. 17 acres, a working barn, fires, glamping and a wood-fired pizza oven.">
+
+<meta property="og:title" content="Flint Hall Events — A hidden treasure in the heart of Suffolk">
+<meta property="og:description" content="A rustic outdoor venue in Suffolk. Weddings · Corporate Retreats · Proms · Team Building.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --rust:       #8C4A2F;
+  --brown-dk:   #4A2F23;
+  --linen:      #E6D2B3;
+  --charcoal:   #1F1A17;
+  --weathered:  #7A736E;
+  --ash-cream:  #F1E6CF;
+  --copper:     #B8924A;
+
+  --paper:        #f3e3c1;
+  --paper-light:  #f8edd0;
+  --paper-warm:   #ead7af;
+  --paper-edge:   #d4ba8c;
+  --paper-deep:   #c4a07a;
+
+  --leather:      #3d2817;
+  --leather-up:   #6b4530;
+  --leather-dn:   #2a1c10;
+  --wood-dark:    #2c1a0e;
+  --wood-mid:     #4a2f1a;
+
+  --ink:          #3a2818;
+  --ink-soft:     #5c4530;
+  --ink-faded:    #806555;
+
+  --gold:         #c89c5a;
+  --gold-soft:    #d8b87c;
+  --moss:         #5e6a4a;
+  --crimson:      #8a3a28;
+
+  --shadow-paper:   0 1px 2px rgba(74,47,35,0.10), 0 4px 12px rgba(74,47,35,0.08);
+  --shadow-card:    0 2px 4px rgba(74,47,35,0.12), 0 12px 32px rgba(74,47,35,0.18);
+  --shadow-deep:    0 8px 24px rgba(31,26,23,0.35), 0 2px 6px rgba(31,26,23,0.22);
+  --shadow-engrave: 0 1px 0 rgba(0,0,0,0.45);
+
+  --display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --serif:   'Libre Baskerville', Georgia, serif;
+  --body:    'Lora', 'Libre Baskerville', Georgia, serif;
+  --ui:      'Montserrat', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { font-family: var(--body); font-size: 16px; line-height: 1.65; color: var(--ink); background: var(--paper-warm); overflow-x: hidden; }
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+::selection { background: var(--rust); color: var(--paper-light); }
+
+/* PHOTO TREATMENT — slight tone shift to sit with heritage palette */
+.photo-tile img, .moment-tile img, .place-art img, .stay-img img, .hero-scene img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: saturate(0.92) contrast(1.04);
+}
+
+/* LOGO — sketch ink mark (replaces the old SVG monoline) */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.logo-img { display: block; max-width: 100%; height: auto; }
+.logo-on-dark, .logo-on-light { display: block; }
+
+/* PAPER TEXTURE */
+.paper-bg {
+  position: relative;
+  background-color: var(--paper-warm);
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(212,186,140,0.45), transparent 70%),
+    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(74,47,35,0.12), transparent 70%),
+    radial-gradient(ellipse 30% 20% at 20% 30%, rgba(184,146,74,0.10), transparent 60%),
+    radial-gradient(ellipse 20% 25% at 80% 60%, rgba(74,47,35,0.06), transparent 60%),
+    radial-gradient(ellipse 25% 20% at 60% 85%, rgba(140,74,47,0.05), transparent 60%);
+}
+.paper-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.27 0 0 0 0 0.18 0 0 0 0 0.10 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  z-index: 1;
+}
+.paper-bg > * { position: relative; z-index: 2; }
+
+.wood-bg {
+  position: relative;
+  background-color: var(--leather);
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(20,12,6,0.3), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 30% 50%, rgba(140,74,47,0.18), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 70% 50%, rgba(184,146,74,0.10), transparent 70%),
+    linear-gradient(180deg, #3a2616 0%, #2c1a0e 100%);
+  color: var(--paper-light);
+}
+.wood-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.65 0 0 0 0 0.45 0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+  pointer-events: none;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+.wood-bg > * { position: relative; z-index: 2; }
+
+.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 28px; }
+.container-narrow { max-width: 880px; margin: 0 auto; padding: 0 28px; }
+section { position: relative; padding: 100px 0; }
+@media (max-width: 768px) { section { padding: 64px 0; } }
+
+h1, h2, h3, h4 { font-family: var(--display); color: var(--brown-dk); font-weight: 600; letter-spacing: 0.02em; line-height: 1.15; }
+.h-display { font-family: var(--display); font-size: clamp(48px, 9vw, 108px); font-weight: 700; letter-spacing: 0.04em; line-height: 1; text-transform: uppercase; }
+.h-section { font-size: clamp(30px, 4.5vw, 52px); letter-spacing: 0.02em; text-transform: uppercase; font-weight: 600; margin-bottom: 18px; }
+.h-card { font-size: clamp(20px, 2.5vw, 26px); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+.eyebrow { display: inline-block; font-family: var(--ui); font-size: 11px; font-weight: 600; letter-spacing: 0.42em; text-transform: uppercase; color: var(--rust); margin-bottom: 22px; }
+.lead { font-family: var(--serif); font-size: clamp(17px, 2vw, 21px); font-style: italic; line-height: 1.55; color: var(--ink-soft); }
+p { margin-bottom: 14px; }
+p:last-child { margin-bottom: 0; }
+.has-dropcap::first-letter { font-family: var(--display); font-size: 4.6em; float: left; line-height: 0.85; margin: 0.06em 0.10em 0 0; color: var(--rust); font-weight: 700; }
+
+/* ORNAMENTS */
+.divider { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 28px auto; max-width: 360px; color: var(--copper); }
+.divider .line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--copper), transparent); }
+.divider .ornament { width: 22px; height: 22px; flex-shrink: 0; }
+.divider-thin { width: 60px; height: 1px; background: var(--copper); margin: 18px auto; position: relative; }
+.divider-thin::before, .divider-thin::after { content: ''; position: absolute; top: 50%; width: 6px; height: 6px; border: 1px solid var(--copper); border-radius: 50%; transform: translateY(-50%) rotate(45deg); }
+.divider-thin::before { left: -10px; }
+.divider-thin::after  { right: -10px; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 12px; font-family: var(--ui); font-weight: 600; font-size: 11.5px; letter-spacing: 0.28em; text-transform: uppercase; padding: 14px 30px; border: none; border-radius: 4px; cursor: pointer; transition: all 0.25s ease; position: relative; }
+.btn-leather { background: linear-gradient(180deg, #6b4530 0%, #4a2f23 50%, #3d2817 100%); color: var(--ash-cream); box-shadow: 0 1px 0 rgba(255,235,200,0.18) inset, 0 -1px 2px rgba(0,0,0,0.35) inset, 0 3px 0 #2a1c10, 0 5px 12px rgba(31,26,23,0.30); text-shadow: var(--shadow-engrave); border: 1px solid rgba(184,146,74,0.25); }
+.btn-leather:hover { background: linear-gradient(180deg, #7a5238 0%, #573725 50%, #46301c 100%); transform: translateY(-1px); box-shadow: 0 1px 0 rgba(255,235,200,0.22) inset, 0 -1px 2px rgba(0,0,0,0.35) inset, 0 4px 0 #2a1c10, 0 8px 18px rgba(31,26,23,0.40); }
+.btn-leather:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(255,235,200,0.18) inset, 0 -1px 2px rgba(0,0,0,0.35) inset, 0 1px 0 #2a1c10, 0 2px 6px rgba(31,26,23,0.30); }
+.btn-rust { background: linear-gradient(180deg, #a85a38 0%, #8c4a2f 50%, #6e3a25 100%); color: var(--ash-cream); box-shadow: 0 1px 0 rgba(255,235,200,0.18) inset, 0 -1px 2px rgba(0,0,0,0.30) inset, 0 3px 0 #5a2e1c, 0 5px 12px rgba(31,26,23,0.28); text-shadow: var(--shadow-engrave); border: 1px solid rgba(232,200,150,0.20); }
+.btn-rust:hover { background: linear-gradient(180deg, #b8694a 0%, #9a5538 50%, #7c4530 100%); transform: translateY(-1px); }
+.btn-parchment { background: var(--paper-light); color: var(--brown-dk); border: 1px solid var(--copper); box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 4px 8px rgba(0,0,0,0.20); }
+.btn-parchment:hover { background: var(--paper); border-color: var(--rust); }
+.btn-link { background: transparent; color: var(--rust); border-bottom: 1.5px solid var(--rust); border-radius: 0; padding: 8px 0; letter-spacing: 0.24em; font-size: 11px; }
+.btn-link:hover { color: var(--brown-dk); border-color: var(--brown-dk); }
+
+/* NAV */
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 0; background: rgba(243,227,193,0); transition: all 0.3s ease; border-bottom: 1px solid transparent; }
+.nav.scrolled { background: rgba(243,227,193,0.96); backdrop-filter: blur(6px); padding: 10px 0; border-bottom-color: rgba(184,146,74,0.30); box-shadow: 0 2px 8px rgba(74,47,35,0.10); }
+.nav.dark-context { background: rgba(31,26,23,0); }
+.nav.dark-context.scrolled { background: rgba(31,26,23,0.92); border-bottom-color: rgba(184,146,74,0.30); }
+.nav-inner { display: flex; align-items: center; gap: 32px; }
+
+.nav-logo { display: flex; align-items: center; flex-shrink: 0; }
+.nav-logo img { display: block; height: 48px; width: auto; transition: height 0.3s ease; }
+.nav.scrolled .nav-logo img { height: 38px; }
+/* Show light variant in dark context, dark variant on light bg */
+.nav-logo .logo-on-light { display: none; }
+.nav.scrolled .nav-logo .logo-on-light { display: block; }
+.nav.scrolled .nav-logo .logo-on-dark  { display: none; }
+.nav.scrolled.dark-context .nav-logo .logo-on-dark  { display: block; }
+.nav.scrolled.dark-context .nav-logo .logo-on-light { display: none; }
+
+.nav-links { display: flex; gap: 28px; margin-left: auto; align-items: center; }
+.nav-links a { font-family: var(--ui); font-size: 11px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--paper-light); transition: color 0.2s ease; position: relative; padding: 4px 0; }
+.nav.scrolled .nav-links a { color: var(--brown-dk); }
+.nav.scrolled.dark-context .nav-links a { color: var(--paper-light); }
+.nav-links a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 1px; background: var(--copper); transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; }
+.nav-links a:hover::after { transform: scaleX(1); }
+.nav-links a:hover { color: var(--gold); }
+.nav.scrolled .nav-links a:hover { color: var(--rust); }
+.nav.scrolled.dark-context .nav-links a:hover { color: var(--gold); }
+
+.nav-signin { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px !important; border: 1px solid rgba(232,200,150,0.65); border-radius: 4px; font-size: 10.5px !important; letter-spacing: 0.22em !important; color: var(--gold-soft) !important; background: rgba(20,12,6,0.18); font-family: var(--ui); font-weight: 600; text-transform: uppercase; }
+.nav-signin svg { width: 12px; height: 12px; }
+.nav-signin::after { display: none !important; }
+.nav-signin:hover { background: rgba(232,200,150,0.14); border-color: var(--gold); color: var(--paper-light) !important; }
+.nav.scrolled .nav-signin { border-color: rgba(140,74,47,0.50); color: var(--brown-dk) !important; background: transparent; }
+.nav.scrolled .nav-signin:hover { background: rgba(140,74,47,0.06); border-color: var(--rust); color: var(--rust) !important; }
+.nav.scrolled.dark-context .nav-signin { border-color: rgba(232,200,150,0.65); color: var(--gold-soft) !important; background: rgba(20,12,6,0.18); }
+
+.nav-toggle { display: none; margin-left: auto; width: 44px; height: 44px; border: 1px solid rgba(232,200,150,0.30); border-radius: 4px; align-items: center; justify-content: center; color: var(--paper-light); }
+.nav.scrolled .nav-toggle { color: var(--brown-dk); border-color: rgba(74,47,35,0.30); }
+.nav.scrolled.dark-context .nav-toggle { color: var(--paper-light); border-color: rgba(232,200,150,0.30); }
+@media (max-width: 920px) {
+  .nav-links { display: none; }
+  .nav-toggle { display: inline-flex; }
+  .nav.menu-open .nav-links { display: flex; flex-direction: column; position: fixed; top: 70px; left: 0; right: 0; background: var(--paper-light); padding: 28px; gap: 20px; border-bottom: 1px solid var(--copper); box-shadow: 0 12px 24px rgba(74,47,35,0.20); }
+  .nav.menu-open .nav-links a { color: var(--brown-dk); }
+  .nav.menu-open .nav-signin { border-color: rgba(140,74,47,0.40); color: var(--brown-dk); }
+}
+
+/* HERO */
+.hero { position: relative; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 120px 24px 80px; overflow: hidden; background: var(--leather); color: var(--paper-light); }
+.hero-scene { position: absolute; inset: 0; z-index: 0; }
+.hero-scene svg, .hero-scene img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.hero-vignette { position: absolute; inset: 0; z-index: 1; background: radial-gradient(ellipse 100% 80% at 50% 50%, transparent 35%, rgba(31,26,23,0.65) 100%), linear-gradient(180deg, rgba(31,26,23,0.30) 0%, transparent 25%, transparent 60%, rgba(31,26,23,0.55) 100%); pointer-events: none; }
+.hero-grain { position: absolute; inset: 0; z-index: 2; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.7 0 0 0 0 0.5 0 0 0 0.13 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"); background-size: 200px 200px; mix-blend-mode: overlay; opacity: 0.65; pointer-events: none; }
+
+.hero-content { position: relative; z-index: 5; max-width: 900px; }
+.hero-mark { margin-bottom: 30px; display: inline-block; }
+.hero-mark img { width: clamp(280px, 36vw, 480px); height: auto; filter: drop-shadow(0 2px 12px rgba(0,0,0,0.55)); display: block; }
+.hero h1 { font-family: var(--display); font-size: clamp(40px, 8vw, 96px); font-weight: 700; letter-spacing: 0.05em; line-height: 1; color: var(--ash-cream); text-transform: uppercase; text-shadow: 0 2px 12px rgba(0,0,0,0.55), 0 0 30px rgba(184,146,74,0.30); margin-bottom: 6px; }
+.hero h1 small { display: block; font-family: var(--display); font-size: 0.32em; letter-spacing: 0.42em; font-weight: 500; color: var(--gold-soft); margin-top: 12px; position: relative; }
+.hero h1 small::before, .hero h1 small::after { content: '—'; margin: 0 14px; opacity: 0.7; }
+.hero-tagline { font-family: var(--serif); font-style: italic; font-size: clamp(17px, 2.2vw, 22px); color: var(--paper-light); margin-top: 24px; margin-bottom: 12px; text-shadow: 0 1px 6px rgba(0,0,0,0.5); letter-spacing: 0.04em; }
+.hero-pitch { font-family: var(--body); font-size: clamp(15px, 1.6vw, 17px); color: var(--paper-light); max-width: 640px; margin: 0 auto 38px; line-height: 1.65; opacity: 0.92; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+.hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+.hero-types { position: absolute; bottom: 32px; left: 0; right: 0; z-index: 5; text-align: center; font-family: var(--ui); font-size: 10.5px; letter-spacing: 0.42em; text-transform: uppercase; color: var(--gold-soft); opacity: 0.85; }
+.hero-types span { margin: 0 14px; }
+@media (max-width: 600px) { .hero-types { font-size: 9px; letter-spacing: 0.30em; } .hero-types span { margin: 0 6px; } }
+
+.fade-up { opacity: 0; transform: translateY(20px); animation: fadeUp 1s ease 0.2s forwards; }
+.fade-up.d2 { animation-delay: 0.4s; }
+.fade-up.d3 { animation-delay: 0.65s; }
+.fade-up.d4 { animation-delay: 0.9s; }
+.fade-up.d5 { animation-delay: 1.15s; }
+@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+/* WELCOME */
+.welcome { padding: 110px 0; }
+.welcome-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+.welcome h2 { font-size: clamp(28px, 4vw, 44px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--brown-dk); margin-bottom: 22px; font-weight: 600; }
+.welcome .lead { margin-bottom: 24px; text-align: center; }
+.welcome-body { font-family: var(--serif); font-size: 15.5px; line-height: 1.85; color: var(--ink); text-align: left; margin-top: 36px; }
+.welcome-body p { margin-bottom: 18px; }
+
+/* PHOTO STRIP */
+.photo-strip { padding: 32px 0 100px; }
+.photo-strip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 768px) { .photo-strip-grid { grid-template-columns: 1fr; } }
+.photo-tile { position: relative; aspect-ratio: 4/3; overflow: hidden; border: 1px solid var(--paper-edge); background: var(--leather); box-shadow: 0 1px 0 rgba(255,243,210,0.6) inset, 0 6px 20px rgba(74,47,35,0.25); }
+.photo-tile svg, .photo-tile img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.photo-tile::after { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.65 0 0 0 0 0.40 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"); background-size: 100px 100px; mix-blend-mode: overlay; opacity: 0.7; pointer-events: none; }
+.photo-tile .caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 18px 22px; background: linear-gradient(0deg, rgba(31,26,23,0.85) 0%, transparent 100%); color: var(--paper-light); font-family: var(--display); font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; z-index: 3; }
+
+/* OFFERINGS */
+.offerings { padding: 100px 0; }
+.offerings-head { text-align: center; margin-bottom: 64px; }
+.offerings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; }
+@media (max-width: 768px) { .offerings-grid { grid-template-columns: 1fr; gap: 22px; } }
+
+.offering-card { position: relative; background: var(--paper-light); border: 1px solid var(--paper-edge); padding: 44px 38px; display: flex; flex-direction: column; box-shadow: var(--shadow-paper); transition: all 0.35s ease; overflow: hidden; }
+.offering-card::before { content: ''; position: absolute; top: 14px; left: 14px; width: 26px; height: 26px; border-top: 2px solid var(--rust); border-left: 2px solid var(--rust); transition: all 0.35s ease; }
+.offering-card::after { content: ''; position: absolute; bottom: 14px; right: 14px; width: 26px; height: 26px; border-bottom: 2px solid var(--rust); border-right: 2px solid var(--rust); transition: all 0.35s ease; }
+.offering-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); background: var(--paper); }
+.offering-card:hover::before, .offering-card:hover::after { width: 38px; height: 38px; border-color: var(--brown-dk); }
+
+.offering-icon { width: 56px; height: 56px; margin-bottom: 22px; color: var(--rust); }
+.offering-card h3 { font-family: var(--display); font-size: 26px; font-weight: 600; color: var(--brown-dk); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+.offering-card .offering-sub { font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--rust); margin-bottom: 16px; }
+.offering-card p { font-family: var(--body); font-size: 15px; line-height: 1.65; color: var(--ink-soft); flex: 1; margin-bottom: 22px; }
+.offering-card .offering-cta { align-self: flex-start; }
+
+/* THE PLACE */
+.the-place { padding: 100px 0; }
+.the-place-head { text-align: center; margin-bottom: 56px; }
+.place-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 64px; align-items: center; }
+@media (max-width: 900px) { .place-grid { grid-template-columns: 1fr; gap: 40px; } }
+.place-art { position: relative; aspect-ratio: 1/1; background: var(--leather); border: 1px solid var(--paper-edge); overflow: hidden; box-shadow: var(--shadow-card); }
+.place-art svg, .place-art img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.place-art::after { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.65 0 0 0 0 0.40 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"); background-size: 100px 100px; mix-blend-mode: overlay; opacity: 0.65; pointer-events: none; }
+.place-content h3 { font-family: var(--display); font-size: clamp(28px, 4vw, 42px); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 18px; color: var(--brown-dk); }
+.place-content .lead { margin-bottom: 24px; }
+.place-list { list-style: none; padding: 0; margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+@media (max-width: 600px) { .place-list { grid-template-columns: 1fr; } }
+.place-list li { font-family: var(--body); font-size: 14.5px; color: var(--ink); padding: 8px 0; display: flex; align-items: baseline; gap: 10px; border-bottom: 1px dotted rgba(74,47,35,0.20); }
+.place-list li::before { content: '✦'; color: var(--copper); font-size: 11px; flex-shrink: 0; }
+
+/* ATMOSPHERE */
+.atmosphere { padding: 100px 0; }
+.atmosphere .h-section { color: var(--paper-light); }
+.atmos-head { text-align: center; margin-bottom: 64px; }
+.atmos-head .eyebrow { color: var(--gold-soft); }
+.atmos-head .lead { color: var(--ash-cream); opacity: 0.85; }
+.atmos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+@media (max-width: 900px) { .atmos-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .atmos-grid { grid-template-columns: 1fr; } }
+.atmos-card { text-align: center; padding: 28px 18px; background: rgba(243,227,193,0.06); border: 1px solid rgba(184,146,74,0.20); transition: all 0.3s ease; }
+.atmos-card:hover { background: rgba(243,227,193,0.10); border-color: var(--gold); transform: translateY(-3px); }
+.atmos-card svg { width: 52px; height: 52px; margin: 0 auto 16px; color: var(--gold); }
+.atmos-card h4 { font-family: var(--display); font-size: 16px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--ash-cream); margin-bottom: 8px; }
+.atmos-card p { font-size: 13px; font-family: var(--body); color: var(--paper-light); line-height: 1.55; opacity: 0.85; }
+
+/* STAYS */
+.stays { padding: 100px 0; }
+.stays-head { text-align: center; max-width: 760px; margin: 0 auto 64px; }
+.stays-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+@media (max-width: 900px) { .stays-grid { grid-template-columns: 1fr; } }
+.stay-card { background: var(--paper-light); border: 1px solid var(--paper-edge); overflow: hidden; box-shadow: var(--shadow-paper); transition: all 0.3s ease; }
+.stay-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+.stay-img { position: relative; aspect-ratio: 4/3; overflow: hidden; background: var(--leather); }
+.stay-img svg, .stay-img img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.stay-img::after { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.65 0 0 0 0 0.40 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"); background-size: 100px 100px; mix-blend-mode: overlay; opacity: 0.55; pointer-events: none; }
+.stay-body { padding: 28px 26px; }
+.stay-card h3 { font-family: var(--display); font-size: 22px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brown-dk); margin-bottom: 6px; }
+.stay-card .stay-meta { font-family: var(--serif); font-style: italic; font-size: 13px; color: var(--rust); margin-bottom: 16px; letter-spacing: 0.04em; }
+.stay-card p { font-family: var(--body); font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
+
+/* MOMENTS */
+.moments { padding: 100px 0; }
+.moments .h-section { color: var(--paper-light); }
+.moments-head { text-align: center; margin-bottom: 56px; }
+.moments-head .eyebrow { color: var(--gold-soft); }
+.moments-head .lead { color: var(--ash-cream); opacity: 0.85; }
+.moments-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px; height: 580px; }
+.moments-grid > div { position: relative; overflow: hidden; border: 1px solid var(--paper-edge); }
+.moments-grid > div:nth-child(1) { grid-row: 1 / 3; }
+.moments-grid > div:nth-child(4) { grid-column: 2 / 4; }
+.moment-tile { position: relative; width: 100%; height: 100%; }
+.moment-tile svg, .moment-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.moment-tile::after { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.65 0 0 0 0 0.40 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"); background-size: 100px 100px; mix-blend-mode: overlay; opacity: 0.6; pointer-events: none; z-index: 2; }
+.moment-tile .moment-overlay { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 26px; background: linear-gradient(0deg, rgba(31,26,23,0.85) 0%, transparent 60%); color: var(--paper-light); z-index: 3; }
+.moment-tile .moment-overlay h4 { color: var(--paper-light); font-family: var(--display); font-size: 20px; letter-spacing: 0.06em; text-transform: uppercase; }
+.moment-tile .moment-overlay h4 small { display: block; font-family: var(--ui); font-size: 10px; letter-spacing: 0.32em; margin-top: 6px; color: var(--gold-soft); font-weight: 400; }
+@media (max-width: 768px) {
+  .moments-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 220px 220px 220px; height: auto; }
+  .moments-grid > div:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
+  .moments-grid > div:nth-child(4) { grid-column: 1 / 3; grid-row: 3; }
+}
+
+/* INQUIRE */
+.inquire { padding: 100px 0; }
+.inquire-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 64px; align-items: start; }
+@media (max-width: 900px) { .inquire-grid { grid-template-columns: 1fr; gap: 40px; } }
+.inquire-info p { font-size: 16px; color: var(--ink-soft); line-height: 1.65; }
+.inquire-info ul { list-style: none; margin-top: 28px; }
+.inquire-info ul li { display: flex; align-items: baseline; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--paper-edge); font-size: 14.5px; color: var(--ink); }
+.inquire-info ul li svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--rust); transform: translateY(2px); }
+
+form.inquire-form { background: var(--paper-light); border: 1px solid var(--paper-edge); padding: 36px; box-shadow: var(--shadow-paper); position: relative; }
+form.inquire-form::before { content: ''; position: absolute; top: 12px; left: 12px; right: 12px; bottom: 12px; border: 1px solid rgba(184,146,74,0.30); pointer-events: none; z-index: 0; }
+form.inquire-form > * { position: relative; z-index: 1; }
+form.inquire-form .row { margin-bottom: 16px; }
+form.inquire-form .row.split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+form.inquire-form label { display: block; font-family: var(--ui); font-size: 10.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+form.inquire-form input, form.inquire-form select, form.inquire-form textarea { width: 100%; font-family: var(--body); font-size: 15px; background: var(--paper); border: 1px solid var(--paper-edge); padding: 12px 14px; color: var(--ink); transition: border-color 0.2s ease, background 0.2s ease; border-radius: 2px; }
+form.inquire-form input:focus, form.inquire-form select:focus, form.inquire-form textarea:focus { outline: none; border-color: var(--rust); background: var(--paper-light); }
+form.inquire-form textarea { resize: vertical; min-height: 120px; }
+form.inquire-form .btn { width: 100%; margin-top: 8px; padding: 18px 28px; font-size: 12px; }
+form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(--ink-soft); text-align: center; margin-top: 14px; font-family: var(--serif); }
+
+/* FOOTER */
+.footer { padding: 72px 0 28px; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+@media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; } }
+@media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; gap: 28px; } }
+.footer-brand img { width: 180px; height: auto; margin-bottom: 18px; display: block; }
+.footer-brand p { font-family: var(--serif); font-style: italic; font-size: 14px; line-height: 1.65; color: var(--paper-light); opacity: 0.75; max-width: 320px; }
+.footer h4 { font-family: var(--ui); font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; font-weight: 600; }
+.footer ul { list-style: none; }
+.footer ul li { margin-bottom: 10px; font-family: var(--body); font-size: 14px; color: var(--paper-light); opacity: 0.78; }
+.footer ul li a { transition: color 0.2s ease, opacity 0.2s ease; }
+.footer ul li a:hover { opacity: 1; color: var(--gold); }
+.footer-bottom { padding-top: 28px; border-top: 1px solid rgba(184,146,74,0.20); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-family: var(--ui); font-size: 11px; letter-spacing: 0.10em; color: rgba(243,227,193,0.55); }
+.footer-signin { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid rgba(200,156,90,0.40); padding-bottom: 2px; transition: all 0.2s ease; }
+.footer-signin:hover { color: var(--paper-light); border-color: var(--paper-light); }
+.footer-signin svg { width: 13px; height: 13px; }
+
+/* LOGIN MODAL */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(20,12,6,0.78); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 24px; opacity: 0; transition: opacity 0.25s ease; }
+.modal-backdrop.active { display: flex; }
+.modal-backdrop.shown { opacity: 1; }
+.modal { position: relative; background: var(--paper-light); border: 1px solid var(--paper-edge); max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-deep); transform: translateY(20px) scale(0.98); transition: transform 0.3s ease; }
+.modal-backdrop.shown .modal { transform: translateY(0) scale(1); }
+.modal::before { content: ''; position: absolute; top: 12px; left: 12px; right: 12px; bottom: 12px; border: 1px solid rgba(184,146,74,0.40); pointer-events: none; }
+.modal-close { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--ink-soft); background: transparent; border: 1px solid var(--paper-edge); border-radius: 50%; cursor: pointer; z-index: 5; transition: all 0.2s ease; }
+.modal-close:hover { background: var(--paper-edge); color: var(--brown-dk); }
+.modal-body { padding: 48px 40px 36px; text-align: center; }
+.modal-mark { width: 200px; height: auto; margin: 0 auto 14px; display: block; }
+.modal-body h2 { font-family: var(--display); font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brown-dk); margin-bottom: 8px; }
+.modal-body .lead { font-size: 15px; margin-bottom: 28px; }
+
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+.role-btn { background: var(--paper); border: 1.5px solid var(--paper-edge); padding: 22px 16px; text-align: center; cursor: pointer; transition: all 0.25s ease; }
+.role-btn:hover { border-color: var(--rust); background: var(--paper-light); transform: translateY(-2px); }
+.role-btn svg { width: 32px; height: 32px; color: var(--rust); margin: 0 auto 10px; }
+.role-btn h3 { font-family: var(--display); font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brown-dk); margin-bottom: 6px; font-weight: 600; }
+.role-btn p { font-family: var(--body); font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; margin: 0; }
+
+.modal-form { text-align: left; display: none; }
+.modal-form.active { display: block; }
+.modal-form-label { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; padding: 12px 14px; background: rgba(140,74,47,0.06); border: 1px solid rgba(140,74,47,0.18); border-radius: 4px; }
+.modal-form-label svg { width: 20px; height: 20px; color: var(--rust); }
+.modal-form-label strong { font-family: var(--ui); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--brown-dk); }
+.modal-form-label small { font-family: var(--body); font-size: 12px; color: var(--ink-soft); margin-left: auto; font-style: italic; }
+.modal-form .row { margin-bottom: 14px; }
+.modal-form label { display: block; font-family: var(--ui); font-size: 10.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+.modal-form input { width: 100%; font-family: var(--body); font-size: 15px; background: var(--paper); border: 1px solid var(--paper-edge); padding: 12px 14px; color: var(--ink); border-radius: 2px; }
+.modal-form input:focus { outline: none; border-color: var(--rust); }
+.modal-form .btn { width: 100%; margin-top: 10px; }
+.modal-form-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-family: var(--body); font-size: 12.5px; }
+.modal-form-foot a { color: var(--rust); }
+.modal-form-foot a:hover { color: var(--brown-dk); text-decoration: underline; }
+
+.modal-message { display: none; padding: 22px; border-radius: 2px; font-family: var(--serif); font-size: 14.5px; line-height: 1.5; margin-top: 20px; text-align: left; }
+.modal-message.active { display: block; }
+.modal-message.success { background: rgba(94,106,74,0.10); border-left: 3px solid var(--moss); color: var(--brown-dk); }
+.modal-message.error { background: rgba(138,58,40,0.08); border-left: 3px solid var(--crimson); color: var(--crimson); }
+.modal-message.info { background: rgba(184,146,74,0.10); border-left: 3px solid var(--copper); color: var(--brown-dk); }
+.modal-message strong { display: block; font-family: var(--display); font-size: 13px; letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<nav class="nav dark-context" id="nav">
+  <div class="container nav-inner">
+    <a class="nav-logo" href="#top" aria-label="Flint Hall Events — Home">
+      <img src="photos/logo-light.webp" class="logo-img logo-on-dark" alt="Flint Hall Events">
+      <img src="photos/logo-dark.webp"  class="logo-img logo-on-light" alt="" aria-hidden="true">
+    </a>
+
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="4" y1="7"  x2="20" y2="7"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <line x1="4" y1="17" x2="20" y2="17"/>
+      </svg>
+    </button>
+
+    <div class="nav-links">
+      <a href="#what-we-do">What we do</a>
+      <a href="#the-place">The place</a>
+      <a href="#stays">Stays</a>
+      <a href="#moments">The vibe</a>
+      <a href="#inquire">Inquire</a>
+      <button class="nav-signin" onclick="openLogin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M 15 3 H 19 V 21 H 15"/><path d="M 10 17 L 15 12 L 10 7"/><path d="M 15 12 H 3"/></svg>
+        Sign In
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- SVG SYMBOLS -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo-mark" viewBox="0 0 100 100">
+      <path d="M 8 70 Q 8 14 50 14 Q 92 14 92 70 L 92 71 L 8 71 Z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      <line x1="6" y1="71" x2="94" y2="71" stroke="currentColor" stroke-width="1.4"/>
+      <g fill="currentColor"><rect x="48.5" y="38" width="3" height="32"/></g>
+      <g stroke="currentColor" stroke-width="0.85" fill="none" stroke-linecap="round">
+        <path d="M 50 44 Q 42 38 36 30 M 50 42 Q 58 36 64 28 M 50 40 Q 44 32 38 25 M 50 38 Q 56 30 62 23 M 50 36 Q 50 28 50 22 M 50 36 Q 46 30 40 22 M 50 36 Q 54 30 60 22"/>
+      </g>
+      <g fill="currentColor">
+        <polygon points="14,71 14,58 18,53 28,53 32,58 32,71"/>
+        <line x1="18" y1="58" x2="18" y2="71" stroke="currentColor" stroke-width="0.7"/>
+        <line x1="23" y1="58" x2="23" y2="71" stroke="currentColor" stroke-width="0.7"/>
+        <line x1="28" y1="58" x2="28" y2="71" stroke="currentColor" stroke-width="0.7"/>
+        <polygon points="32,71 32,55 38,49 62,49 68,55 68,71"/>
+        <polygon points="68,71 68,58 72,53 82,53 86,58 86,71"/>
+        <line x1="72" y1="58" x2="72" y2="71" stroke="currentColor" stroke-width="0.7"/>
+        <line x1="77" y1="58" x2="77" y2="71" stroke="currentColor" stroke-width="0.7"/>
+        <line x1="82" y1="58" x2="82" y2="71" stroke="currentColor" stroke-width="0.7"/>
+      </g>
+      <g fill="currentColor" opacity="0.65">
+        <path d="M 12 71 Q 14 67 12 64 M 14 71 Q 12 67 14 64 M 16 71 Q 14 67 16 64"/>
+        <path d="M 88 71 Q 86 67 88 64 M 86 71 Q 88 67 86 64 M 84 71 Q 86 67 84 64"/>
+      </g>
+      <text x="50" y="83" text-anchor="middle" font-family="Cinzel, serif" font-weight="700" font-size="9.5" letter-spacing="0.5" fill="currentColor">FLINT HALL</text>
+      <line x1="32" y1="91" x2="40" y2="91" stroke="currentColor" stroke-width="0.7"/>
+      <text x="50" y="93" text-anchor="middle" font-family="Cinzel, serif" font-weight="500" font-size="5" letter-spacing="2" fill="currentColor">EVENTS</text>
+      <line x1="60" y1="91" x2="68" y2="91" stroke="currentColor" stroke-width="0.7"/>
+    </symbol>
+
+    <symbol id="sprig" viewBox="0 0 22 22">
+      <g fill="currentColor">
+        <ellipse cx="6" cy="11" rx="3.5" ry="1.4" transform="rotate(-30 6 11)"/>
+        <ellipse cx="11" cy="8" rx="4" ry="1.6" transform="rotate(-12 11 8)"/>
+        <ellipse cx="11" cy="14" rx="4" ry="1.6" transform="rotate(28 11 14)"/>
+        <ellipse cx="16" cy="11" rx="3.5" ry="1.4" transform="rotate(30 16 11)"/>
+        <circle cx="11" cy="11" r="1.5"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- HERO -->
+<header class="hero" id="top">
+  <div class="hero-scene" aria-hidden="true">
+    <img src="photos/hero-barn-night.jpg" alt="The Barn at Flint Hall under string lights at night">
+  </div>
+
+  <div class="hero-vignette" aria-hidden="true"></div>
+  <div class="hero-grain" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <h1 class="visually-hidden">Flint Hall Events</h1>
+    <div class="hero-mark fade-up">
+      <img src="photos/logo-light.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="hero-tagline fade-up d2">A hidden treasure in the heart of Suffolk</p>
+    <p class="hero-pitch fade-up d3">
+      Wood-fired pizzas. Hog roast under canvas. Fires that go past midnight. Shepherd&rsquo;s huts, bell tents and a barn that holds the dancing &mdash; for weddings, corporate retreats, proms and team building days.
+    </p>
+    <div class="hero-ctas fade-up d4">
+      <a href="#what-we-do" class="btn btn-leather">Our Venue</a>
+      <a href="#inquire" class="btn btn-rust">Get In Touch</a>
+    </div>
+  </div>
+
+  <div class="hero-types fade-up d5">
+    <span>Weddings</span>·<span>Corporate Retreats</span>·<span>Proms</span>·<span>Team Building</span>·<span>Stays</span>
+  </div>
+</header>
+
+<!-- WELCOME -->
+<section class="welcome paper-bg">
+  <div class="container">
+    <div class="welcome-inner">
+      <span class="eyebrow">Welcome to Flint Hall</span>
+      <h2>Where history meets charm</h2>
+      <div class="divider">
+        <span class="line"></span>
+        <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+        <span class="line"></span>
+      </div>
+      <p class="lead">A rustic outdoor venue tucked into 17 acres of Suffolk countryside &mdash; built for the moments that matter, run by people who care that they go right.</p>
+
+      <div class="welcome-body">
+        <p class="has-dropcap">Flint Hall is a working countryside venue, not a polished wedding factory. There&rsquo;s a barn that takes a DJ at full tilt and an open-fronted Ranch where the bar lives. There&rsquo;s a wood-fired pizza oven we&rsquo;ve never lent to anyone, a meadow that holds the ceremony, and a fire pit that holds the conversation long after dinner&rsquo;s gone.</p>
+        <p>For weddings, corporate retreats, proms and team building days, we offer the whole place &mdash; barn, ranch, meadow, padel court, glamping field &mdash; with on-site catering, accommodation for up to twelve, and the kind of low-key hospitality that makes a long day feel short.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PHOTO STRIP -->
+<section class="photo-strip paper-bg">
+  <div class="container">
+    <div class="photo-strip-grid">
+      <div class="photo-tile">
+        <img src="photos/strip-bell-tent-path.jpg" alt="Bell tent under stars with lantern path">
+        <div class="caption">Stays under the stars</div>
+      </div>
+
+      <div class="photo-tile">
+        <img src="photos/strip-courtyard.jpg" alt="Courtyard at night with picnic benches and string lights">
+        <div class="caption">Long evenings</div>
+      </div>
+
+      <div class="photo-tile">
+        <img src="photos/strip-ceremony.jpg" alt="Inside the Barn — ceremony setup with rope-Edison bulbs and dried flowers">
+        <div class="caption">Ceremonies in the Barn</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT WE DO -->
+<section class="offerings paper-bg" id="what-we-do">
+  <div class="container">
+    <div class="offerings-head">
+      <span class="eyebrow">What we do</span>
+      <h2 class="h-section">Four ways to use the place</h2>
+      <div class="divider">
+        <span class="line"></span>
+        <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+        <span class="line"></span>
+      </div>
+      <p class="lead">Pick the one that fits. We&rsquo;ll tailor everything else.</p>
+    </div>
+
+    <div class="offerings-grid">
+      <article class="offering-card">
+        <svg class="offering-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M 32 12 L 32 44 M 18 22 Q 32 10 46 22 Q 32 34 18 22 Z" fill="currentColor" fill-opacity="0.16"/>
+          <path d="M 32 44 L 22 56 M 32 44 L 42 56" stroke-linecap="round"/>
+          <circle cx="32" cy="44" r="2.5" fill="currentColor"/>
+        </svg>
+        <h3>Weddings</h3>
+        <p class="offering-sub">your weekend, the whole place</p>
+        <p>Outdoor ceremony in the meadow, indoor in the barn, or somewhere between. Hog roast or stone-baked pizzas. Bell tents, shepherd&rsquo;s huts and the Tiny House for the wedding party so the day stretches past midnight and into breakfast.</p>
+        <a href="#inquire" class="btn btn-link offering-cta">Plan your wedding →</a>
+      </article>
+
+      <article class="offering-card">
+        <svg class="offering-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <rect x="10" y="20" width="44" height="32" stroke-linejoin="round"/>
+          <path d="M 10 28 L 54 28 M 22 20 L 22 14 Q 22 12 24 12 L 40 12 Q 42 12 42 14 L 42 20" stroke-linejoin="round"/>
+          <circle cx="32" cy="40" r="3" fill="currentColor"/>
+        </svg>
+        <h3>Corporate Retreats</h3>
+        <p class="offering-sub">teams, away from the office</p>
+        <p>A day or several. Wi-Fi when you need it, a fire pit when you don&rsquo;t. Wood-fired catering for the team lunch. Stays for the multi-day version. Padel court, paddock and 17 acres for the breakout sessions that don&rsquo;t feel like sessions.</p>
+        <a href="#inquire" class="btn btn-link offering-cta">Plan your retreat →</a>
+      </article>
+
+      <article class="offering-card">
+        <svg class="offering-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M 18 24 L 32 12 L 46 24 L 46 50 L 18 50 Z" stroke-linejoin="round"/>
+          <path d="M 24 50 L 24 36 L 40 36 L 40 50" stroke-linejoin="round"/>
+          <circle cx="40" cy="20" r="3" fill="currentColor"/>
+          <path d="M 50 14 L 56 8 M 50 8 L 56 14" stroke-linecap="round"/>
+        </svg>
+        <h3>Proms</h3>
+        <p class="offering-sub">the venue cleans up well</p>
+        <p>The barn takes a DJ, lights, dance-floor and three hundred Year 11s without breaking a sweat. Food they&rsquo;ll actually eat (pizzas, BBQ). Photo backdrops for days. A car park your parents can find.</p>
+        <a href="#inquire" class="btn btn-link offering-cta">Plan your prom →</a>
+      </article>
+
+      <article class="offering-card">
+        <svg class="offering-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <circle cx="22" cy="22" r="6"/>
+          <circle cx="42" cy="22" r="6"/>
+          <path d="M 12 50 Q 12 38 22 38 Q 32 38 32 50 Z" stroke-linejoin="round"/>
+          <path d="M 32 50 Q 32 38 42 38 Q 52 38 52 50 Z" stroke-linejoin="round"/>
+          <path d="M 32 14 L 32 6 M 28 10 L 32 6 L 36 10" stroke-linecap="round"/>
+        </svg>
+        <h3>Team Building</h3>
+        <p class="offering-sub">17 acres, 1 fire pit</p>
+        <p>Padel court, open paddocks, glamping field, the whole site. Bring your own activity provider or let us point you at one. Pizza ovens are warmer than icebreakers. Day or overnight; small teams or large.</p>
+        <a href="#inquire" class="btn btn-link offering-cta">Plan your day →</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- THE PLACE -->
+<section class="the-place paper-bg" id="the-place">
+  <div class="container">
+    <div class="the-place-head">
+      <span class="eyebrow">The place</span>
+      <h2 class="h-section">17 acres, in our hands</h2>
+      <div class="divider">
+        <span class="line"></span>
+        <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+        <span class="line"></span>
+      </div>
+    </div>
+
+    <div class="place-grid">
+      <div class="place-art">
+        <img src="photos/place-barn-roof.jpg" alt="Inside the Barn at Flint Hall — view up to the timber roof">
+      </div>
+
+      <div class="place-content">
+        <h3>What you get with the run of the place</h3>
+        <p class="lead">Whole-site exclusivity. Nobody else booked, nobody else around. The whole 17 acres are yours for as long as you&rsquo;ve booked them.</p>
+        <p>From the wedding party getting ready in the Tiny House to the last person sat by the fire at midnight &mdash; this is your patch of Suffolk for the duration.</p>
+        <ul class="place-list">
+          <li>The Barn (ceremonies &amp; dancing)</li>
+          <li>The Ranch &amp; bar</li>
+          <li>Wood-fired pizza oven</li>
+          <li>Outdoor kitchen &amp; fridges</li>
+          <li>Padel court</li>
+          <li>Showers &amp; toilets</li>
+          <li>25 picnic benches</li>
+          <li>150 chairs</li>
+          <li>Car park (adjacent field)</li>
+          <li>Glamping accommodation up to 12</li>
+          <li>Space for tents &amp; campervans</li>
+          <li>The fire pits, the meadow, the lot</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ATMOSPHERE -->
+<section class="atmosphere wood-bg">
+  <div class="container">
+    <div class="atmos-head">
+      <span class="eyebrow">What it&rsquo;s like</span>
+      <h2 class="h-section">Fires, food, fairy lights</h2>
+      <div class="divider">
+        <span class="line"></span>
+        <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+        <span class="line"></span>
+      </div>
+      <p class="lead">The four things people remember.</p>
+    </div>
+
+    <div class="atmos-grid">
+      <div class="atmos-card">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M 32 8 Q 26 18 30 26 Q 34 22 36 26 Q 40 32 32 40 Q 22 32 26 22 Q 28 18 32 8 Z" fill="currentColor" fill-opacity="0.18"/>
+          <path d="M 18 56 L 46 56 M 22 50 L 42 50" stroke-linecap="round"/>
+          <path d="M 32 40 Q 22 46 22 56 M 32 40 Q 42 46 42 56"/>
+        </svg>
+        <h4>Wood-fired food</h4>
+        <p>Stone-baked pizzas, hog roast, BBQ feasts &mdash; cooked on site, eaten where you&rsquo;re standing.</p>
+      </div>
+      <div class="atmos-card">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <rect x="10" y="22" width="44" height="22" rx="2" stroke-linejoin="round"/>
+          <path d="M 18 22 L 18 14 Q 18 12 20 12 L 28 12 Q 30 12 30 14 L 30 22 M 34 22 L 34 14 Q 34 12 36 12 L 44 12 Q 46 12 46 14 L 46 22"/>
+          <path d="M 22 44 L 22 50 M 42 44 L 42 50" stroke-linecap="round"/>
+        </svg>
+        <h4>The full bar</h4>
+        <p>Beers, wines, spirits, cocktails. Open from arrival to last orders. Bring your crowd, we&rsquo;ll pour for them.</p>
+      </div>
+      <div class="atmos-card">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M 14 50 Q 22 30 32 18 Q 42 30 50 50 Z" fill="currentColor" fill-opacity="0.14" stroke-linejoin="round"/>
+          <path d="M 22 50 L 26 38 L 30 44 L 34 32 L 38 42 L 42 50" stroke-linecap="round"/>
+          <path d="M 12 56 L 52 56" stroke-linecap="round"/>
+        </svg>
+        <h4>Glamping</h4>
+        <p>Bell tents, shepherd&rsquo;s huts and the Tiny House &mdash; beds for the people who love you most.</p>
+      </div>
+      <div class="atmos-card">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <circle cx="32" cy="32" r="20"/>
+          <path d="M 22 38 L 22 24 L 32 22 L 32 36" stroke-linejoin="round"/>
+          <circle cx="22" cy="40" r="3" fill="currentColor"/>
+          <circle cx="32" cy="38" r="3" fill="currentColor"/>
+          <path d="M 40 18 L 42 14 L 46 14 L 46 18" stroke-linecap="round"/>
+        </svg>
+        <h4>Music &amp; dancing</h4>
+        <p>The barn handles a DJ at full tilt. Acoustic on the porch is fine too. Everything until late.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STAYS -->
+<section class="stays paper-bg" id="stays">
+  <div class="container">
+    <div class="stays-head">
+      <span class="eyebrow">Sleep here</span>
+      <h2 class="h-section">Stay the night</h2>
+      <div class="divider">
+        <span class="line"></span>
+        <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+        <span class="line"></span>
+      </div>
+      <p class="lead">Three kinds of bed across the field. Beds for up to twelve, plus space for tents and campervans.</p>
+    </div>
+
+    <div class="stays-grid">
+      <article class="stay-card">
+        <div class="stay-img">
+          <img src="photos/stay-bell-tent.jpg" alt="Bell tent at Flint Hall lit at night">
+        </div>
+        <div class="stay-body">
+          <h3>Bell Tent</h3>
+          <p class="stay-meta">Sleeps 4 · canvas, sheepskins, low light</p>
+          <p>The proper glamping one. Place it in the field for proximity to the barn, or back near the trees for privacy. Comes with bedding, towels, toiletries.</p>
+        </div>
+      </article>
+
+      <article class="stay-card">
+        <div class="stay-img">
+          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="st2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2a1410"/>
+                <stop offset="55%" stop-color="#4a2818"/>
+                <stop offset="100%" stop-color="#8a4818"/>
+              </linearGradient>
+            </defs>
+            <rect width="400" height="300" fill="url(#st2)"/>
+            <path d="M 0 200 Q 100 185 200 195 Q 300 185 400 200 L 400 230 L 0 230 Z" fill="#1a0e08"/>
+            <g transform="translate(120 130)">
+              <circle cx="20" cy="92" r="14" fill="#3a2010"/>
+              <circle cx="20" cy="92" r="6" fill="#1a0e08"/>
+              <circle cx="140" cy="92" r="14" fill="#3a2010"/>
+              <circle cx="140" cy="92" r="6" fill="#1a0e08"/>
+              <rect x="5" y="20" width="150" height="70" fill="#c4a085"/>
+              <path d="M 0 28 Q 80 -8 160 28 L 160 22 L 0 22 Z" fill="#5a3818"/>
+              <path d="M 0 28 Q 80 -8 160 28 L 160 24 L 0 24 Z" fill="#3a2010"/>
+              <rect x="60" y="35" width="40" height="55" fill="#2a1410"/>
+              <rect x="62" y="37" width="36" height="40" fill="rgba(245,180,90,0.55)"/>
+              <rect x="20" y="38" width="20" height="18" fill="rgba(245,180,90,0.55)"/>
+              <rect x="120" y="38" width="20" height="18" fill="rgba(245,180,90,0.55)"/>
+              <rect x="118" y="0" width="10" height="22" fill="#3a2010"/>
+              <ellipse cx="124" cy="-2" rx="3" ry="1.5" fill="rgba(245,180,90,0.4)"/>
+            </g>
+            <rect x="0" y="240" width="400" height="60" fill="#0a0604"/>
+          </svg>
+        </div>
+        <div class="stay-body">
+          <h3>Shepherd&rsquo;s Hut</h3>
+          <p class="stay-meta">Sleeps 2 · insulated, romantic, quiet</p>
+          <p>Snug, well-built, far enough from the dance-floor to sleep through it. The romantic option for two. Heated, with proper bedding.</p>
+        </div>
+      </article>
+
+      <article class="stay-card">
+        <div class="stay-img">
+          <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="st3" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1a0e08"/>
+                <stop offset="55%" stop-color="#3a1c10"/>
+                <stop offset="100%" stop-color="#6a3018"/>
+              </linearGradient>
+            </defs>
+            <rect width="400" height="300" fill="url(#st3)"/>
+            <path d="M 0 205 Q 100 190 200 200 Q 300 185 400 200 L 400 230 L 0 230 Z" fill="#0a0604"/>
+            <g transform="translate(110 90)">
+              <polygon points="0,140 90,40 180,140" fill="#c4a085"/>
+              <polygon points="0,140 90,40 180,140 180,144 0,144" fill="#3a1c10"/>
+              <rect x="-15" y="138" width="210" height="10" fill="#3a2010"/>
+              <polygon points="55,90 90,62 125,90 125,120 55,120" fill="rgba(245,180,90,0.55)" stroke="#3a2010" stroke-width="1"/>
+              <rect x="78" y="90" width="24" height="40" fill="#2a1410"/>
+              <rect x="100" y="30" width="9" height="20" fill="#3a2010"/>
+              <line x1="0" y1="144" x2="180" y2="144" stroke="#a08866" stroke-width="0.5"/>
+              <circle cx="20" cy="144" r="1.5" fill="#ffe080"/>
+              <circle cx="55" cy="144" r="1.5" fill="#ffe080"/>
+              <circle cx="90" cy="144" r="1.5" fill="#ffe080"/>
+              <circle cx="125" cy="144" r="1.5" fill="#ffe080"/>
+              <circle cx="160" cy="144" r="1.5" fill="#ffe080"/>
+            </g>
+            <rect x="0" y="240" width="400" height="60" fill="#050200"/>
+          </svg>
+        </div>
+        <div class="stay-body">
+          <h3>Tiny House</h3>
+          <p class="stay-meta">Sleeps 4 · architect-pretty, lit up at night</p>
+          <p>Where the bridal party gets ready. Where the management retreat sleeps. The most photographed unit on site.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- MOMENTS -->
+<section class="moments wood-bg" id="moments">
+  <div class="container">
+    <div class="moments-head">
+      <span class="eyebrow">The vibe</span>
+      <h2 class="h-section">A night they won&rsquo;t forget</h2>
+      <div class="divider">
+        <span class="line"></span>
+        <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+        <span class="line"></span>
+      </div>
+      <p class="lead">Real moments from real events &mdash; weddings, birthdays, corporate days, charity afternoons.</p>
+    </div>
+
+    <div class="moments-grid">
+      <div>
+        <div class="moment-tile">
+          <img src="photos/vibe-lit-tree.jpg" alt="Tree wrapped in fairy lights at night">
+          <div class="moment-overlay"><h4>After Dark<small>WHEN THE LIGHTS GO ON</small></h4></div>
+        </div>
+      </div>
+      <div>
+        <div class="moment-tile">
+          <img src="photos/vibe-star-wall.jpg" alt="Inside the Barn — illuminated star feature wall">
+          <div class="moment-overlay"><h4>Inside the Barn<small>CEREMONIES & DANCING</small></h4></div>
+        </div>
+      </div>
+      <div>
+        <div class="moment-tile">
+          <img src="photos/vibe-bench-shelter.jpg" alt="Wooden bench shelter wrapped in fairy lights and ivy">
+          <div class="moment-overlay"><h4>Hidden Corners<small>EVERY EVENT, ALL ITS OWN</small></h4></div>
+        </div>
+      </div>
+      <div>
+        <div class="moment-tile">
+          <img src="photos/vibe-barn-frame.jpg" alt="The Barn — view of timber framing and exposed beams">
+          <div class="moment-overlay"><h4>Heritage Beams<small>THE WORKING BARN</small></h4></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INQUIRE -->
+<section class="inquire paper-bg" id="inquire">
+  <div class="container">
+    <div class="inquire-grid">
+      <div class="inquire-info">
+        <span class="eyebrow">Plan your event</span>
+        <h2 class="h-section">Tell us about your day</h2>
+        <div class="divider">
+          <span class="line"></span>
+          <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+          <span class="line"></span>
+        </div>
+        <p>Send us the rough shape of what you have in mind. We&rsquo;ll come back inside 48 hours with availability, the right package and an honest answer on whether we&rsquo;re the right fit. No hard sell.</p>
+        <ul>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M 12 7 L 12 12 L 16 14"/></svg>
+            <div>Reply within 48 hours, with availability and an indicative quote.</div>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M 4 6 L 20 6 L 20 18 L 4 18 Z"/><path d="M 4 6 L 12 13 L 20 6"/></svg>
+            <div>Site visits booked at your convenience &mdash; bring whoever&rsquo;s deciding.</div>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M 5 12 L 10 17 L 19 7"/></svg>
+            <div>Clear, written quote &mdash; venue + catering + stays in one number.</div>
+          </li>
+        </ul>
+      </div>
+
+      <form class="inquire-form" onsubmit="return handleInquiry(event)">
+        <div class="row split">
+          <div>
+            <label for="iq-firstname">First name</label>
+            <input type="text" id="iq-firstname" required>
+          </div>
+          <div>
+            <label for="iq-lastname">Surname</label>
+            <input type="text" id="iq-lastname" required>
+          </div>
+        </div>
+        <div class="row split">
+          <div>
+            <label for="iq-email">Email</label>
+            <input type="email" id="iq-email" required>
+          </div>
+          <div>
+            <label for="iq-phone">Phone</label>
+            <input type="tel" id="iq-phone">
+          </div>
+        </div>
+        <div class="row split">
+          <div>
+            <label for="iq-type">Event type</label>
+            <select id="iq-type" required>
+              <option value="">Choose one&hellip;</option>
+              <option>Wedding</option>
+              <option>Corporate Retreat</option>
+              <option>Prom</option>
+              <option>Team Building</option>
+              <option>Birthday / Private Party</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="iq-date">Date in mind</label>
+            <input type="date" id="iq-date">
+          </div>
+        </div>
+        <div class="row split">
+          <div>
+            <label for="iq-guests">Approx. guests</label>
+            <input type="number" id="iq-guests" placeholder="e.g. 80">
+          </div>
+          <div>
+            <label for="iq-source">How did you find us?</label>
+            <select id="iq-source">
+              <option value="">Choose one&hellip;</option>
+              <option>Instagram</option>
+              <option>Facebook</option>
+              <option>Google search</option>
+              <option>Word of mouth</option>
+              <option>Wedding fair</option>
+              <option>Wedding directory</option>
+              <option>Returning client</option>
+              <option>Supplier referral</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <label for="iq-notes">Tell us a bit more</label>
+          <textarea id="iq-notes" placeholder="What you&rsquo;re imagining, anything specific to ask, anything we should know."></textarea>
+        </div>
+        <button type="submit" class="btn btn-leather">Send inquiry</button>
+        <p class="form-note">We&rsquo;ll be in touch within 48 hours. No mailing list, no spam.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer wood-bg">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="photos/logo-light.webp" alt="Flint Hall Events">
+        <p>A hidden treasure in the heart of Suffolk &mdash; 17 acres for the moments that matter.</p>
+      </div>
+      <div>
+        <h4>What we do</h4>
+        <ul>
+          <li><a href="#what-we-do">Weddings</a></li>
+          <li><a href="#what-we-do">Corporate Retreats</a></li>
+          <li><a href="#what-we-do">Proms</a></li>
+          <li><a href="#what-we-do">Team Building</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>The site</h4>
+        <ul>
+          <li><a href="#the-place">The place</a></li>
+          <li><a href="#stays">Stays</a></li>
+          <li><a href="#moments">The vibe</a></li>
+          <li><a href="#inquire">Inquire</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Find us</h4>
+        <ul>
+          <li>Suffolk countryside</li>
+          <li><a href="mailto:hello@flinthall.uk">hello@flinthall.uk</a></li>
+          <li><a href="https://flinthall.uk">flinthall.uk</a></li>
+          <li><a href="https://instagram.com/flinthallevents">Instagram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>&copy; <span id="year">2026</span> Flint Hall Glamping &amp; Events Ltd. Registered in England.</div>
+      <button class="footer-signin" onclick="openLogin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M 15 3 H 19 V 21 H 15"/><path d="M 10 17 L 15 12 L 10 7"/><path d="M 15 12 H 3"/></svg>
+        Booking Portal
+      </button>
+    </div>
+  </div>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-backdrop" id="login-backdrop" role="dialog" aria-modal="true" aria-labelledby="login-title" onclick="closeLoginIfBackdrop(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeLogin()" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+
+    <div class="modal-body">
+      <div id="login-step-1">
+        <img class="modal-mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+        <h2 id="login-title">Booking Portal</h2>
+        <div class="divider-thin"></div>
+        <p class="lead">Sign in to access your booking, function sheet and payment status &mdash; or, if you&rsquo;re part of the Flint Hall team, the operations system.</p>
+
+        <div class="role-grid">
+          <button class="role-btn" onclick="selectRole('client')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M 4 22 Q 4 14 12 14 Q 20 14 20 22"/></svg>
+            <h3>Client</h3>
+            <p>I&rsquo;ve got an event booked at Flint Hall</p>
+          </button>
+          <button class="role-btn" onclick="selectRole('staff')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M 4 9 H 20 M 9 4 V 9"/></svg>
+            <h3>Staff</h3>
+            <p>I&rsquo;m on the Flint Hall team</p>
+          </button>
+        </div>
+
+        <p style="font-family:var(--body); font-size:12.5px; color:var(--ink-faded); font-style:italic;">No login? Just <a href="mailto:hello@flinthall.uk" style="color:var(--rust); border-bottom: 1px solid var(--rust); padding-bottom:1px;">drop us a line</a>.</p>
+      </div>
+
+      <form class="modal-form" id="login-form-client" onsubmit="return handleClientLogin(event)">
+        <img class="modal-mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+        <h2>Client Login</h2>
+        <div class="divider-thin"></div>
+        <div class="modal-form-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M 4 22 Q 4 14 12 14 Q 20 14 20 22"/></svg>
+          <strong>Client</strong>
+          <small>your booking</small>
+        </div>
+        <div class="row">
+          <label for="cl-user">Username</label>
+          <input type="text" id="cl-user" placeholder="e.g. KimberleeAndStephen" required>
+        </div>
+        <div class="row">
+          <label for="cl-pass">Password</label>
+          <input type="password" id="cl-pass" placeholder="provided in your welcome email" required>
+        </div>
+        <button type="submit" class="btn btn-leather">Sign In</button>
+        <div class="modal-form-foot">
+          <a href="#" onclick="backToRoleSelect(event)">← Back</a>
+          <a href="mailto:hello@flinthall.uk?subject=Lost%20login">Forgotten password?</a>
+        </div>
+        <div class="modal-message info" id="cl-msg">
+          <strong>Booking portal — coming soon</strong>
+          The client portal is being built. When live, you&rsquo;ll be able to view your function sheet, payment status, communications history and document downloads here.
+        </div>
+      </form>
+
+      <form class="modal-form" id="login-form-staff" onsubmit="return handleStaffLogin(event)">
+        <img class="modal-mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+        <h2>Staff Login</h2>
+        <div class="divider-thin"></div>
+        <div class="modal-form-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M 4 9 H 20 M 9 4 V 9"/></svg>
+          <strong>Staff</strong>
+          <small>operations system</small>
+        </div>
+        <div class="row">
+          <label for="st-user">Username</label>
+          <input type="text" id="st-user" placeholder="staff username" required>
+        </div>
+        <div class="row">
+          <label for="st-pass">Password</label>
+          <input type="password" id="st-pass" required>
+        </div>
+        <button type="submit" class="btn btn-rust">Open Operations</button>
+        <div class="modal-form-foot">
+          <a href="#" onclick="backToRoleSelect(event)">← Back</a>
+          <a href="mailto:hello@flinthall.uk?subject=Staff%20access">Need access?</a>
+        </div>
+        <div class="modal-message success" id="st-msg">
+          <strong>Welcome back</strong>
+          Opening the operations system in a new tab&hellip;
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const nav = document.getElementById('nav');
+function onScroll() {
+  if (window.scrollY > 40) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+document.getElementById('nav-toggle').addEventListener('click', () => {
+  nav.classList.toggle('menu-open');
+});
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => nav.classList.remove('menu-open'));
+});
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+function handleInquiry(e) {
+  e.preventDefault();
+  const fn = document.getElementById('iq-firstname').value.trim();
+  const ln = document.getElementById('iq-lastname').value.trim();
+  const email = document.getElementById('iq-email').value.trim();
+  const phone = document.getElementById('iq-phone').value.trim();
+  const type = document.getElementById('iq-type').value;
+  const date = document.getElementById('iq-date').value;
+  const guests = document.getElementById('iq-guests').value;
+  const source = document.getElementById('iq-source').value;
+  const notes = document.getElementById('iq-notes').value.trim();
+
+  const body =
+    `Inquiry from ${fn} ${ln}\n\n` +
+    `Email: ${email}\n` +
+    `Phone: ${phone || '—'}\n` +
+    `Event type: ${type}\n` +
+    `Date in mind: ${date || '—'}\n` +
+    `Approx. guests: ${guests || '—'}\n` +
+    `Source: ${source || '—'}\n\n` +
+    `${notes || ''}\n`;
+
+  const subject = `Flint Hall inquiry — ${type || 'event'}${date ? ' · ' + date : ''}`;
+  window.location.href = `mailto:hello@flinthall.uk?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return false;
+}
+
+const backdrop = document.getElementById('login-backdrop');
+
+function openLogin() {
+  backdrop.classList.add('active');
+  document.getElementById('login-step-1').style.display = 'block';
+  document.getElementById('login-form-client').classList.remove('active');
+  document.getElementById('login-form-staff').classList.remove('active');
+  document.getElementById('cl-msg').classList.remove('active');
+  document.getElementById('st-msg').classList.remove('active');
+  requestAnimationFrame(() => backdrop.classList.add('shown'));
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLogin() {
+  backdrop.classList.remove('shown');
+  setTimeout(() => {
+    backdrop.classList.remove('active');
+    document.body.style.overflow = '';
+  }, 250);
+}
+
+function closeLoginIfBackdrop(e) {
+  if (e.target === backdrop) closeLogin();
+}
+
+function selectRole(role) {
+  document.getElementById('login-step-1').style.display = 'none';
+  if (role === 'client') {
+    document.getElementById('login-form-client').classList.add('active');
+  } else if (role === 'staff') {
+    document.getElementById('login-form-staff').classList.add('active');
+  }
+}
+
+function backToRoleSelect(e) {
+  e.preventDefault();
+  document.getElementById('login-form-client').classList.remove('active');
+  document.getElementById('login-form-staff').classList.remove('active');
+  document.getElementById('cl-msg').classList.remove('active');
+  document.getElementById('st-msg').classList.remove('active');
+  document.getElementById('login-step-1').style.display = 'block';
+}
+
+function handleClientLogin(e) {
+  e.preventDefault();
+  document.getElementById('cl-msg').classList.add('active');
+  return false;
+}
+
+function handleStaffLogin(e) {
+  e.preventDefault();
+  document.getElementById('st-msg').classList.add('active');
+  setTimeout(() => {
+    window.open('flinthall-os.html', '_blank');
+  }, 800);
+  return false;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && backdrop.classList.contains('active')) closeLogin();
+});
+</script>
+
+</body>
+</html>

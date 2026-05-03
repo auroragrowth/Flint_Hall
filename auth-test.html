@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Flint Hall · Ops Auth Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --rust: #8C4A2F;
+  --brown-dk: #4A2F23;
+  --paper: #f3e3c1;
+  --paper-light: #f8edd0;
+  --paper-warm: #ead7af;
+  --paper-edge: #d4ba8c;
+  --leather: #3d2817;
+  --ink: #3a2818;
+  --ink-soft: #5c4530;
+  --copper: #B8924A;
+  --moss: #5e6a4a;
+  --crimson: #8a3a28;
+  --display: 'Cinzel', Georgia, serif;
+  --body: 'Lora', Georgia, serif;
+  --ui: 'Montserrat', system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--body); color: var(--ink); background: var(--paper-warm); min-height: 100vh; padding: 60px 24px; line-height: 1.6; }
+
+.wrap {
+  max-width: 540px; margin: 0 auto;
+  background: var(--paper-light);
+  border: 1px solid var(--paper-edge);
+  padding: 48px 40px;
+  position: relative;
+  box-shadow: 0 12px 40px rgba(74,47,35,0.18);
+}
+.wrap::before {
+  content: ''; position: absolute;
+  top: 12px; left: 12px; right: 12px; bottom: 12px;
+  border: 1px solid rgba(184,146,74,0.40);
+  pointer-events: none;
+}
+.wrap > * { position: relative; }
+
+h1 {
+  font-family: var(--display);
+  font-size: 26px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--brown-dk);
+  text-align: center; margin-bottom: 8px;
+}
+.eyebrow {
+  display: block; text-align: center;
+  font-family: var(--ui); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.42em; text-transform: uppercase;
+  color: var(--rust); margin-bottom: 22px;
+}
+.divider { width: 60px; height: 1px; background: var(--copper); margin: 14px auto 28px; position: relative; }
+.divider::before, .divider::after {
+  content: ''; position: absolute; top: 50%;
+  width: 6px; height: 6px; border: 1px solid var(--copper);
+  border-radius: 50%; transform: translateY(-50%) rotate(45deg);
+}
+.divider::before { left: -10px; }
+.divider::after { right: -10px; }
+
+p.intro { text-align: center; color: var(--ink-soft); font-size: 14.5px; margin-bottom: 28px; }
+
+label {
+  display: block; font-family: var(--ui); font-size: 10.5px;
+  font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 6px;
+}
+input[type=email] {
+  width: 100%; font-family: var(--body); font-size: 15px;
+  background: var(--paper); border: 1px solid var(--paper-edge);
+  padding: 12px 14px; color: var(--ink); border-radius: 2px;
+  margin-bottom: 16px;
+}
+input[type=email]:focus { outline: none; border-color: var(--rust); }
+
+button.btn {
+  width: 100%;
+  background: linear-gradient(180deg, #6b4530 0%, #4a2f23 50%, #3d2817 100%);
+  color: #f1e6cf; font-family: var(--ui); font-weight: 600;
+  font-size: 11.5px; letter-spacing: 0.28em; text-transform: uppercase;
+  padding: 14px 30px; border: 1px solid rgba(184,146,74,0.25);
+  border-radius: 4px; cursor: pointer; transition: transform 0.2s;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+  box-shadow: 0 1px 0 rgba(255,235,200,0.18) inset, 0 -1px 2px rgba(0,0,0,0.35) inset, 0 3px 0 #2a1c10, 0 5px 12px rgba(31,26,23,0.30);
+}
+button.btn:hover { transform: translateY(-1px); }
+button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+button.btn.ghost {
+  background: transparent; color: var(--ink-soft); border: 1px solid var(--paper-edge);
+  text-shadow: none; box-shadow: none; font-size: 10.5px; letter-spacing: 0.22em;
+  padding: 10px 24px;
+}
+button.btn.ghost:hover { background: var(--paper); border-color: var(--rust); color: var(--rust); }
+
+.user-info {
+  background: rgba(140,74,47,0.06);
+  border: 1px solid rgba(140,74,47,0.18);
+  padding: 14px 16px; border-radius: 4px;
+  margin-bottom: 22px; font-size: 14px;
+}
+.user-info strong { font-family: var(--display); color: var(--brown-dk); letter-spacing: 0.04em; }
+
+.checks { margin-bottom: 24px; }
+.check {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 14px; margin-bottom: 8px;
+  border-radius: 3px; font-size: 14px;
+  border-left: 3px solid var(--paper-edge);
+  background: var(--paper);
+}
+.check.pass { border-left-color: var(--moss); background: rgba(94,106,74,0.08); }
+.check.fail { border-left-color: var(--crimson); background: rgba(138,58,40,0.08); color: var(--crimson); }
+.check.pending { border-left-color: var(--copper); background: rgba(184,146,74,0.08); }
+.check .icon { font-weight: bold; flex-shrink: 0; }
+.check .label { font-family: var(--ui); font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; display: block; margin-bottom: 3px; color: var(--brown-dk); }
+.check.fail .label { color: var(--crimson); }
+.check .detail { font-family: var(--body); font-size: 13px; color: var(--ink-soft); }
+.check.fail .detail { color: var(--crimson); opacity: 0.85; }
+
+.notice {
+  text-align: center; padding: 20px;
+  background: rgba(184,146,74,0.10);
+  border-left: 3px solid var(--copper);
+  font-style: italic; font-size: 14px; color: var(--brown-dk);
+  margin-bottom: 22px;
+}
+
+.error {
+  background: rgba(138,58,40,0.08);
+  border-left: 3px solid var(--crimson);
+  padding: 14px 16px;
+  font-size: 13px; color: var(--crimson);
+  margin-bottom: 16px;
+}
+
+.foot {
+  text-align: center; margin-top: 28px; padding-top: 20px;
+  border-top: 1px dotted var(--paper-edge);
+  font-size: 12px; font-style: italic; color: var(--ink-soft);
+}
+
+[hidden] { display: none !important; }
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <img src="photos/logo-dark.webp" alt="Flint Hall Events" style="width:240px; height:auto; margin: 0 auto 16px; display: block;">
+  <h1>Ops Auth Test</h1>
+  <div class="divider"></div>
+  <p class="intro">A test page to confirm the three of you can sign in and that row-level security works as intended. Disposable — we'll remove it before going live.</p>
+
+  <!-- Loading state -->
+  <div id="state-loading">
+    <div class="notice">Loading&hellip;</div>
+  </div>
+
+  <!-- Signed-out state: ask for email -->
+  <form id="state-signin" hidden>
+    <label for="email">Email address</label>
+    <input type="email" id="email" placeholder="paulrudland@me.com" required>
+    <button type="submit" class="btn" id="signin-btn">Send magic link</button>
+    <div id="signin-error" class="error" hidden></div>
+  </form>
+
+  <!-- After link sent -->
+  <div id="state-link-sent" hidden>
+    <div class="notice">
+      <strong>Magic link sent to <span id="sent-to"></span>.</strong><br>
+      Check your inbox &mdash; the link will sign you in here when clicked.
+    </div>
+    <button class="btn ghost" onclick="location.reload()">Use a different email</button>
+  </div>
+
+  <!-- Signed-in state: show test results -->
+  <div id="state-signed-in" hidden>
+    <div class="user-info">Signed in as <strong id="user-email"></strong></div>
+
+    <div class="checks">
+      <div class="check pending" id="c-auth">
+        <span class="icon">⏳</span>
+        <div><span class="label">Auth</span><span class="detail">Establishing session&hellip;</span></div>
+      </div>
+      <div class="check pending" id="c-team">
+        <span class="icon">⏳</span>
+        <div><span class="label">Team membership</span><span class="detail">Checking allowlist&hellip;</span></div>
+      </div>
+      <div class="check pending" id="c-read">
+        <span class="icon">⏳</span>
+        <div><span class="label">Read access</span><span class="detail">Querying bookings table&hellip;</span></div>
+      </div>
+      <div class="check pending" id="c-write">
+        <span class="icon">⏳</span>
+        <div><span class="label">Write access</span><span class="detail">Creating &amp; deleting test booking&hellip;</span></div>
+      </div>
+    </div>
+
+    <button id="signout" class="btn ghost">Sign out</button>
+  </div>
+
+  <div class="foot">Connected to <code style="font-size:11px">dgrbazpcytwusnsvoaou.supabase.co</code></div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
+
+const SUPABASE_URL = 'https://dgrbazpcytwusnsvoaou.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_C5jAgpcN560Eg1zRqFU62g_Es8zRT_t';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+function show(state) {
+  ['state-loading','state-signin','state-link-sent','state-signed-in'].forEach(s => $(s).hidden = (s !== state));
+}
+function setCheck(id, status, label, detail) {
+  const el = $(id);
+  el.className = 'check ' + status;
+  el.querySelector('.icon').textContent = status === 'pass' ? '✓' : status === 'fail' ? '✗' : '⏳';
+  el.querySelector('.label').textContent = label;
+  el.querySelector('.detail').textContent = detail;
+}
+
+// On load, check for an existing session.
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    enterSignedIn(session.user);
+  } else {
+    show('state-signin');
+  }
+}
+
+function enterSignedIn(user) {
+  show('state-signed-in');
+  $('user-email').textContent = user.email;
+  setCheck('c-auth', 'pass', 'Auth', `Session active for ${user.email}`);
+  runTeamCheck();
+  runReadCheck();
+  runWriteCheck();
+}
+
+async function runTeamCheck() {
+  const { data, error } = await supabase.from('team_members').select('email, name, role');
+  if (error) {
+    setCheck('c-team', 'fail', 'Team membership', `Blocked by RLS — your email isn't on the allowlist. (${error.message})`);
+  } else if (!data || data.length === 0) {
+    setCheck('c-team', 'fail', 'Team membership', 'Signed in, but RLS returned no team rows. Allowlist mismatch.');
+  } else {
+    setCheck('c-team', 'pass', 'Team membership', `On the team — sees ${data.length} members: ${data.map(t=>t.name).join(', ')}`);
+  }
+}
+
+async function runReadCheck() {
+  const { data, error, count } = await supabase.from('bookings').select('id', { count: 'exact', head: true });
+  if (error) {
+    setCheck('c-read', 'fail', 'Read access', `Cannot read bookings: ${error.message}`);
+  } else {
+    setCheck('c-read', 'pass', 'Read access', `Bookings table reachable — ${count ?? 0} rows visible`);
+  }
+}
+
+async function runWriteCheck() {
+  const testId = 'test_' + Date.now();
+  const { error: insertError } = await supabase.from('bookings').insert({
+    id: testId, status: 'inquiry',
+    client_first_name: 'Auth', client_last_name: 'Test',
+    internal_notes: 'auto-created by auth-test.html, will be deleted'
+  });
+  if (insertError) {
+    setCheck('c-write', 'fail', 'Write access', `Insert blocked: ${insertError.message}`);
+    return;
+  }
+  const { error: deleteError } = await supabase.from('bookings').delete().eq('id', testId);
+  if (deleteError) {
+    setCheck('c-write', 'fail', 'Write access', `Inserted but couldn't clean up: ${deleteError.message}`);
+    return;
+  }
+  setCheck('c-write', 'pass', 'Write access', 'Insert + delete both succeeded. RLS allows full CRUD.');
+}
+
+// Sign-in form
+$('state-signin').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = $('email').value.trim().toLowerCase();
+  const btn = $('signin-btn');
+  const errEl = $('signin-error');
+  errEl.hidden = true;
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href }
+  });
+
+  if (error) {
+    errEl.textContent = 'Could not send: ' + error.message;
+    errEl.hidden = false;
+    btn.disabled = false; btn.textContent = 'Send magic link';
+    return;
+  }
+
+  $('sent-to').textContent = email;
+  show('state-link-sent');
+});
+
+// Sign out
+$('signout').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  location.reload();
+});
+
+// React to magic-link redirect
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) enterSignedIn(session.user);
+});
+
+init();
+</script>
+
+</body>
+</html>
