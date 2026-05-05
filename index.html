@@ -273,6 +273,19 @@ p:last-child { margin-bottom: 0; }
 .offering-card p { font-family: var(--body); font-size: 15px; line-height: 1.65; color: var(--ink-soft); flex: 1; margin-bottom: 22px; }
 .offering-card .offering-cta { align-self: flex-start; }
 
+/* APPROVED-VENUE BADGE */
+.approved-row { display: flex; align-items: center; gap: 14px; margin: 6px 0 18px; padding: 12px 14px; background: rgba(184,146,74,0.08); border: 1px solid rgba(184,146,74,0.25); border-radius: 4px; }
+.approved-row img { flex-shrink: 0; width: 56px; height: 56px; clip-path: circle(48% at 50% 50%); display: block; }
+.approved-row .approved-text { line-height: 1.45; }
+.approved-row .approved-text strong { display: block; font-family: var(--display); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brown-dk); font-weight: 600; margin-bottom: 3px; }
+.approved-row .approved-text small { font-family: var(--serif); font-style: italic; font-size: 12.5px; color: var(--ink-soft); letter-spacing: 0; }
+
+.footer-approved { display: flex; align-items: center; gap: 12px; margin-top: 22px; padding-top: 18px; border-top: 1px dotted rgba(184,146,74,0.25); }
+.footer-approved img { width: 60px; height: 60px; clip-path: circle(48% at 50% 50%); display: block; flex-shrink: 0; }
+.footer-approved .approved-text { line-height: 1.45; }
+.footer-approved .approved-text strong { display: block; font-family: var(--display); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
+.footer-approved .approved-text small { font-family: var(--serif); font-style: italic; font-size: 12px; color: rgba(243,227,193,0.65); letter-spacing: 0; }
+
 /* THE PLACE */
 .the-place { padding: 100px 0; }
 .the-place-head { text-align: center; margin-bottom: 56px; }
@@ -659,6 +672,13 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
         <h3>Weddings</h3>
         <p class="offering-sub">your weekend, the whole place</p>
         <p>Outdoor ceremony in the meadow, indoor in the barn, or somewhere between. Hog roast or stone-baked pizzas. Bell tents, shepherd&rsquo;s huts and the Tiny House for the wedding party so the day stretches past midnight and into breakfast.</p>
+        <div class="approved-row">
+          <img src="photos/approved-badge.jpg" alt="Approved Venue — Suffolk Registrars">
+          <div class="approved-text">
+            <strong>Approved Venue</strong>
+            <small>Licensed by Suffolk Registrars for civil ceremonies</small>
+          </div>
+        </div>
         <a href="#inquire" class="btn btn-link offering-cta">Plan your wedding →</a>
       </article>
 
@@ -1022,6 +1042,13 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
       <div class="footer-brand">
         <img src="photos/logo-light.webp" alt="Flint Hall Events">
         <p>A hidden treasure in the heart of Suffolk &mdash; 17 acres for the moments that matter.</p>
+        <div class="footer-approved">
+          <img src="photos/approved-badge.jpg" alt="Approved Venue — Suffolk Registrars">
+          <div class="approved-text">
+            <strong>Approved Venue</strong>
+            <small>Suffolk Registrars &middot; licensed for civil ceremonies</small>
+          </div>
+        </div>
       </div>
       <div>
         <h4>What we do</h4>
