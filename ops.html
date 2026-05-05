@@ -1413,6 +1413,14 @@ a:hover { text-decoration: underline; }
         <span>✓</span> Completed
       </div>
 
+      <div class="nav-section">Portal</div>
+      <div class="nav-item" data-route="access-requests">
+        <span>⌘</span> Access Requests <span class="count" id="count-access-requests">0</span>
+      </div>
+      <div class="nav-item" data-route="gallery">
+        <span>◇</span> Gallery <span class="count" id="count-gallery">0</span>
+      </div>
+
       <div class="nav-section">Insights</div>
       <div class="nav-item" data-route="leadsources">
         <span>◈</span> Lead Sources
@@ -2045,6 +2053,8 @@ const App = {
   state: {
     bookings: [],
     templates: [],
+    accessRequests: [],
+    galleryPhotos: [],
     contractTemplate: DEFAULT_CONTRACT,
     settings: { ...DEFAULT_SETTINGS },
     route: 'dashboard',
@@ -2163,6 +2173,7 @@ const App = {
       functionSheet: r.function_sheet || { days: [], catering: '', notes: '' },
       communications: r.communications || [],
       internalNotes: r.internal_notes || '',
+      clientPortalEnabled: !!r.client_portal_enabled,
       createdAt: r.created_at,
       updatedAt: r.updated_at
     };
@@ -2223,7 +2234,8 @@ const App = {
       contract_version:            ct.version ?? null,
       function_sheet:              b.functionSheet || null,
       communications:              b.communications || [],
-      internal_notes:              b.internalNotes || null
+      internal_notes:              b.internalNotes || null,
+      client_portal_enabled:       !!b.clientPortalEnabled
     };
   },
 
@@ -2282,6 +2294,23 @@ const App = {
     } else {
       this.state.settings = { ...DEFAULT_SETTINGS };
     }
+
+    // Client account requests (pending first, then recent history)
+    const { data: arRows, error: arErr } = await sb
+      .from('client_account_requests')
+      .select('*')
+      .order('requested_at', { ascending: false });
+    if (arErr) console.warn('Could not load access requests:', arErr.message);
+    this.state.accessRequests = arRows || [];
+
+    // Gallery photos (metadata; binary lives in the 'gallery' bucket)
+    const { data: gpRows, error: gpErr } = await sb
+      .from('gallery_photos')
+      .select('*')
+      .order('display_order', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (gpErr) console.warn('Could not load gallery photos:', gpErr.message);
+    this.state.galleryPhotos = gpRows || [];
   },
 
   // Save the entire state to Supabase. Debounced — multiple calls in quick
@@ -2559,6 +2588,21 @@ const App = {
         subtitle.textContent = 'Venue and operational defaults';
         content.innerHTML = this.viewSettings();
         break;
+      case 'access-requests':
+        title.textContent = 'Access Requests';
+        const pendingN = this.state.accessRequests.filter(r => r.status === 'pending').length;
+        subtitle.textContent = pendingN
+          ? `${pendingN} request${pendingN === 1 ? '' : 's'} waiting on you`
+          : 'Clients applying for portal access';
+        content.innerHTML = this.viewAccessRequests();
+        this.bindAccessRequests();
+        break;
+      case 'gallery':
+        title.textContent = 'Gallery';
+        subtitle.textContent = 'Photos shown on the public gallery page';
+        content.innerHTML = this.viewGallery();
+        this.bindGallery();
+        break;
       default:
         content.innerHTML = '<div class="empty-state"><h3>Not found</h3></div>';
     }
@@ -2568,9 +2612,14 @@ const App = {
     const active = this.state.bookings.filter(b => !['completed','cancelled'].includes(b.status)).length;
     const inquiries = this.state.bookings.filter(b => ['inquiry','quoted','provisional'].includes(b.status)).length;
     const confirmed = this.state.bookings.filter(b => ['confirmed','planning','balance_due','balance_overdue','balance_paid','event_week'].includes(b.status)).length;
+    const pendingReqs = this.state.accessRequests.filter(r => r.status === 'pending').length;
     document.getElementById('count-active').textContent = active;
     document.getElementById('count-inquiry').textContent = inquiries;
     document.getElementById('count-confirmed').textContent = confirmed;
+    const arCount = document.getElementById('count-access-requests');
+    if (arCount) arCount.textContent = pendingReqs;
+    const gCount = document.getElementById('count-gallery');
+    if (gCount) gCount.textContent = (this.state.galleryPhotos || []).length;
   },
 
   updateNavActive() {
@@ -4383,6 +4432,337 @@ const App = {
         <button class="btn btn-primary" onclick="App.saveSettings()">Save settings</button>
       </div>
     `;
+  },
+
+  // ───────── ACCESS REQUESTS (Client Portal) ─────────
+  viewAccessRequests() {
+    const requests = this.state.accessRequests || [];
+    const pending  = requests.filter(r => r.status === 'pending');
+    const handled  = requests.filter(r => r.status !== 'pending').slice(0, 20);
+
+    const reqCard = (r) => {
+      const matches = this.state.bookings.filter(b =>
+        b.client.email && b.client.email.toLowerCase() === (r.email || '').toLowerCase()
+      );
+      const allBookings = [...this.state.bookings].sort((a, b) =>
+        (a.event.date || '').localeCompare(b.event.date || '')
+      );
+      const optionLabel = (b) => {
+        const name = `${b.client.firstName || ''} ${b.client.lastName || ''}`.trim() || '(unnamed)';
+        const date = b.event.date ? this.fmtDateShort(b.event.date) : 'no date';
+        const portal = b.clientPortalEnabled ? ' · portal on' : '';
+        return `${name} · ${date} · ${b.event.type || 'event'}${portal}`;
+      };
+      const preselect = matches.length === 1 ? matches[0].id : '';
+      const optionsHtml = [
+        `<option value="">— pick a booking —</option>`,
+        ...(matches.length ? [`<optgroup label="Email match">${
+          matches.map(b => `<option value="${this.esc(b.id)}"${b.id === preselect ? ' selected' : ''}>${this.esc(optionLabel(b))}</option>`).join('')
+        }</optgroup>`] : []),
+        `<optgroup label="All bookings">${
+          allBookings.filter(b => !matches.includes(b)).map(b => `<option value="${this.esc(b.id)}">${this.esc(optionLabel(b))}</option>`).join('')
+        }</optgroup>`
+      ].join('');
+
+      const status = r.status;
+      const pillClass = status === 'pending' ? 'pill pill-inquiry' : (status === 'approved' ? 'pill pill-balance_paid' : 'pill pill-cancelled');
+      const meta = [];
+      if (r.event_date) meta.push(this.fmtDateShort(r.event_date));
+      if (r.requested_at) meta.push('requested ' + this.fmtRelative(r.requested_at));
+
+      const actions = status === 'pending' ? `
+        <div class="row" style="gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center;">
+          <select class="ar-booking-select" data-req="${this.esc(r.id)}" style="flex: 1; min-width: 240px; padding: 8px 10px; font-family: var(--font-body); font-size: 13.5px; border: 1px solid var(--brown-200); border-radius: 4px; background: var(--linen);">
+            ${optionsHtml}
+          </select>
+          <button class="btn btn-primary btn-sm ar-approve" data-req="${this.esc(r.id)}">Approve</button>
+          <button class="btn btn-secondary btn-sm ar-reject" data-req="${this.esc(r.id)}">Reject</button>
+        </div>` : `
+        <div class="row" style="gap: 8px; margin-top: 10px; font-family: var(--font-body); font-style: italic; font-size: 13px; color: var(--brown-500);">
+          ${status === 'approved'
+            ? `Approved ${r.approved_at ? this.fmtRelative(r.approved_at) : ''}${r.booking_id ? ' · linked to booking ' + this.esc(r.booking_id) : ''}`
+            : `Rejected ${r.rejected_at ? this.fmtRelative(r.rejected_at) : ''}${r.rejection_reason ? ' · ' + this.esc(r.rejection_reason) : ''}`}
+        </div>`;
+
+      return `
+        <div class="card mb-2">
+          <div class="card-body">
+            <div class="row" style="justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 220px;">
+                <div style="font-family: var(--font-display); font-size: 16px; color: var(--brown-800); font-weight: 600;">${this.esc(r.name || '—')}</div>
+                <div style="font-family: var(--font-body); font-size: 13.5px; color: var(--brown-600); margin-top: 2px;">
+                  <a href="mailto:${this.esc(r.email)}" style="color: var(--rust); border-bottom: 1px solid rgba(140,74,47,0.30);">${this.esc(r.email)}</a>
+                </div>
+                <div style="font-family: var(--font-body); font-style: italic; font-size: 12.5px; color: var(--brown-500); margin-top: 4px;">${this.esc(meta.join(' · '))}</div>
+              </div>
+              <span class="${pillClass}" style="white-space: nowrap;">${this.esc(status)}</span>
+            </div>
+            ${r.message ? `<div style="margin-top: 12px; padding: 10px 14px; background: var(--linen); border-left: 3px solid var(--gold); font-family: var(--font-body); font-size: 13.5px; color: var(--brown-700); white-space: pre-wrap;">${this.esc(r.message)}</div>` : ''}
+            ${actions}
+          </div>
+        </div>`;
+    };
+
+    return `
+      <section style="margin-bottom: 28px;">
+        <div style="font-family: var(--font-display); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brown-700); margin: 0 0 12px 4px;">Pending</div>
+        ${pending.length
+          ? pending.map(reqCard).join('')
+          : `<div class="card"><div class="empty-state"><div class="icon">✓</div><h3>Nothing pending</h3><p>You&rsquo;re all caught up on portal access requests.</p></div></div>`}
+      </section>
+      ${handled.length ? `
+        <section>
+          <div style="font-family: var(--font-display); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brown-700); margin: 0 0 12px 4px;">Recent</div>
+          ${handled.map(reqCard).join('')}
+        </section>` : ''}
+    `;
+  },
+
+  bindAccessRequests() {
+    document.querySelectorAll('.ar-approve').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const reqId = btn.dataset.req;
+        const sel = document.querySelector(`.ar-booking-select[data-req="${reqId}"]`);
+        const bookingId = sel ? sel.value : '';
+        if (!bookingId) { this.toast('Pick a booking to link first', 'error'); return; }
+        this.approveAccessRequest(reqId, bookingId);
+      });
+    });
+    document.querySelectorAll('.ar-reject').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const reqId = btn.dataset.req;
+        const reason = prompt('Reason for rejection (optional, shown internally only):', '');
+        if (reason === null) return; // user cancelled
+        this.rejectAccessRequest(reqId, reason || null);
+      });
+    });
+  },
+
+  async approveAccessRequest(requestId, bookingId) {
+    const sb = window.fhSupabase;
+    if (!sb) { this.toast('Database not ready', 'error'); return; }
+    const booking = this.state.bookings.find(b => b.id === bookingId);
+    if (!booking) { this.toast('Booking not found', 'error'); return; }
+
+    // 1) Flip the per-booking flag (direct DB write, surgical)
+    const { error: bookingErr } = await sb
+      .from('bookings')
+      .update({ client_portal_enabled: true })
+      .eq('id', bookingId);
+    if (bookingErr) { this.toast('Approve failed: ' + bookingErr.message, 'error'); return; }
+
+    // 2) Mark request approved
+    const { data: { user } } = await sb.auth.getUser();
+    const updates = {
+      status: 'approved',
+      approved_at: new Date().toISOString(),
+      approved_by: user?.id || null,
+      booking_id: bookingId
+    };
+    const { error: reqErr } = await sb
+      .from('client_account_requests')
+      .update(updates)
+      .eq('id', requestId);
+    if (reqErr) { this.toast('Approve saved on booking, but request update failed: ' + reqErr.message, 'error'); return; }
+
+    // 3) Update local state
+    booking.clientPortalEnabled = true;
+    const r = this.state.accessRequests.find(x => x.id === requestId);
+    if (r) Object.assign(r, updates);
+
+    // 4) Notify client (edge function — graceful if not deployed yet)
+    try {
+      await sb.functions.invoke('notify-client-approved', {
+        body: { request_id: requestId, booking_id: bookingId }
+      });
+    } catch (err) {
+      console.warn('Approval notification not sent:', err.message || err);
+    }
+
+    this.toast('Approved — client can now sign in', 'success');
+    this.render();
+  },
+
+  async rejectAccessRequest(requestId, reason) {
+    const sb = window.fhSupabase;
+    if (!sb) { this.toast('Database not ready', 'error'); return; }
+    const updates = {
+      status: 'rejected',
+      rejected_at: new Date().toISOString(),
+      rejection_reason: reason
+    };
+    const { error } = await sb
+      .from('client_account_requests')
+      .update(updates)
+      .eq('id', requestId);
+    if (error) { this.toast('Reject failed: ' + error.message, 'error'); return; }
+
+    const r = this.state.accessRequests.find(x => x.id === requestId);
+    if (r) Object.assign(r, updates);
+    this.toast('Request rejected', 'success');
+    this.render();
+  },
+
+  // ───────── GALLERY (public photo gallery) ─────────
+  galleryPublicUrl(path) {
+    return `https://dgrbazpcytwusnsvoaou.supabase.co/storage/v1/object/public/gallery/${path}`;
+  },
+
+  viewGallery() {
+    const photos = this.state.galleryPhotos || [];
+    const tiles = photos.map(p => `
+      <div class="gphoto" data-id="${this.esc(p.id)}" style="position: relative; background: var(--brown-900); border: 1px solid var(--paper-edge); aspect-ratio: 4/3; overflow: hidden;">
+        <img src="${this.esc(this.galleryPublicUrl(p.storage_path))}" alt="${this.esc(p.caption || '')}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;" loading="lazy">
+        <div style="position:absolute; left:0; right:0; bottom:0; padding: 10px 12px; background: linear-gradient(0deg, rgba(31,26,23,0.9) 0%, transparent 100%); color: var(--paper-light); display: flex; gap: 8px; align-items: center;">
+          <input type="text" class="gphoto-caption" data-id="${this.esc(p.id)}" value="${this.esc(p.caption || '')}" placeholder="Caption…" style="flex:1; background: rgba(255,255,255,0.06); border: 1px solid rgba(232,200,150,0.30); color: var(--paper-light); padding: 6px 8px; border-radius: 3px; font-family: var(--font-body); font-size: 12.5px;">
+          <input type="number" class="gphoto-order" data-id="${this.esc(p.id)}" value="${Number(p.display_order || 0)}" title="Sort order (higher = earlier)" style="width: 60px; background: rgba(255,255,255,0.06); border: 1px solid rgba(232,200,150,0.30); color: var(--paper-light); padding: 6px 8px; border-radius: 3px; font-family: var(--font-body); font-size: 12.5px;">
+          <button class="btn btn-secondary btn-sm gphoto-save" data-id="${this.esc(p.id)}" style="padding: 5px 10px;">Save</button>
+          <button class="btn btn-secondary btn-sm gphoto-del" data-id="${this.esc(p.id)}" data-path="${this.esc(p.storage_path)}" style="padding: 5px 10px; color: #c66;">Del</button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="card mb-2">
+        <div class="card-header"><div class="card-title">Add photos</div></div>
+        <div class="card-body">
+          <p class="muted italic" style="margin-bottom: 12px;">Drop or pick image files (jpg / png / webp / avif). They&rsquo;ll go straight to the public gallery page once you save.</p>
+          <div id="gphoto-drop" style="border: 2px dashed var(--paper-edge); border-radius: 6px; padding: 28px; text-align: center; background: var(--linen); cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease;">
+            <input type="file" id="gphoto-file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple hidden>
+            <div style="font-family: var(--font-display); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brown-700);">Drop photos here</div>
+            <div class="muted italic" style="font-size: 13px; margin-top: 6px;">or click to pick &mdash; up to 10 MB each</div>
+          </div>
+          <div id="gphoto-queue" style="margin-top: 16px; display: none;"></div>
+          <div id="gphoto-progress" style="margin-top: 12px; font-family: var(--font-body); font-size: 13px; color: var(--brown-600);"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Current gallery (${photos.length})</div></div>
+        <div class="card-body">
+          ${photos.length
+            ? `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;">${tiles}</div>`
+            : `<div class="empty-state"><div class="icon">∅</div><h3>No photos yet</h3><p>Drop a few in above and they&rsquo;ll show on /gallery.</p></div>`}
+        </div>
+      </div>
+    `;
+  },
+
+  bindGallery() {
+    const drop = document.getElementById('gphoto-drop');
+    const file = document.getElementById('gphoto-file');
+    if (drop && file) {
+      drop.addEventListener('click', () => file.click());
+      drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.style.borderColor = 'var(--rust)'; drop.style.background = 'rgba(140,74,47,0.06)'; });
+      drop.addEventListener('dragleave', () => { drop.style.borderColor = 'var(--paper-edge)'; drop.style.background = 'var(--linen)'; });
+      drop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        drop.style.borderColor = 'var(--paper-edge)'; drop.style.background = 'var(--linen)';
+        if (e.dataTransfer?.files?.length) this.galleryUpload(e.dataTransfer.files);
+      });
+      file.addEventListener('change', () => {
+        if (file.files?.length) this.galleryUpload(file.files);
+        file.value = '';
+      });
+    }
+    document.querySelectorAll('.gphoto-save').forEach(btn => {
+      btn.addEventListener('click', () => this.gallerySaveOne(btn.dataset.id));
+    });
+    document.querySelectorAll('.gphoto-del').forEach(btn => {
+      btn.addEventListener('click', () => this.galleryDeleteOne(btn.dataset.id, btn.dataset.path));
+    });
+  },
+
+  async galleryUpload(fileList) {
+    const sb = window.fhSupabase;
+    if (!sb) { this.toast('Database not ready', 'error'); return; }
+    const progress = document.getElementById('gphoto-progress');
+    const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+    if (!files.length) { this.toast('No images selected', 'error'); return; }
+
+    const { data: { user } } = await sb.auth.getUser();
+    let done = 0, failed = 0;
+    progress.textContent = `Uploading 0 / ${files.length}…`;
+
+    for (const f of files) {
+      const ext = (f.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${new Date().getFullYear()}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await sb.storage.from('gallery').upload(path, f, {
+        cacheControl: '31536000', contentType: f.type, upsert: false
+      });
+      if (upErr) { console.warn('upload failed', f.name, upErr); failed++; continue; }
+      const { data: row, error: insErr } = await sb.from('gallery_photos').insert({
+        storage_path: path,
+        caption: '',
+        display_order: 0,
+        uploaded_by: user?.id || null
+      }).select().single();
+      if (insErr) {
+        console.warn('metadata insert failed', insErr);
+        // Best effort cleanup
+        await sb.storage.from('gallery').remove([path]).catch(() => {});
+        failed++;
+        continue;
+      }
+      this.state.galleryPhotos.unshift(row);
+      done++;
+      progress.textContent = `Uploading ${done} / ${files.length}…`;
+    }
+
+    progress.textContent = `${done} uploaded${failed ? ` · ${failed} failed` : ''}.`;
+    this.toast(failed ? `${done} uploaded, ${failed} failed` : `${done} uploaded`, failed ? 'error' : 'success');
+    this.render();
+  },
+
+  async gallerySaveOne(id) {
+    const sb = window.fhSupabase;
+    if (!sb) { this.toast('Database not ready', 'error'); return; }
+    const captionEl = document.querySelector(`.gphoto-caption[data-id="${id}"]`);
+    const orderEl   = document.querySelector(`.gphoto-order[data-id="${id}"]`);
+    const updates = {
+      caption: captionEl ? captionEl.value : '',
+      display_order: orderEl ? Number(orderEl.value || 0) : 0
+    };
+    const { error } = await sb.from('gallery_photos').update(updates).eq('id', id);
+    if (error) { this.toast('Save failed: ' + error.message, 'error'); return; }
+    const p = this.state.galleryPhotos.find(x => x.id === id);
+    if (p) Object.assign(p, updates);
+    // Re-sort so the order field takes effect immediately
+    this.state.galleryPhotos.sort((a, b) =>
+      (b.display_order || 0) - (a.display_order || 0) ||
+      (b.created_at || '').localeCompare(a.created_at || '')
+    );
+    this.toast('Saved', 'success');
+    this.render();
+  },
+
+  async galleryDeleteOne(id, path) {
+    if (!confirm('Delete this photo? This cannot be undone.')) return;
+    const sb = window.fhSupabase;
+    if (!sb) { this.toast('Database not ready', 'error'); return; }
+    // Delete row first (RLS-gated), then storage object
+    const { error: rowErr } = await sb.from('gallery_photos').delete().eq('id', id);
+    if (rowErr) { this.toast('Delete failed: ' + rowErr.message, 'error'); return; }
+    if (path) await sb.storage.from('gallery').remove([path]).catch(err => console.warn('storage cleanup:', err));
+    this.state.galleryPhotos = this.state.galleryPhotos.filter(x => x.id !== id);
+    this.toast('Photo deleted', 'success');
+    this.render();
+  },
+
+  // Friendly relative time ("3 hours ago", "yesterday").
+  fmtRelative(iso) {
+    if (!iso) return '';
+    const t = new Date(iso).getTime();
+    if (isNaN(t)) return '';
+    const diff = Date.now() - t;
+    const m = 60_000, h = 60 * m, d = 24 * h;
+    if (diff < m)        return 'just now';
+    if (diff < h)        return Math.floor(diff / m) + ' min ago';
+    if (diff < 2 * h)    return '1 hour ago';
+    if (diff < d)        return Math.floor(diff / h) + ' hours ago';
+    if (diff < 2 * d)    return 'yesterday';
+    if (diff < 7 * d)    return Math.floor(diff / d) + ' days ago';
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   },
 
   saveSettings() {

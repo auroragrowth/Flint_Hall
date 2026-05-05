@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Booking Portal · Flint Hall Events</title>
+<meta name="description" content="The Flint Hall booking portal — your function sheet, payment status, communications history and document downloads, all in one place.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --rust:       #8C4A2F;
+  --brown-dk:   #4A2F23;
+  --linen:      #E6D2B3;
+  --charcoal:   #1F1A17;
+  --weathered:  #7A736E;
+  --ash-cream:  #F1E6CF;
+  --copper:     #B8924A;
+
+  --paper:        #f3e3c1;
+  --paper-light:  #f8edd0;
+  --paper-warm:   #ead7af;
+  --paper-edge:   #d4ba8c;
+  --paper-deep:   #c4a07a;
+
+  --leather:      #3d2817;
+  --leather-up:   #6b4530;
+  --leather-dn:   #2a1c10;
+  --wood-dark:    #2c1a0e;
+  --wood-mid:     #4a2f1a;
+
+  --ink:          #3a2818;
+  --ink-soft:     #5c4530;
+  --ink-faded:    #806555;
+
+  --gold:         #c89c5a;
+  --gold-soft:    #d8b87c;
+  --moss:         #5e6a4a;
+  --crimson:      #8a3a28;
+
+  --shadow-paper:   0 1px 2px rgba(74,47,35,0.10), 0 4px 12px rgba(74,47,35,0.08);
+  --shadow-card:    0 2px 4px rgba(74,47,35,0.12), 0 12px 32px rgba(74,47,35,0.18);
+  --shadow-deep:    0 8px 24px rgba(31,26,23,0.35), 0 2px 6px rgba(31,26,23,0.22);
+  --shadow-engrave: 0 1px 0 rgba(0,0,0,0.45);
+
+  --display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --serif:   'Libre Baskerville', Georgia, serif;
+  --body:    'Lora', 'Libre Baskerville', Georgia, serif;
+  --ui:      'Montserrat', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body {
+  font-family: var(--body); font-size: 16px; line-height: 1.65;
+  color: var(--ink); background: var(--paper-warm);
+  min-height: 100vh; display: flex; flex-direction: column;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea, select { font: inherit; color: inherit; }
+::selection { background: var(--rust); color: var(--paper-light); }
+[hidden] { display: none !important; }
+
+/* ─── Paper / texture ─── */
+.paper-bg {
+  position: relative;
+  background-color: var(--paper-warm);
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(212,186,140,0.45), transparent 70%),
+    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(74,47,35,0.12), transparent 70%),
+    radial-gradient(ellipse 30% 20% at 20% 30%, rgba(184,146,74,0.10), transparent 60%),
+    radial-gradient(ellipse 20% 25% at 80% 60%, rgba(74,47,35,0.06), transparent 60%);
+  flex: 1; display: flex; flex-direction: column;
+}
+.paper-bg::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.27 0 0 0 0 0.18 0 0 0 0 0.10 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+  pointer-events: none; opacity: 0.55;
+  mix-blend-mode: multiply; z-index: 1;
+}
+.paper-bg > * { position: relative; z-index: 2; }
+
+/* ─── Top bar ─── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 32px;
+  border-bottom: 1px solid rgba(184,146,74,0.30);
+  background: rgba(243,227,193,0.55);
+  backdrop-filter: blur(4px);
+}
+.topbar-logo img { display: block; height: 44px; width: auto; }
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.topbar-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--ui); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--brown-dk);
+  padding: 8px 16px;
+  border: 1px solid rgba(140,74,47,0.30); border-radius: 4px;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+.topbar-link svg { width: 14px; height: 14px; }
+.topbar-link:hover { background: rgba(140,74,47,0.06); border-color: var(--rust); color: var(--rust); }
+.topbar-user {
+  font-family: var(--body); font-style: italic; font-size: 13px;
+  color: var(--ink-soft); margin-right: 6px;
+}
+@media (max-width: 600px) {
+  .topbar { padding: 16px 18px; }
+  .topbar-logo img { height: 36px; }
+  .topbar-link { padding: 7px 12px; font-size: 10px; letter-spacing: 0.20em; }
+  .topbar-link .topbar-link-text { display: none; }
+  .topbar-user { display: none; }
+}
+
+/* ─── Main ─── */
+main { flex: 1; padding: 64px 24px 40px; display: flex; flex-direction: column; align-items: center; }
+@media (max-width: 600px) { main { padding: 36px 16px 28px; } }
+
+/* ─── Card frame ─── */
+.card {
+  width: 100%; max-width: 760px;
+  background: var(--paper-light);
+  border: 1px solid var(--paper-edge);
+  padding: 56px 56px;
+  position: relative;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+}
+.card::before {
+  content: ''; position: absolute;
+  top: 14px; left: 14px; right: 14px; bottom: 14px;
+  border: 1px solid rgba(184,146,74,0.40);
+  pointer-events: none;
+}
+.card > * { position: relative; }
+@media (max-width: 600px) { .card { padding: 40px 24px; } }
+
+.card-wide { max-width: 880px; }
+
+/* ─── Headings ─── */
+.eyebrow {
+  display: block; text-align: center;
+  font-family: var(--ui); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.42em; text-transform: uppercase;
+  color: var(--rust); margin-bottom: 16px;
+}
+.mark { width: 100px; height: auto; margin: 0 auto 16px; display: block; opacity: 0.92; }
+h1 {
+  font-family: var(--display);
+  font-size: clamp(28px, 4.4vw, 40px);
+  font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--brown-dk);
+  text-align: center; margin-bottom: 4px;
+  line-height: 1.1;
+}
+.subtitle {
+  text-align: center;
+  font-family: var(--display); font-size: clamp(12px, 1.4vw, 14px);
+  font-weight: 500; letter-spacing: 0.32em;
+  color: var(--gold); text-transform: uppercase;
+  margin-top: 12px;
+}
+.subtitle::before, .subtitle::after { content: '—'; margin: 0 12px; opacity: 0.7; }
+
+.divider { width: 80px; height: 1px; background: var(--copper); margin: 24px auto; position: relative; }
+.divider::before, .divider::after {
+  content: ''; position: absolute; top: 50%;
+  width: 6px; height: 6px; border: 1px solid var(--copper);
+  border-radius: 50%; transform: translateY(-50%) rotate(45deg);
+}
+.divider::before { left: -10px; }
+.divider::after  { right: -10px; }
+
+.lead {
+  font-family: var(--serif); font-size: clamp(15px, 1.6vw, 17px);
+  font-style: italic; line-height: 1.55;
+  color: var(--ink-soft); text-align: center;
+  max-width: 560px; margin: 0 auto 8px;
+}
+.body-copy {
+  font-family: var(--body); font-size: 15px; line-height: 1.7;
+  color: var(--ink); text-align: center;
+  max-width: 560px; margin: 0 auto 8px;
+}
+
+/* ─── Action buttons ─── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--ui); font-weight: 600;
+  font-size: 11.5px; letter-spacing: 0.28em; text-transform: uppercase;
+  padding: 14px 28px; border-radius: 4px;
+  cursor: pointer; transition: all 0.25s ease;
+  border: none;
+}
+.btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+.btn-leather {
+  background: linear-gradient(180deg, #6b4530 0%, #4a2f23 50%, #3d2817 100%);
+  color: var(--ash-cream);
+  box-shadow: 0 1px 0 rgba(255,235,200,0.18) inset, 0 -1px 2px rgba(0,0,0,0.35) inset, 0 3px 0 #2a1c10, 0 5px 12px rgba(31,26,23,0.30);
+  text-shadow: var(--shadow-engrave);
+  border: 1px solid rgba(184,146,74,0.25);
+}
+.btn-leather:hover:not([disabled]) {
+  background: linear-gradient(180deg, #7a5238 0%, #573725 50%, #46301c 100%);
+  transform: translateY(-1px);
+}
+.btn-parchment {
+  background: var(--paper-light);
+  color: var(--brown-dk);
+  border: 1px solid var(--copper);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 4px 8px rgba(0,0,0,0.10);
+}
+.btn-parchment:hover:not([disabled]) { background: var(--paper); border-color: var(--rust); color: var(--rust); }
+.btn-block { width: 100%; }
+.btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+
+/* ─── Forms ─── */
+.form-row { margin-bottom: 16px; text-align: left; }
+.form-row.split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 480px) { .form-row.split { grid-template-columns: 1fr; } }
+label {
+  display: block; font-family: var(--ui); font-size: 10.5px;
+  font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 6px;
+}
+input[type=email], input[type=text], input[type=date], textarea {
+  width: 100%; font-family: var(--body); font-size: 15px;
+  background: var(--paper); border: 1px solid var(--paper-edge);
+  padding: 12px 14px; color: var(--ink); border-radius: 2px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+input:focus, textarea:focus { outline: none; border-color: var(--rust); background: var(--paper-light); }
+textarea { resize: vertical; min-height: 100px; }
+
+.form-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 14px; font-family: var(--body); font-size: 12.5px;
+  color: var(--ink-soft); flex-wrap: wrap; gap: 8px;
+}
+.form-foot a { color: var(--rust); border-bottom: 1px solid rgba(140,74,47,0.40); padding-bottom: 1px; }
+.form-foot a:hover { color: var(--brown-dk); border-color: var(--brown-dk); }
+
+/* ─── Choice tiles (sign in / request access) ─── */
+.choices {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-top: 32px;
+}
+@media (max-width: 560px) { .choices { grid-template-columns: 1fr; } }
+.choice {
+  background: var(--paper);
+  border: 1.5px solid var(--paper-edge);
+  border-radius: 3px;
+  padding: 28px 22px; text-align: center;
+  cursor: pointer; transition: all 0.25s ease;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.choice:hover { border-color: var(--rust); background: var(--paper-light); transform: translateY(-2px); }
+.choice-icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--rust);
+  background: rgba(140,74,47,0.08);
+  border: 1px solid rgba(140,74,47,0.18);
+  border-radius: 50%;
+}
+.choice-icon svg { width: 22px; height: 22px; }
+.choice h3 {
+  font-family: var(--display); font-size: 15px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--brown-dk);
+}
+.choice p {
+  font-family: var(--body); font-size: 13.5px;
+  color: var(--ink-soft); line-height: 1.5; margin: 0;
+}
+
+/* ─── Notices ─── */
+.notice {
+  padding: 22px 24px;
+  border-radius: 2px;
+  font-family: var(--serif); font-size: 14.5px; line-height: 1.6;
+  margin-top: 24px; text-align: left;
+}
+.notice strong {
+  display: block; font-family: var(--display); font-size: 12.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--brown-dk); margin-bottom: 6px; font-weight: 600;
+}
+.notice.info     { background: rgba(184,146,74,0.10); border-left: 3px solid var(--copper); color: var(--brown-dk); }
+.notice.success  { background: rgba(94,106,74,0.10);  border-left: 3px solid var(--moss);   color: var(--brown-dk); }
+.notice.warn     { background: rgba(184,146,74,0.16); border-left: 3px solid var(--gold);   color: var(--brown-dk); }
+.notice.error    { background: rgba(138,58,40,0.08);  border-left: 3px solid var(--crimson); color: var(--crimson); }
+.notice a { color: var(--rust); border-bottom: 1px solid var(--rust); padding-bottom: 1px; }
+.notice a:hover { color: var(--brown-dk); border-color: var(--brown-dk); }
+
+/* ─── Authenticated portal ─── */
+.portal-greet {
+  text-align: center;
+  font-family: var(--serif); font-style: italic; font-size: 16px;
+  color: var(--ink-soft); margin-top: 8px;
+}
+.portal-greet strong {
+  font-family: var(--display); font-style: normal;
+  letter-spacing: 0.06em; color: var(--brown-dk);
+  font-weight: 600;
+}
+
+.status-pill {
+  display: inline-block;
+  font-family: var(--ui); font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.24em; text-transform: uppercase;
+  padding: 6px 14px; border-radius: 999px;
+  margin-top: 14px;
+}
+.status-pill.confirmed,
+.status-pill.planning,
+.status-pill.balance_paid,
+.status-pill.event_week { background: rgba(94,106,74,0.16);  color: var(--moss);     border: 1px solid rgba(94,106,74,0.45); }
+.status-pill.balance_due,
+.status-pill.balance_overdue { background: rgba(138,58,40,0.10); color: var(--crimson); border: 1px solid rgba(138,58,40,0.40); }
+.status-pill.completed { background: rgba(74,47,35,0.10); color: var(--brown-dk); border: 1px solid rgba(74,47,35,0.30); }
+.status-pill.inquiry,
+.status-pill.quoted,
+.status-pill.provisional { background: rgba(184,146,74,0.16); color: var(--brown-dk); border: 1px solid rgba(184,146,74,0.40); }
+.status-pill.cancelled  { background: rgba(122,115,110,0.16); color: var(--weathered); border: 1px solid rgba(122,115,110,0.40); }
+
+.event-headline {
+  text-align: center;
+  margin-top: 6px;
+  font-family: var(--display); font-size: clamp(20px, 2.6vw, 26px);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--brown-dk); font-weight: 600;
+}
+.event-sub {
+  text-align: center;
+  font-family: var(--serif); font-style: italic; font-size: 15px;
+  color: var(--ink-soft); margin-top: 6px;
+}
+
+/* Section heading inside cards */
+.h-section {
+  font-family: var(--display); font-size: 14.5px;
+  font-weight: 600; letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--brown-dk); margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(184,146,74,0.30);
+  display: flex; align-items: center; gap: 10px;
+}
+.h-section svg { width: 18px; height: 18px; color: var(--rust); flex-shrink: 0; }
+
+/* Detail rows */
+.kv {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 14px 24px;
+  font-family: var(--body); font-size: 14.5px;
+}
+@media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 4px 0; } .kv > .kv-key { margin-top: 14px; } }
+.kv-key {
+  font-family: var(--ui); font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-soft); align-self: center;
+}
+.kv-val {
+  color: var(--ink); align-self: center;
+}
+.kv-val.muted { color: var(--ink-faded); font-style: italic; }
+.kv-val.money { font-family: var(--serif); font-size: 16px; }
+.kv-val.money .pos { color: var(--moss); }
+.kv-val.money .neg { color: var(--crimson); }
+
+.totals-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 16px 0; border-top: 1px solid rgba(184,146,74,0.30);
+  margin-top: 8px;
+  font-family: var(--ui); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.totals-row .totals-amount {
+  font-family: var(--display); font-size: 22px; letter-spacing: 0.04em;
+  color: var(--brown-dk); font-weight: 600;
+}
+.totals-row.outstanding .totals-amount { color: var(--crimson); }
+.totals-row.paid .totals-amount { color: var(--moss); }
+
+/* Loader */
+.loader {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 48px 0;
+}
+.loader-spin {
+  width: 32px; height: 32px;
+  border: 2px solid rgba(140,74,47,0.20);
+  border-top-color: var(--rust);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text {
+  font-family: var(--serif); font-style: italic; color: var(--ink-soft); font-size: 14px;
+}
+
+/* Footer */
+.foot {
+  text-align: center;
+  padding: 28px 24px 36px;
+  font-family: var(--ui);
+  font-size: 11px; letter-spacing: 0.18em;
+  color: var(--ink-faded);
+}
+</style>
+</head>
+
+<body>
+
+<div class="paper-bg">
+
+  <header class="topbar">
+    <a class="topbar-logo" href="/" aria-label="Flint Hall Events — Home">
+      <img src="photos/logo-dark.webp" alt="Flint Hall Events">
+    </a>
+    <div class="topbar-actions">
+      <span class="topbar-user" id="topbar-user" hidden></span>
+      <button class="topbar-link" id="topbar-signout" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="topbar-link-text">Sign out</span>
+      </button>
+      <a class="topbar-link" href="/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span class="topbar-link-text">Back to site</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== LOADING ===== -->
+    <article class="card" id="state-loading">
+      <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+      <div class="loader">
+        <div class="loader-spin"></div>
+        <div class="loader-text">Opening the portal&hellip;</div>
+      </div>
+    </article>
+
+    <!-- ===== SIGNED OUT — landing with two choices ===== -->
+    <article class="card" id="state-landing" hidden>
+      <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+      <span class="eyebrow">Booking Portal</span>
+      <h1>Welcome</h1>
+      <div class="subtitle">For couples &amp; clients of Flint Hall</div>
+      <div class="divider"></div>
+
+      <p class="lead">Your function sheet, payment status and shared documents — all in one place.</p>
+
+      <div class="choices">
+        <button class="choice" type="button" id="choice-signin">
+          <div class="choice-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+          </div>
+          <h3>Sign in</h3>
+          <p>I already have access to the portal</p>
+        </button>
+        <button class="choice" type="button" id="choice-request">
+          <div class="choice-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+          </div>
+          <h3>Request access</h3>
+          <p>I&rsquo;ve booked an event &mdash; I&rsquo;d like a portal account</p>
+        </button>
+      </div>
+
+      <p style="text-align:center; font-family:var(--body); font-size:12.5px; color:var(--ink-faded); font-style:italic; margin-top:28px;">
+        Stuck? <a href="mailto:info@flinthall.uk" style="color:var(--rust); border-bottom: 1px solid var(--rust); padding-bottom:1px;">Drop us a line</a> and we&rsquo;ll sort it.
+      </p>
+    </article>
+
+    <!-- ===== SIGN-IN — magic link ===== -->
+    <article class="card" id="state-signin" hidden>
+      <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+      <span class="eyebrow">Sign in</span>
+      <h1>Welcome back</h1>
+      <div class="divider"></div>
+      <p class="lead">We&rsquo;ll email you a one-time link to sign in &mdash; no password to remember.</p>
+
+      <form id="form-signin" style="margin-top:28px;">
+        <div class="form-row">
+          <label for="signin-email">Email address</label>
+          <input type="email" id="signin-email" required autocomplete="email" placeholder="the email you booked with">
+        </div>
+        <button type="submit" class="btn btn-leather btn-block" id="signin-submit">Send sign-in link</button>
+        <div class="form-foot">
+          <a href="#" id="signin-back">← Back</a>
+          <a href="mailto:info@flinthall.uk?subject=Booking%20portal%20access">Lost access?</a>
+        </div>
+      </form>
+
+      <p style="font-family: var(--body); font-size: 12.5px; color: var(--ink-faded); font-style: italic; text-align: center; margin-top: 18px;">
+        No password needed &mdash; the link is your sign-in. If a previous one&rsquo;s expired, just request a fresh one.
+      </p>
+
+      <div class="notice error" id="signin-err" hidden></div>
+    </article>
+
+    <!-- ===== SIGN-IN SENT ===== -->
+    <article class="card" id="state-signin-sent" hidden>
+      <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+      <span class="eyebrow">Check your inbox</span>
+      <h1>Sign-in link sent</h1>
+      <div class="divider"></div>
+      <p class="lead">We&rsquo;ve emailed a one-time sign-in link to <strong id="signin-sent-to" style="font-style:normal; color:var(--brown-dk);"></strong>.</p>
+      <p class="body-copy">Click the link in the email to come back here signed in. You can close this tab in the meantime.</p>
+      <div class="btn-row">
+        <button type="button" class="btn btn-parchment" id="signin-sent-retry">Use a different email</button>
+      </div>
+    </article>
+
+    <!-- ===== REQUEST ACCESS ===== -->
+    <article class="card" id="state-request" hidden>
+      <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+      <span class="eyebrow">Request access</span>
+      <h1>Get me on the portal</h1>
+      <div class="divider"></div>
+      <p class="lead">Drop your details below. We&rsquo;ll match you to your booking and email you when your account is live &mdash; usually the same day.</p>
+
+      <form id="form-request" style="margin-top:28px;">
+        <div class="form-row split">
+          <div>
+            <label for="req-name">Your name</label>
+            <input type="text" id="req-name" required autocomplete="name" placeholder="e.g. Kimberlee Rosen">
+          </div>
+          <div>
+            <label for="req-email">Email address</label>
+            <input type="email" id="req-email" required autocomplete="email" placeholder="the email you booked with">
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="req-event-date">Event date</label>
+          <input type="date" id="req-event-date">
+        </div>
+        <div class="form-row">
+          <label for="req-message">Anything we should know? <span style="text-transform:none; letter-spacing:0; font-style:italic; color:var(--ink-faded); font-weight:400;">(optional)</span></label>
+          <textarea id="req-message" maxlength="2000" placeholder="Booking reference, partner&rsquo;s name, anything that helps us match you up…"></textarea>
+        </div>
+        <button type="submit" class="btn btn-leather btn-block" id="req-submit">Send request</button>
+        <div class="form-foot">
+          <a href="#" id="request-back">← Back</a>
+          <a href="mailto:info@flinthall.uk?subject=Booking%20portal%20access">Or email us</a>
+        </div>
+      </form>
+      <div class="notice error" id="request-err" hidden></div>
+    </article>
+
+    <!-- ===== REQUEST SENT ===== -->
+    <article class="card" id="state-request-sent" hidden>
+      <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+      <span class="eyebrow">Got it</span>
+      <h1>Request received</h1>
+      <div class="divider"></div>
+      <p class="lead">Thanks &mdash; we&rsquo;ve passed your request along. Someone on the team will match you to your booking and email you when your account is ready.</p>
+      <div class="notice info">
+        <strong>What happens next</strong>
+        We aim to come back to you the same day during office hours. If we need anything else, we&rsquo;ll be in touch on the email you gave us.
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-parchment" href="/">Back to the site</a>
+      </div>
+    </article>
+
+    <!-- ===== SIGNED IN, BUT NOT YET APPROVED ===== -->
+    <article class="card" id="state-pending" hidden>
+      <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+      <span class="eyebrow">Almost there</span>
+      <h1 id="pending-title">Hold tight</h1>
+      <div class="divider"></div>
+      <p class="lead" id="pending-lead">Your account isn&rsquo;t active yet.</p>
+
+      <div class="notice info" id="pending-pending-msg">
+        <strong>Request under review</strong>
+        Your request has come through and is sitting on the team&rsquo;s desk. We&rsquo;ll email you as soon as it&rsquo;s approved.
+      </div>
+
+      <div class="notice warn" id="pending-no-request" hidden>
+        <strong>No request on file</strong>
+        We can&rsquo;t see a portal account for this email. If you&rsquo;ve booked an event with us, send a request and we&rsquo;ll get you set up.
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-leather" id="pending-request-btn" hidden>Request access</button>
+        <button type="button" class="btn btn-parchment" id="pending-signout">Sign out</button>
+      </div>
+    </article>
+
+    <!-- ===== TERMS & CONDITIONS GATE ===== -->
+    <article class="card card-wide" id="state-terms" hidden>
+      <span class="eyebrow">Terms &amp; Conditions</span>
+      <h1>One last thing</h1>
+      <div class="subtitle">Please read &amp; sign</div>
+      <div class="divider"></div>
+      <p class="lead">Before we open the rest of your portal, take a moment with the venue agreement below. Once you&rsquo;re happy, sign at the bottom and we&rsquo;ll save a record on your booking.</p>
+
+      <div id="terms-already-signed" class="notice success" hidden style="margin-top:24px;">
+        <strong>Already signed</strong>
+        Thanks &mdash; we&rsquo;ve got your signature on file.
+      </div>
+
+      <div id="terms-doc-wrap" style="margin-top: 28px; max-height: 60vh; overflow-y: auto; background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 3px; padding: 28px 32px; font-family: 'Lora', Georgia, serif; font-size: 14px; line-height: 1.65; color: var(--ink); white-space: pre-wrap;" id="terms-doc"></div>
+
+      <form id="form-terms-sign" style="margin-top: 28px;">
+        <div class="form-row">
+          <label for="terms-name">Type your full name to sign</label>
+          <input type="text" id="terms-name" autocomplete="name" required placeholder="e.g. Kimberlee Rosen">
+        </div>
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-family:var(--body); font-size:13.5px; letter-spacing:0; text-transform:none; color:var(--ink); font-weight:400; line-height:1.55;">
+          <input type="checkbox" id="terms-agree" required style="margin-top:4px;">
+          <span>I confirm I have read, understood and agree to the terms and conditions above. I understand my typed name acts as a legal signature.</span>
+        </label>
+        <button type="submit" class="btn btn-leather btn-block" id="terms-submit" style="margin-top: 18px;">I agree &mdash; sign &amp; continue</button>
+        <p style="font-family: var(--body); font-size: 12.5px; color: var(--ink-faded); font-style: italic; text-align: center; margin-top: 12px;">A copy of the signed terms will be saved alongside your booking.</p>
+      </form>
+      <div class="notice error" id="terms-err" hidden></div>
+    </article>
+
+    <!-- ===== APPROVED — DASHBOARD (Phase 1 shell) ===== -->
+    <div id="state-approved" hidden>
+      <article class="card card-wide">
+        <span class="eyebrow" id="dash-status-eyebrow">Booking</span>
+        <p class="portal-greet" id="dash-greet">Hello.</p>
+        <div id="dash-status-pill-wrap" style="text-align:center;">
+          <span class="status-pill" id="dash-status-pill"></span>
+        </div>
+        <p class="event-headline" id="dash-event-headline">&mdash;</p>
+        <p class="event-sub" id="dash-event-sub"></p>
+        <div class="divider"></div>
+
+        <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Event details
+        </h2>
+        <div class="kv" id="dash-event-kv"></div>
+      </article>
+
+      <article class="card card-wide">
+        <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="14" x2="10" y2="14"/></svg>
+          Payments
+        </h2>
+        <div class="kv" id="dash-payments-kv"></div>
+        <div class="totals-row paid" id="dash-paid-row" hidden>
+          <span>Paid to date</span>
+          <span class="totals-amount" id="dash-paid-amount">£0</span>
+        </div>
+        <div class="totals-row outstanding" id="dash-outstanding-row" hidden>
+          <span>Outstanding</span>
+          <span class="totals-amount" id="dash-outstanding-amount">£0</span>
+        </div>
+        <p class="lead" style="font-size:12.5px; margin-top:18px; text-align:left;">All payments by BACS unless agreed otherwise. Your invoices and receipts will appear here once the document downloads section is live.</p>
+      </article>
+
+      <article class="card card-wide">
+        <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+          Function sheet
+        </h2>
+        <div id="dash-fs-empty" class="notice info" hidden>
+          <strong>Not started yet</strong>
+          Your function sheet will appear here once we start fleshing it out together. We usually kick this off four to six weeks before your event.
+        </div>
+        <div id="dash-fs-content" hidden></div>
+      </article>
+
+      <article class="card card-wide">
+        <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Communications &amp; documents
+        </h2>
+        <div class="notice info">
+          <strong>Coming next</strong>
+          Your communications history and document downloads will land here in the next iteration. In the meantime, drop us a line at <a href="mailto:info@flinthall.uk">info@flinthall.uk</a> for anything you need.
+        </div>
+      </article>
+    </div>
+
+    <p class="foot">Flint Hall Events &middot; Suffolk</p>
+  </main>
+
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+
+const SUPABASE_URL = 'https://dgrbazpcytwusnsvoaou.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_C5jAgpcN560Eg1zRqFU62g_Es8zRT_t';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $  = id => document.getElementById(id);
+const STATES = ['loading','landing','signin','signin-sent','request','request-sent','pending','terms','approved'];
+function show(state) {
+  STATES.forEach(s => {
+    const el = $('state-' + s);
+    if (el) el.hidden = (s !== state);
+  });
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function showError(el, msg) {
+  el.innerHTML = `<strong>Couldn&rsquo;t do that</strong>${msg}`;
+  el.hidden = false;
+}
+function clearError(el) { el.hidden = true; el.innerHTML = ''; }
+
+// ─── Landing choices ───
+$('choice-signin').addEventListener('click',  () => { clearError($('signin-err'));  show('signin'); });
+$('choice-request').addEventListener('click', () => { clearError($('request-err')); show('request'); });
+$('signin-back').addEventListener('click',  e => { e.preventDefault(); show('landing'); });
+$('request-back').addEventListener('click', e => { e.preventDefault(); show('landing'); });
+$('signin-sent-retry').addEventListener('click', () => { show('signin'); });
+
+// ─── Sign-in (magic link) ───
+$('form-signin').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = $('signin-err');
+  clearError(errEl);
+  const email = $('signin-email').value.trim().toLowerCase();
+  const btn = $('signin-submit');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.origin + '/booking' }
+  });
+
+  btn.disabled = false; btn.textContent = 'Send sign-in link';
+  if (error) {
+    showError(errEl, escapeHtml(error.message || 'Could not send the link. Try again or email info@flinthall.uk.'));
+    return;
+  }
+  $('signin-sent-to').textContent = email;
+  show('signin-sent');
+});
+
+// ─── Request access ───
+$('form-request').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = $('request-err');
+  clearError(errEl);
+  const name      = $('req-name').value.trim();
+  const email     = $('req-email').value.trim().toLowerCase();
+  const eventDate = $('req-event-date').value || null;
+  const message   = $('req-message').value.trim() || null;
+  const btn = $('req-submit');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  const { data: requestId, error } = await supabase.rpc('submit_client_account_request', {
+    p_email: email, p_name: name, p_event_date: eventDate, p_message: message
+  });
+
+  btn.disabled = false; btn.textContent = 'Send request';
+  if (error) {
+    let msg = error.message || 'Could not send the request. Try again or email info@flinthall.uk.';
+    if (/invalid_email/.test(msg))      msg = 'That email doesn&rsquo;t look right.';
+    else if (/invalid_name/.test(msg))  msg = 'Please give us a name.';
+    else if (/too_many_pending/.test(msg)) msg = 'We&rsquo;ve already got requests from this email — sit tight, we&rsquo;ll be in touch.';
+    showError(errEl, msg);
+    return;
+  }
+
+  // Fire-and-forget staff notification. The function no-ops gracefully
+  // if RESEND_API_KEY isn't configured yet, so this never blocks the user.
+  if (requestId) {
+    supabase.functions.invoke('notify-new-request', { body: { request_id: requestId } })
+      .catch(err => console.warn('Staff notification skipped:', err.message || err));
+  }
+
+  show('request-sent');
+});
+
+// ─── Pending state buttons ───
+$('pending-signout').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  show('landing');
+});
+$('pending-request-btn').addEventListener('click', () => show('request'));
+
+// ─── Top-bar sign-out ───
+$('topbar-signout').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  $('topbar-signout').hidden = true;
+  $('topbar-user').hidden = true;
+  show('landing');
+});
+
+// ─── Render the authenticated dashboard ───
+function fmtDate(s) {
+  if (!s) return null;
+  try {
+    const d = new Date(s + (s.length === 10 ? 'T00:00:00' : ''));
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  } catch { return s; }
+}
+function fmtDateShort(s) {
+  if (!s) return null;
+  try {
+    const d = new Date(s + (s.length === 10 ? 'T00:00:00' : ''));
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return s; }
+}
+function fmtMoney(n) {
+  if (n === null || n === undefined || n === '' || isNaN(Number(n))) return null;
+  return '£' + Number(n).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function titleCase(s) {
+  return String(s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function renderKv(target, rows) {
+  target.innerHTML = '';
+  rows.forEach(({ key, value, muted }) => {
+    if (value === null || value === undefined || value === '') return;
+    const k = document.createElement('div'); k.className = 'kv-key'; k.textContent = key;
+    const v = document.createElement('div'); v.className = 'kv-val' + (muted ? ' muted' : ''); v.innerHTML = value;
+    target.appendChild(k); target.appendChild(v);
+  });
+}
+
+function renderDashboard(b) {
+  const c = b.client || {};
+  const e = b.event  || {};
+  const f = b.financial || {};
+  const ct = b.contract || {};
+
+  $('topbar-user').textContent = `Signed in as ${c.email || ''}`;
+  $('topbar-user').hidden = false;
+  $('topbar-signout').hidden = false;
+
+  // Greeting + status pill
+  const name = [c.firstName, b.partnerName].filter(Boolean).join(' & ') || c.firstName || 'there';
+  $('dash-greet').innerHTML = `Hello, <strong>${escapeHtml(name)}</strong>`;
+  const status = b.status || 'inquiry';
+  const pill = $('dash-status-pill');
+  pill.className = 'status-pill ' + status;
+  pill.textContent = titleCase(status);
+
+  // Event headline
+  const headline = [e.type ? titleCase(e.type) : null, e.package ? `· ${e.package}` : null].filter(Boolean).join(' ');
+  $('dash-event-headline').textContent = headline || 'Your event at Flint Hall';
+  $('dash-event-sub').textContent = fmtDate(e.date) || '';
+
+  // Event details kv
+  const guestsText = (() => {
+    const ex = e.expectedGuests, cer = e.ceremonyGuests, ev = e.eveningGuests;
+    if (cer || ev) return [cer ? `${cer} ceremony` : null, ev ? `${ev} evening` : null].filter(Boolean).join(' · ');
+    return ex ? `${ex} guests` : null;
+  })();
+  renderKv($('dash-event-kv'), [
+    { key: 'Date',         value: fmtDate(e.date) },
+    { key: 'Time',         value: [e.startTime, e.endTime].filter(Boolean).join(' – ') },
+    { key: 'Guests',       value: guestsText },
+    { key: 'Package',      value: e.package },
+    { key: 'Catering',     value: e.cateringType },
+    { key: 'Bar',          value: e.bar },
+    { key: 'Accommodation',value: e.accommodation },
+    { key: 'Check-in',     value: fmtDate(e.checkInDate) },
+    { key: 'Check-out',    value: fmtDate(e.checkOutDate) },
+    { key: 'Notes',        value: escapeHtml(e.notes || '') }
+  ]);
+
+  // Payments kv
+  const total      = Number(f.totalCost ?? 0);
+  const dep        = Number(f.depositAmount ?? 0);
+  const bal        = Number(f.balanceAmount ?? 0);
+  const cTot       = Number(f.cateringCost ?? 0);
+  const cDep       = Number(f.cateringDepositAmount ?? 0);
+  const cBal       = Number(f.cateringBalanceAmount ?? 0);
+  const dam        = Number(f.damageDeposit ?? 0);
+
+  const paid =
+    (f.depositPaidDate         ? dep  : 0) +
+    (f.balancePaidDate         ? bal  : 0) +
+    (f.cateringDepositPaidDate ? cDep : 0) +
+    (f.cateringBalancePaidDate ? cBal : 0) +
+    (f.damageDepositPaidDate   ? dam  : 0);
+  const outstanding =
+    (f.depositPaidDate         ? 0 : dep)  +
+    (f.balancePaidDate         ? 0 : bal)  +
+    (f.cateringDepositPaidDate ? 0 : cDep) +
+    (f.cateringBalancePaidDate ? 0 : cBal);
+
+  renderKv($('dash-payments-kv'), [
+    { key: 'Total cost',           value: fmtMoney(total + cTot) },
+    { key: 'Venue deposit',        value: paymentLine(dep,  f.depositPaidDate) },
+    { key: 'Venue balance',        value: paymentLine(bal,  f.balancePaidDate) },
+    { key: 'Catering deposit',     value: paymentLine(cDep, f.cateringDepositPaidDate) },
+    { key: 'Catering balance',     value: paymentLine(cBal, f.cateringBalancePaidDate) },
+    { key: 'Damage deposit',       value: damageLine(dam, f.damageDepositPaidDate, f.damageDepositReturnedDate) },
+    { key: 'Late fees',            value: f.lateFeeAccrued && Number(f.lateFeeAccrued) > 0 ? `<span style="color:var(--crimson)">${fmtMoney(f.lateFeeAccrued)}</span>` : null }
+  ]);
+  if (paid > 0)        { $('dash-paid-row').hidden = false;        $('dash-paid-amount').textContent = fmtMoney(paid); }
+  if (outstanding > 0) { $('dash-outstanding-row').hidden = false; $('dash-outstanding-amount').textContent = fmtMoney(outstanding); }
+
+  // Function sheet
+  const fs = b.functionSheet;
+  const fsHasContent = fs && (
+    (Array.isArray(fs.days) && fs.days.length > 0) ||
+    (fs.catering && fs.catering.trim()) ||
+    (fs.notes && fs.notes.trim())
+  );
+  if (!fsHasContent) {
+    $('dash-fs-empty').hidden = false;
+  } else {
+    $('dash-fs-content').hidden = false;
+    $('dash-fs-content').innerHTML = renderFunctionSheet(fs);
+  }
+}
+
+function paymentLine(amount, paidDate) {
+  if (!amount) return null;
+  const money = fmtMoney(amount);
+  if (paidDate) return `<span class="pos">${money}</span> &middot; <span style="font-family:var(--serif); font-style:italic; color:var(--moss); font-size:13px;">paid ${escapeHtml(fmtDateShort(paidDate))}</span>`;
+  return `${money} &middot; <span style="font-family:var(--serif); font-style:italic; color:var(--ink-faded); font-size:13px;">due</span>`;
+}
+function damageLine(amount, paidDate, returnedDate) {
+  if (!amount) return null;
+  const money = fmtMoney(amount);
+  if (returnedDate) return `${money} &middot; <span style="font-family:var(--serif); font-style:italic; color:var(--moss); font-size:13px;">returned ${escapeHtml(fmtDateShort(returnedDate))}</span>`;
+  if (paidDate) return `<span class="pos">${money}</span> &middot; <span style="font-family:var(--serif); font-style:italic; color:var(--moss); font-size:13px;">paid ${escapeHtml(fmtDateShort(paidDate))}</span>`;
+  return `${money} &middot; <span style="font-family:var(--serif); font-style:italic; color:var(--ink-faded); font-size:13px;">refundable, due before event</span>`;
+}
+
+function renderFunctionSheet(fs) {
+  const parts = [];
+  if (Array.isArray(fs.days) && fs.days.length) {
+    fs.days.forEach((day, i) => {
+      parts.push(`<div style="margin-bottom:24px;">`);
+      const label = day.label || `Day ${i+1}`;
+      const dateLine = day.date ? ` &middot; <span style="font-family:var(--serif); font-style:italic; color:var(--ink-soft); font-weight:400; letter-spacing:0;">${escapeHtml(fmtDate(day.date) || day.date)}</span>` : '';
+      parts.push(`<h3 style="font-family:var(--display); font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin-bottom:12px;">${escapeHtml(label)}${dateLine}</h3>`);
+      if (Array.isArray(day.items) && day.items.length) {
+        parts.push('<ul style="list-style:none; margin:0; padding:0;">');
+        day.items.forEach(it => {
+          const time  = it.time ? `<span style="font-family:var(--ui); font-size:11px; letter-spacing:0.18em; color:var(--rust); min-width:64px; display:inline-block;">${escapeHtml(it.time)}</span>` : '<span style="min-width:64px; display:inline-block;"></span>';
+          const what  = it.what  ? `<span style="font-family:var(--body); font-size:14.5px; color:var(--ink);">${escapeHtml(it.what)}</span>` : '';
+          const note  = it.note  ? `<div style="font-family:var(--serif); font-style:italic; font-size:13px; color:var(--ink-soft); margin-left:64px;">${escapeHtml(it.note)}</div>` : '';
+          parts.push(`<li style="padding:8px 0; border-bottom:1px dotted rgba(74,47,35,0.18); display:flex; gap:14px; align-items:baseline; flex-wrap:wrap;">${time}${what}</li>`);
+          if (note) parts.push(`<li style="padding:0 0 8px 0; border-bottom:1px dotted rgba(74,47,35,0.18);">${note}</li>`);
+        });
+        parts.push('</ul>');
+      }
+      parts.push('</div>');
+    });
+  }
+  if (fs.catering && fs.catering.trim()) {
+    parts.push(`<div style="margin-top:18px;"><h3 style="font-family:var(--display); font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin-bottom:8px;">Catering</h3><div style="font-family:var(--body); font-size:14.5px; color:var(--ink); line-height:1.65; white-space:pre-wrap;">${escapeHtml(fs.catering)}</div></div>`);
+  }
+  if (fs.notes && fs.notes.trim()) {
+    parts.push(`<div style="margin-top:18px;"><h3 style="font-family:var(--display); font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin-bottom:8px;">Notes</h3><div style="font-family:var(--body); font-size:14.5px; color:var(--ink); line-height:1.65; white-space:pre-wrap;">${escapeHtml(fs.notes)}</div></div>`);
+  }
+  return parts.join('');
+}
+
+// ─── State machine on session change ───
+async function onSession(session) {
+  if (!session) {
+    $('topbar-signout').hidden = true;
+    $('topbar-user').hidden = true;
+    show('landing');
+    return;
+  }
+
+  show('loading');
+  $('topbar-user').textContent = `Signed in as ${session.user.email}`;
+  $('topbar-user').hidden = false;
+  $('topbar-signout').hidden = false;
+
+  // Check whether this user is approved.
+  const { data: status, error: statusErr } = await supabase.rpc('my_portal_status');
+  if (statusErr) {
+    console.warn('portal status error', statusErr);
+    show('pending');
+    $('pending-title').textContent = 'Something went wrong';
+    $('pending-lead').textContent  = 'We hit a snag fetching your account. Try again in a moment, or email info@flinthall.uk.';
+    $('pending-pending-msg').hidden = true;
+    return;
+  }
+
+  if (status?.isTeamMember) {
+    // Staff signed in here by accident — point them at ops.
+    show('pending');
+    $('pending-title').textContent = 'You&rsquo;re on the team';
+    $('pending-lead').textContent  = 'This portal is for clients. Head to the operations system instead.';
+    $('pending-pending-msg').innerHTML = '<strong>Operations</strong>Open <a href="/ops">the ops tool</a> to manage bookings.';
+    $('pending-no-request').hidden = true;
+    $('pending-request-btn').hidden = true;
+    return;
+  }
+
+  if (status?.approved) {
+    const { data: booking, error: bErr } = await supabase.rpc('get_my_booking');
+    if (bErr || !booking) {
+      console.warn('get_my_booking error', bErr);
+      show('pending');
+      $('pending-title').textContent = 'Almost there';
+      $('pending-lead').textContent  = 'We couldn&rsquo;t load your booking. Try again or email info@flinthall.uk.';
+      return;
+    }
+
+    // T&Cs gate — render the agreement if it hasn't been signed in the portal yet.
+    if (!booking?.contract?.signedInPortal) {
+      await loadAndShowTerms();
+      return;
+    }
+
+    renderDashboard(booking);
+    show('approved');
+    return;
+  }
+
+  // Signed in but not approved
+  show('pending');
+  if (status?.pendingRequest) {
+    $('pending-title').textContent = 'Hold tight';
+    $('pending-lead').textContent  = 'Your account isn&rsquo;t active yet.';
+    $('pending-pending-msg').hidden = false;
+    $('pending-no-request').hidden = true;
+    $('pending-request-btn').hidden = true;
+  } else {
+    $('pending-title').textContent = 'Not on the list yet';
+    $('pending-lead').textContent  = 'We don&rsquo;t see a portal account for this email.';
+    $('pending-pending-msg').hidden = true;
+    $('pending-no-request').hidden = false;
+    $('pending-request-btn').hidden = false;
+  }
+}
+
+// ─── T&Cs gate ───
+async function loadAndShowTerms() {
+  show('terms');
+  $('terms-doc').textContent = 'Loading your terms…';
+  $('terms-already-signed').hidden = true;
+  clearError($('terms-err'));
+
+  const { data: terms, error } = await supabase.rpc('get_my_terms');
+  if (error || !terms) {
+    $('terms-doc').textContent = 'We couldn’t load the terms right now. Please refresh, or email info@flinthall.uk if it persists.';
+    return;
+  }
+  $('terms-doc').textContent = terms.rendered || '(no terms configured yet)';
+  if (terms.signedAt) {
+    $('terms-already-signed').hidden = false;
+    $('form-terms-sign').hidden = true;
+  } else {
+    $('form-terms-sign').hidden = false;
+  }
+}
+
+$('form-terms-sign').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = $('terms-err');
+  clearError(errEl);
+  const name  = $('terms-name').value.trim();
+  const agree = $('terms-agree').checked;
+  if (!agree)      { showError(errEl, 'Please tick the box to confirm.'); return; }
+  if (name.length < 2) { showError(errEl, 'Please type your full name.'); return; }
+
+  const btn = $('terms-submit');
+  btn.disabled = true; btn.textContent = 'Signing…';
+
+  const { error } = await supabase.rpc('sign_my_terms', {
+    p_typed_name: name,
+    p_user_agent: navigator.userAgent || ''
+  });
+
+  btn.disabled = false; btn.textContent = 'I agree — sign & continue';
+  if (error) {
+    let msg = error.message || 'We couldn’t save your signature. Try again or email info@flinthall.uk.';
+    if (/invalid_name/.test(msg))            msg = 'Please type your full name.';
+    else if (/terms_not_configured/.test(msg)) msg = 'Terms aren’t configured yet — please email info@flinthall.uk.';
+    else if (/booking_not_found/.test(msg))  msg = 'We couldn’t find your booking. Email info@flinthall.uk.';
+    showError(errEl, msg);
+    return;
+  }
+
+  // Re-fetch session-derived state so the dashboard renders.
+  const { data: { session } } = await supabase.auth.getSession();
+  await onSession(session);
+});
+
+// ─── Boot ───
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession();
+  await onSession(session);
+}
+supabase.auth.onAuthStateChange((event, session) => {
+  // Re-evaluate state when the magic link returns the user signed in.
+  onSession(session);
+});
+init();
+</script>
+
+</body>
+</html>
