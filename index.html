@@ -326,7 +326,8 @@ p:last-child { margin-bottom: 0; }
 .stays { padding: 100px 0; }
 .stays-head { text-align: center; max-width: 760px; margin: 0 auto 64px; }
 .stays-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
-@media (max-width: 900px) { .stays-grid { grid-template-columns: 1fr; } }
+.stays-grid.stays-grid-single { grid-template-columns: minmax(0, 520px); justify-content: center; }
+@media (max-width: 900px) { .stays-grid { grid-template-columns: 1fr; } .stays-grid.stays-grid-single { grid-template-columns: 1fr; } }
 .stay-card { background: var(--paper-light); border: 1px solid var(--paper-edge); overflow: hidden; box-shadow: var(--shadow-paper); transition: all 0.3s ease; }
 .stay-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
 .stay-img { position: relative; aspect-ratio: 4/3; overflow: hidden; background: var(--leather); }
@@ -535,7 +536,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
     </div>
     <p class="hero-tagline fade-up d2">A hidden treasure in the heart of Suffolk</p>
     <p class="hero-pitch fade-up d3">
-      Wood-fired pizzas. Hog roast under canvas. Fires that go past midnight. Shepherd&rsquo;s huts, bell tents and a barn that holds the dancing &mdash; for weddings, corporate retreats, proms, team building days, birthdays, mini festivals and celebrations.
+      Wood-fired pizzas. Hog roast under canvas. Fires that go past midnight. Bell tents in the meadow and a barn that holds the dancing &mdash; for weddings, corporate retreats, proms, team building days, birthdays, mini festivals and celebrations.
     </p>
     <div class="hero-ctas fade-up d4">
       <a href="#what-we-do" class="btn btn-leather">Our Venue</a>
@@ -632,7 +633,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
 
       <div class="welcome-body">
         <p class="has-dropcap">Flint Hall is a working countryside venue, not a polished wedding factory. There&rsquo;s a barn that takes a DJ at full tilt and an open-fronted Ranch where the bar lives. There&rsquo;s a wood-fired pizza oven we&rsquo;ve never lent to anyone, a meadow that holds the ceremony, and a fire pit that holds the conversation long after dinner&rsquo;s gone.</p>
-        <p>For weddings, corporate retreats, proms, team building days, birthdays, mini festivals and celebrations, we offer the whole place &mdash; barn, ranch, meadow, padel court, accommodation field &mdash; with on-site catering, beds for up to twelve, and the kind of low-key hospitality that makes a long day feel short.</p>
+        <p>For weddings, corporate retreats, proms, team building days, birthdays, mini festivals and celebrations, we offer the whole place &mdash; barn, ranch, meadow, padel court, accommodation field &mdash; with on-site catering, canvas in the meadow, and the kind of low-key hospitality that makes a long day feel short.</p>
       </div>
     </div>
   </div>
@@ -683,7 +684,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
         </svg>
         <h3>Weddings</h3>
         <p class="offering-sub">your weekend, the whole place</p>
-        <p>Outdoor ceremony in the meadow, indoor in the barn, or somewhere between. Hog roast or stone-baked pizzas. Bell tents, shepherd&rsquo;s huts and the Tiny House for the wedding party so the day stretches past midnight and into breakfast.</p>
+        <p>Outdoor ceremony in the meadow, indoor in the barn, or somewhere between. Hog roast or stone-baked pizzas. Bell tents in the meadow for the wedding party so the day stretches past midnight and into breakfast.</p>
         <div class="approved-row">
           <img src="photos/approved-badge.jpg" alt="Approved Venue — Suffolk Registrars">
           <div class="approved-text">
@@ -774,7 +775,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
       <div class="place-content">
         <h3>What you get with the run of the place</h3>
         <p class="lead">Whole-site exclusivity. Nobody else booked, nobody else around. The whole 17 acres are yours for as long as you&rsquo;ve booked them.</p>
-        <p>From the wedding party getting ready in the Tiny House to the last person sat by the fire at midnight &mdash; this is your patch of Suffolk for the duration.</p>
+        <p>From the first cup of coffee at sunrise to the last person sat by the fire at midnight &mdash; this is your patch of Suffolk for the duration.</p>
         <ul class="place-list">
           <li>The Barn (ceremonies &amp; dancing)</li>
           <li>The Ranch &amp; bar</li>
@@ -785,7 +786,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
           <li>25 picnic benches</li>
           <li>150 chairs</li>
           <li>Car park (adjacent field)</li>
-          <li>Accommodation up to 12</li>
+          <li>Bell tents in the meadow</li>
           <li>Space for tents &amp; campervans</li>
           <li>The fire pits, the meadow, the lot</li>
         </ul>
@@ -834,7 +835,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
           <path d="M 12 56 L 52 56" stroke-linecap="round"/>
         </svg>
         <h4>Beds in the meadow</h4>
-        <p>Bell tents, shepherd&rsquo;s huts and the Tiny House &mdash; beds for the people who love you most.</p>
+        <p>Bell tents pitched between the trees &mdash; beds for the people who love you most.</p>
       </div>
       <div class="atmos-card">
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -862,40 +863,18 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
         <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
         <span class="line"></span>
       </div>
-      <p class="lead">Three kinds of bed across the field. Beds for up to twelve, plus space for tents and campervans.</p>
+      <p class="lead">Canvas in the meadow for the people who love you most &mdash; plus space for tents and campervans on the accommodation field.</p>
     </div>
 
-    <div class="stays-grid">
+    <div class="stays-grid stays-grid-single">
       <article class="stay-card">
         <div class="stay-img">
           <img src="photos/stay-bell-tent.jpg" alt="Bell tent at Flint Hall lit at night">
         </div>
         <div class="stay-body">
-          <h3>Bell Tent</h3>
-          <p class="stay-meta">Sleeps 4 · canvas, sheepskins, low light</p>
-          <p>The classic canvas. Place it in the field for proximity to the barn, or back near the trees for privacy. Comes with bedding, towels, toiletries.</p>
-        </div>
-      </article>
-
-      <article class="stay-card">
-        <div class="stay-img">
-          <img src="photos/stay-shepherd-hut.jpg" alt="Shepherd's Hut at Flint Hall — sage green with arched roof, surrounded by daisies">
-        </div>
-        <div class="stay-body">
-          <h3>Shepherd&rsquo;s Hut</h3>
-          <p class="stay-meta">Sleeps 2 · insulated, romantic, quiet</p>
-          <p>Snug, well-built, far enough from the dance-floor to sleep through it. The romantic option for two. Heated, with proper bedding.</p>
-        </div>
-      </article>
-
-      <article class="stay-card">
-        <div class="stay-img">
-          <img src="photos/stay-tiny-house.jpg" alt="Tiny House at Flint Hall — timber-clad with deck, lit at dusk">
-        </div>
-        <div class="stay-body">
-          <h3>Tiny House</h3>
-          <p class="stay-meta">Sleeps 4 · architect-pretty, lit up at night</p>
-          <p>Where the bridal party gets ready. Where the management retreat sleeps. The most photographed unit on site.</p>
+          <h3>Bell Tents</h3>
+          <p class="stay-meta">canvas, sheepskins, low light</p>
+          <p>The classic canvas. Place them in the field for proximity to the barn, or back near the trees for privacy. Comes with bedding, towels, toiletries.</p>
         </div>
       </article>
     </div>
