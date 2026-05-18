@@ -4105,6 +4105,9 @@ const App = {
     if (fs.menu.allergies == null && fs.menu.dietary) fs.menu.allergies = fs.menu.dietary;
     if (fs.menu.extras == null && fs.catering) fs.menu.extras = fs.catering;
 
+    // Breakfast — the morning after, for overnight stays.
+    fs.breakfast = fs.breakfast || {};
+
     if (fs.notes == null) fs.notes = '';
     return fs;
   },
@@ -4168,6 +4171,30 @@ const App = {
       </div>
 
       <div class="card mt-3">
+        <div class="card-header"><div class="card-title">Breakfast</div></div>
+        <div class="card-body">
+          <label style="display:flex; align-items:center; gap:10px; margin-bottom:14px; font-family:var(--font-ui); font-size:12.5px; font-weight:600; color:var(--brown-700); cursor:pointer;">
+            <input type="checkbox" data-fs="breakfast" data-k="needed" ${fs.breakfast.needed ? 'checked' : ''}>
+            Breakfast needed the morning after
+          </label>
+          <div class="form-grid cols-2">
+            <div class="field">
+              <label>Time</label>
+              <input type="text" data-fs="breakfast" data-k="time" value="${this.esc(fs.breakfast.time || '')}" placeholder="e.g. 9am">
+            </div>
+            <div class="field">
+              <label>Covers</label>
+              <input type="text" data-fs="breakfast" data-k="covers" value="${this.esc(fs.breakfast.covers || '')}" placeholder="e.g. 12">
+            </div>
+            <div class="field full">
+              <label>What's served</label>
+              <textarea data-fs="breakfast" data-k="menu" rows="2" placeholder="e.g. bacon rolls, pastries, fruit, tea &amp; coffee">${this.esc(fs.breakfast.menu || '')}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
         <div class="card-header">
           <div class="card-title">Suppliers</div>
           <button class="btn btn-secondary btn-sm" onclick="App.fsSupAdd('${b.id}')">+ Add supplier</button>
@@ -4193,23 +4220,29 @@ const App = {
   bindFunctionSheet(b) {
     const fs = this.fsEnsure(b);
 
-    // Field edits across running order, suppliers and menu
+    // Field edits across running order, suppliers, menu and breakfast
     const handler = (e) => {
       const t = e.target;
       const section = t.dataset.fs, key = t.dataset.k;
       if (!section || !key) return;
+      const val = (t.type === 'checkbox') ? t.checked : t.value;
       if (section === 'ro') {
         const i = Number(t.dataset.i);
-        if (fs.runningOrder[i]) fs.runningOrder[i][key] = t.value;
+        if (fs.runningOrder[i]) fs.runningOrder[i][key] = val;
       } else if (section === 'sup') {
         const i = Number(t.dataset.i);
-        if (fs.suppliers[i]) fs.suppliers[i][key] = t.value;
+        if (fs.suppliers[i]) fs.suppliers[i][key] = val;
       } else if (section === 'menu') {
-        fs.menu[key] = t.value;
+        fs.menu[key] = val;
+      } else if (section === 'breakfast') {
+        fs.breakfast = fs.breakfast || {};
+        fs.breakfast[key] = val;
       }
       this.save();
     };
-    document.querySelectorAll('[data-fs]').forEach(el => el.addEventListener('blur', handler));
+    document.querySelectorAll('[data-fs]').forEach(el => {
+      el.addEventListener(el.type === 'checkbox' ? 'change' : 'blur', handler);
+    });
 
     const notes = document.getElementById('fs-notes');
     if (notes) notes.addEventListener('blur', () => { fs.notes = notes.value; this.save(); });
@@ -4333,6 +4366,28 @@ const App = {
         </tbody>
       </table>` : '';
 
+    // Breakfast — if needed or any detail filled
+    const bk = fs.breakfast || {};
+    const bkFilled = bk.needed || (bk.time || '').trim() || (bk.covers || '').trim() || (bk.menu || '').trim();
+    const bkHtml = bkFilled ? `
+      <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #d3c6ad;">
+        <tbody>
+          ${headCell('Breakfast')}
+          ${(bk.time || bk.covers) ? `
+            <tr style="background:#faf6ec;">
+              <td style="width:160px; padding: 9px 14px; font-weight:700; border-bottom: 1px solid #ece4d3; vertical-align: top; font-family: Montserrat, sans-serif; font-size: 12px;">When</td>
+              <td style="padding: 9px 14px; border-bottom: 1px solid #ece4d3; font-family: 'Lora', serif; font-size: 12px;">${this.esc(bk.time || '')}${bk.covers ? ` &middot; ${this.esc(bk.covers)} covers` : ''}</td>
+            </tr>` : ''}
+          ${(bk.menu || '').trim() ? `
+            <tr style="background:#faf6ec;">
+              <td style="width:160px; padding: 9px 14px; font-weight:700; border-bottom: 1px solid #ece4d3; vertical-align: top; font-family: Montserrat, sans-serif; font-size: 12px;">Served</td>
+              <td style="padding: 9px 14px; border-bottom: 1px solid #ece4d3; font-family: 'Lora', serif; font-size: 12px; white-space: pre-wrap;">${this.esc(bk.menu)}</td>
+            </tr>` : ''}
+          ${(!bk.time && !bk.covers && !(bk.menu || '').trim()) ? `
+            <tr style="background:#faf6ec;"><td colspan="2" style="padding: 9px 14px; font-family: 'Lora', serif; font-size: 12px;">Breakfast needed — details to follow</td></tr>` : ''}
+        </tbody>
+      </table>` : '';
+
     // Suppliers — rows with any value
     const supFilled = fs.suppliers.filter(s => (s.role || '').trim() || (s.name || '').trim() || (s.phone || '').trim() || (s.note || '').trim());
     const supHtml = supFilled.length ? `
@@ -4365,6 +4420,7 @@ const App = {
 
       ${roHtml}
       ${menuHtml}
+      ${bkHtml}
       ${supHtml}
 
       ${fs.notes ? `<div style="margin-bottom:14px;"><strong style="font-family:'Cinzel', serif; letter-spacing:.08em;">NOTES:</strong> <span style="font-family:'Lora', serif; white-space:pre-wrap;">${this.esc(fs.notes)}</span></div>` : ''}

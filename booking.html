@@ -922,8 +922,12 @@ function renderDashboard(b) {
     fs.runningOrder.some(r => (r.time || '').trim() || (r.what || '').trim());
   const menuHasContent = fs && fs.menu &&
     Object.values(fs.menu).some(v => (v || '').toString().trim());
+  const bkHasContent = fs && fs.breakfast && (
+    fs.breakfast.needed ||
+    ['time','covers','menu'].some(k => (fs.breakfast[k] || '').toString().trim())
+  );
   const fsHasContent = fs && (
-    roHasContent || menuHasContent ||
+    roHasContent || menuHasContent || bkHasContent ||
     (Array.isArray(fs.days) && fs.days.length > 0) ||
     (fs.catering && fs.catering.trim()) ||
     (fs.notes && fs.notes.trim())
@@ -989,6 +993,19 @@ function renderFunctionSheet(fs) {
       </div>`);
     if (menuRows.length) {
       parts.push(`<div style="margin-bottom:24px;"><h3 style="font-family:var(--display); font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin-bottom:8px;">Menu &amp; catering</h3>${menuRows.join('')}</div>`);
+    }
+  }
+
+  // Breakfast — the morning after
+  if (fs.breakfast && typeof fs.breakfast === 'object') {
+    const bk = fs.breakfast;
+    const when = [bk.time, bk.covers ? `${bk.covers} covers` : ''].filter(Boolean).join(' · ');
+    if (bk.needed || when || (bk.menu || '').trim()) {
+      const lines = [];
+      if (when) lines.push(`<div style="padding:8px 0; border-bottom:1px dotted rgba(74,47,35,0.18);"><span style="font-family:var(--ui); font-size:10.5px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:3px;">When</span><span style="font-family:var(--body); font-size:14.5px; color:var(--ink);">${escapeHtml(when)}</span></div>`);
+      if ((bk.menu || '').trim()) lines.push(`<div style="padding:8px 0; border-bottom:1px dotted rgba(74,47,35,0.18);"><span style="font-family:var(--ui); font-size:10.5px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:3px;">Served</span><span style="font-family:var(--body); font-size:14.5px; color:var(--ink); white-space:pre-wrap;">${escapeHtml(bk.menu)}</span></div>`);
+      if (!lines.length) lines.push(`<div style="font-family:var(--body); font-size:14.5px; color:var(--ink-soft); font-style:italic;">Breakfast is being arranged — details to follow.</div>`);
+      parts.push(`<div style="margin-bottom:24px;"><h3 style="font-family:var(--display); font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin-bottom:8px;">Breakfast</h3>${lines.join('')}</div>`);
     }
   }
 
