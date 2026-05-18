@@ -357,6 +357,30 @@ textarea { resize: vertical; min-height: 100px; }
 }
 .h-section svg { width: 18px; height: 18px; color: var(--rust); flex-shrink: 0; }
 
+/* Extras catalogue */
+.extras-group { margin-bottom: 22px; }
+.extras-group:last-child { margin-bottom: 0; }
+.extras-group-label {
+  font-family: var(--ui); font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--rust); margin-bottom: 8px;
+}
+.extra-item { padding: 11px 0; border-bottom: 1px dotted rgba(74,47,35,0.20); }
+.extra-item:last-child { border-bottom: none; }
+.extra-item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
+.extra-item-name {
+  font-family: var(--display); font-size: 14px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--brown-dk);
+}
+.extra-item-price {
+  flex-shrink: 0; font-family: var(--display); font-size: 13.5px;
+  font-weight: 600; color: var(--rust); white-space: nowrap;
+}
+.extra-item-desc {
+  font-family: var(--body); font-size: 13px; line-height: 1.55;
+  color: var(--ink-soft); margin-top: 3px;
+}
+
 /* Detail rows */
 .kv {
   display: grid;
@@ -684,6 +708,15 @@ textarea { resize: vertical; min-height: 100px; }
 
       <article class="card card-wide">
         <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          Extras &amp; hire
+        </h2>
+        <p class="lead" style="font-size:13.5px; text-align:left; margin:0 0 18px;">Feasts, fires and a few flourishes to add to your day. To add any of these, just <a href="mailto:info@flinthall.uk?subject=Extras%20for%20our%20booking" style="color:var(--rust); border-bottom:1px solid var(--rust);">drop us a line</a> and we&rsquo;ll fold them into your quote.</p>
+        <div id="dash-extras"></div>
+      </article>
+
+      <article class="card card-wide">
+        <h2 class="h-section">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Communications &amp; documents
         </h2>
@@ -940,6 +973,58 @@ function renderDashboard(b) {
     $('dash-fs-content').hidden = false;
     $('dash-fs-content').innerHTML = renderFunctionSheet(fs);
   }
+
+  // Extras catalogue — static, members-only
+  $('dash-extras').innerHTML = renderExtras();
+}
+
+// Members-only extras catalogue. Single source of truth for the price list.
+const EXTRAS_CATALOGUE = [
+  { group: 'Feasting', items: [
+    { name: 'Hog Roast', price: '£20 / head', desc: 'A whole hog from our butcher in Needham Market, slow-turned over the coals. Crackling, warm rolls from the Needham Market bakers, apple sauce and the trimmings.' },
+    { name: 'The Barbecue', price: '£20 / head', desc: 'Burgers, hot dogs, and chicken & chorizo skewers, with potato salad, mixed veg and pesto pasta alongside. Meat and rolls from Needham Market.' },
+    { name: 'Wood-Fired Pizza', price: '£18 / head', desc: 'Stone-baked, straight from the oven — pulled pork, pepperoni, margherita and veg, kept coming until everyone’s had their fill.' },
+    { name: 'Jacket Potatoes', price: 'from £7 / head', desc: 'Baked in their skins, soft in the middle, loaded however you like.' },
+    { name: 'Slow-Smoked Flint Hall Ribs', price: 'from £2.50 / head', desc: 'Our own ribs, smoked low over the embers until the meat gives way. A favourite add-on to any feast.' },
+    { name: 'The Morning-After Breakfast', price: '£8 / person', desc: 'For guests who stayed over — bacon or sausage baps, pots of tea, fresh coffee and fruit juices, or a lighter continental spread.' }
+  ]},
+  { group: 'Around the Fire', items: [
+    { name: 'Fire Pit Package', price: '£15 / fire pit', desc: 'A little extra atmosphere for the evening — relaxed drinks and gathering under the stars.' },
+    { name: 'Marshmallow Kit', price: '£2 / head', desc: 'Marshmallows and toasting sticks, for evenings around the fire pit.' }
+  ]},
+  { group: 'Games & Play', items: [
+    { name: 'Kids’ Mini Golf', price: '£40', desc: 'A pint-sized putting course to keep the youngest guests happily busy.' },
+    { name: 'Giant Jenga', price: '£15', desc: 'The tower that draws a crowd and a held breath.' },
+    { name: 'Giant Noughts & Crosses', price: '£15', desc: 'A garden classic scaled up — quick games, friendly rivalries.' },
+    { name: 'Hook-a-Duck', price: '£5', desc: 'The fairground favourite — daft, cheerful fun for younger guests.' },
+    { name: 'Cornhole', price: '£10', desc: 'Two boards, a handful of bean bags, gentle competition.' }
+  ]},
+  { group: 'Atmosphere & Hire', items: [
+    { name: 'Love Letters', price: '£100', desc: 'Illuminated LOVE letters, glowing warm against the dusk.' },
+    { name: 'Red Love Heart', price: '£50', desc: 'A lit-up heart to set the scene, wherever the camera finds it.' },
+    { name: 'PA System', price: '£100', desc: 'Speakers and a mic for the ceremony, the speeches and the playlist.' },
+    { name: 'Digital Photo Booth', price: '£150', desc: 'A modern booth — guests snap away and pictures land straight on their phones by QR code or email.' }
+  ]},
+  { group: 'Drinks', items: [
+    { name: 'Prosecco Wall', price: '£50 + drinks', desc: 'A wall of chilled glasses for guests to help themselves on arrival.' },
+    { name: 'The Tuk Tuk Bar', price: '£175 + drinks', desc: 'Our little three-wheeled bar, parked up wherever the party needs it.' },
+    { name: 'The Ice Cream Bike', price: '£100 + £3.80/head', desc: 'Scoops for the children and the young at heart — and it doubles as a drinks cart for the evening.' }
+  ]}
+];
+
+function renderExtras() {
+  return EXTRAS_CATALOGUE.map(g => `
+    <div class="extras-group">
+      <div class="extras-group-label">${escapeHtml(g.group)}</div>
+      ${g.items.map(it => `
+        <div class="extra-item">
+          <div class="extra-item-head">
+            <span class="extra-item-name">${escapeHtml(it.name)}</span>
+            <span class="extra-item-price">${escapeHtml(it.price)}</span>
+          </div>
+          <div class="extra-item-desc">${escapeHtml(it.desc)}</div>
+        </div>`).join('')}
+    </div>`).join('');
 }
 
 function paymentLine(amount, paidDate) {
