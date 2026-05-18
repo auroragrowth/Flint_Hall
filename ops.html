@@ -810,8 +810,25 @@ a:hover { text-decoration: underline; }
   font-size: 17px; line-height: 1; padding: 4px 6px; flex-shrink: 0;
 }
 .fs-rowdel:hover { color: var(--brick); }
+
+/* Extras & hire rows */
+.fs-extra-row {
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--paper);
+}
+.fs-extra-row.fs-extra-on { background: var(--moss-light); border-color: var(--moss); }
+.fs-extra-chk { flex-shrink: 0; width: 16px; height: 16px; }
+.fs-extra-fields { flex: 1; display: grid; grid-template-columns: 1.3fr 1.6fr 100px; gap: 8px; }
+.fs-extra-row input {
+  font-family: var(--font-body); font-size: 13px;
+  background: var(--linen-soft); border: 1px solid var(--border);
+  padding: 6px 9px; border-radius: 4px; color: var(--brown-800); width: 100%;
+}
+.fs-extra-row input:focus { outline: none; border-color: var(--brown-500); background: var(--paper); }
+.fs-extra-row input.fs-extra-name { font-weight: 600; }
+
 @media (max-width: 700px) {
-  .fs-ro-fields, .fs-sup-fields { grid-template-columns: 1fr; }
+  .fs-ro-fields, .fs-sup-fields, .fs-extra-fields { grid-template-columns: 1fr; }
 }
 
 /* ============== MODAL ============== */
@@ -4047,6 +4064,10 @@ const App = {
     'Pre-drinks / reception', 'Food — service', 'DJ / band arrives',
     'First dance', 'Cutting the cake', 'Speeches'
   ],
+  FS_EXTRA_DEFAULTS: [
+    'Fire Kit', 'PA system', 'Love Letters', 'Love Heart',
+    'Ice cream bike', 'Digital photo booth'
+  ],
   FS_MENU: [
     { key: 'pizza',     label: 'Pizza — topping choices',        area: true },
     { key: 'hogRoast',  label: 'Hog roast',                       area: false },
@@ -4108,6 +4129,13 @@ const App = {
     // Breakfast — the morning after, for overnight stays.
     fs.breakfast = fs.breakfast || {};
 
+    // Extras & hire — chargeable add-ons, seeded with the usual options.
+    if (!Array.isArray(fs.extras)) {
+      fs.extras = this.FS_EXTRA_DEFAULTS.map(name => ({
+        id: this.fsRowId(), name, added: false, detail: '', price: ''
+      }));
+    }
+
     if (fs.notes == null) fs.notes = '';
     return fs;
   },
@@ -4136,6 +4164,17 @@ const App = {
           <input type="text" data-fs="sup" data-i="${i}" data-k="note"  value="${this.esc(s.note || '')}"  placeholder="Note">
         </div>
         <button class="fs-rowdel" onclick="App.fsSupRemove('${b.id}', ${i})" title="Remove supplier">×</button>
+      </div>`).join('');
+
+    const extraRows = fs.extras.map((x, i) => `
+      <div class="fs-extra-row${x.added ? ' fs-extra-on' : ''}" data-idx="${i}">
+        <input type="checkbox" class="fs-extra-chk" data-fs="extra" data-i="${i}" data-k="added" ${x.added ? 'checked' : ''} title="Added to this booking">
+        <div class="fs-extra-fields">
+          <input type="text" class="fs-extra-name" data-fs="extra" data-i="${i}" data-k="name"   value="${this.esc(x.name || '')}"   placeholder="Item">
+          <input type="text" data-fs="extra" data-i="${i}" data-k="detail" value="${this.esc(x.detail || '')}" placeholder="Detail / qty / notes">
+          <input type="text" data-fs="extra" data-i="${i}" data-k="price"  value="${this.esc(x.price || '')}"  placeholder="Price">
+        </div>
+        <button class="fs-rowdel" onclick="App.fsExtraRemove('${b.id}', ${i})" title="Remove item">×</button>
       </div>`).join('');
 
     const menuRows = this.FS_MENU.map(f => `
@@ -4196,6 +4235,17 @@ const App = {
 
       <div class="card mt-3">
         <div class="card-header">
+          <div class="card-title">Extras &amp; hire</div>
+          <button class="btn btn-secondary btn-sm" onclick="App.fsExtraAdd('${b.id}')">+ Add item</button>
+        </div>
+        <div class="card-body">
+          <div class="muted italic" style="margin-bottom: 10px;">Tick what's been added to this booking. Add a price if you want it on the sheet.</div>
+          <div class="fs-list" id="fs-extra-list">${extraRows}</div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
           <div class="card-title">Suppliers</div>
           <button class="btn btn-secondary btn-sm" onclick="App.fsSupAdd('${b.id}')">+ Add supplier</button>
         </div>
@@ -4237,6 +4287,16 @@ const App = {
       } else if (section === 'breakfast') {
         fs.breakfast = fs.breakfast || {};
         fs.breakfast[key] = val;
+      } else if (section === 'extra') {
+        const i = Number(t.dataset.i);
+        if (fs.extras[i]) {
+          fs.extras[i][key] = val;
+          // Reflect the 'added' tint without a full re-render
+          if (key === 'added') {
+            const row = t.closest('.fs-extra-row');
+            if (row) row.classList.toggle('fs-extra-on', !!val);
+          }
+        }
       }
       this.save();
     };
@@ -4324,6 +4384,22 @@ const App = {
     this.render();
   },
 
+  fsExtraAdd(id) {
+    const b = this.state.bookings.find(x => x.id === id);
+    const fs = this.fsEnsure(b);
+    fs.extras.push({ id: this.fsRowId(), name: '', added: true, detail: '', price: '' });
+    this.save();
+    this.render();
+  },
+
+  fsExtraRemove(id, i) {
+    const b = this.state.bookings.find(x => x.id === id);
+    const fs = this.fsEnsure(b);
+    fs.extras.splice(i, 1);
+    this.save();
+    this.render();
+  },
+
   printFunctionSheet(id) {
     const b = this.state.bookings.find(x => x.id === id);
     if (!b) return;
@@ -4388,6 +4464,22 @@ const App = {
         </tbody>
       </table>` : '';
 
+    // Extras & hire — items ticked as added (or with detail / price)
+    const extraFilled = (fs.extras || []).filter(x => x.added || (x.detail || '').trim() || (x.price || '').trim());
+    const extraHtml = extraFilled.length ? `
+      <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #d3c6ad;">
+        <tbody>
+          ${headCell('Extras &amp; hire')}
+          ${extraFilled.map(x => `
+            <tr style="background:#faf6ec;">
+              <td style="width:160px; padding: 9px 14px; font-weight:700; border-bottom: 1px solid #ece4d3; vertical-align: top; font-family: Montserrat, sans-serif; font-size: 12px;">${this.esc(x.name || '—')}</td>
+              <td style="padding: 9px 14px; border-bottom: 1px solid #ece4d3; font-family: 'Lora', serif; font-size: 12px;">
+                ${this.esc(x.detail || '')}${x.price ? `${x.detail ? ' &middot; ' : ''}<strong>${this.esc(x.price)}</strong>` : ''}
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>` : '';
+
     // Suppliers — rows with any value
     const supFilled = fs.suppliers.filter(s => (s.role || '').trim() || (s.name || '').trim() || (s.phone || '').trim() || (s.note || '').trim());
     const supHtml = supFilled.length ? `
@@ -4421,6 +4513,7 @@ const App = {
       ${roHtml}
       ${menuHtml}
       ${bkHtml}
+      ${extraHtml}
       ${supHtml}
 
       ${fs.notes ? `<div style="margin-bottom:14px;"><strong style="font-family:'Cinzel', serif; letter-spacing:.08em;">NOTES:</strong> <span style="font-family:'Lora', serif; white-space:pre-wrap;">${this.esc(fs.notes)}</span></div>` : ''}
