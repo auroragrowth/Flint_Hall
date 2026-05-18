@@ -3309,7 +3309,12 @@ const App = {
                 <td>${b.event.expectedGuests || '—'}</td>
                 <td><span class="pill pill-${b.status}">${this.statusLabel(b.status)}</span></td>
                 <td>${b.financial.balancePaidDate ? '<span class="muted">Paid</span>' : '£' + this.fmtMoney(b.financial.balanceAmount)}</td>
-                <td>${actions.length > 0 ? `<span class="pill pill-balance_due">${actions.length} todo</span>` : '<span class="muted">—</span>'}</td>
+                <td>
+                  <div class="row gap-sm" style="align-items: center;">
+                    ${actions.length > 0 ? `<span class="pill pill-balance_due">${actions.length} todo</span>` : ''}
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); App.openFunctionSheet('${b.id}')">📋 Function&nbsp;Sheet</button>
+                  </div>
+                </td>
               </tr>`;
             }).join('')}</tbody>
           </table></div>`}
