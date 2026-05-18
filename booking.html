@@ -918,7 +918,12 @@ function renderDashboard(b) {
 
   // Function sheet
   const fs = b.functionSheet;
+  const roHasContent = fs && Array.isArray(fs.runningOrder) &&
+    fs.runningOrder.some(r => (r.time || '').trim() || (r.what || '').trim());
+  const menuHasContent = fs && fs.menu &&
+    Object.values(fs.menu).some(v => (v || '').toString().trim());
   const fsHasContent = fs && (
+    roHasContent || menuHasContent ||
     (Array.isArray(fs.days) && fs.days.length > 0) ||
     (fs.catering && fs.catering.trim()) ||
     (fs.notes && fs.notes.trim())
@@ -945,8 +950,49 @@ function damageLine(amount, paidDate, returnedDate) {
   return `${money} &middot; <span style="font-family:var(--serif); font-style:italic; color:var(--ink-faded); font-size:13px;">refundable, due before event</span>`;
 }
 
+const FS_MENU_LABELS = {
+  pizza: 'Pizza', hogRoast: 'Hog roast', barbecue: 'Barbecue',
+  allergies: 'Gluten-free & allergies', extras: 'Other catering',
+  // legacy keys, in case an older sheet is still around
+  canapes: 'Canapés', starter: 'Starter', main: 'Main', dessert: 'Dessert',
+  eveningFood: 'Evening food', dietary: 'Dietary / allergies'
+};
+
 function renderFunctionSheet(fs) {
   const parts = [];
+
+  // Running order — the draggable list built in ops
+  if (Array.isArray(fs.runningOrder) && fs.runningOrder.length) {
+    const rows = fs.runningOrder.filter(r => (r.time || '').trim() || (r.what || '').trim());
+    if (rows.length) {
+      parts.push(`<div style="margin-bottom:24px;"><h3 style="font-family:var(--display); font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin-bottom:12px;">Running order</h3>`);
+      parts.push('<ul style="list-style:none; margin:0; padding:0;">');
+      rows.forEach(r => {
+        const time = `<span style="font-family:var(--ui); font-size:11px; letter-spacing:0.14em; color:var(--rust); min-width:72px; display:inline-block;">${escapeHtml(r.time || '')}</span>`;
+        const what = `<span style="font-family:var(--body); font-size:14.5px; color:var(--ink);">${escapeHtml(r.what || '')}</span>`;
+        parts.push(`<li style="padding:8px 0; border-bottom:1px dotted rgba(74,47,35,0.18); display:flex; gap:14px; align-items:baseline; flex-wrap:wrap;">${time}${what}</li>`);
+        if (r.note && r.note.trim()) {
+          parts.push(`<li style="padding:0 0 8px 86px; border-bottom:1px dotted rgba(74,47,35,0.18); font-family:var(--serif); font-style:italic; font-size:13px; color:var(--ink-soft);">${escapeHtml(r.note)}</li>`);
+        }
+      });
+      parts.push('</ul></div>');
+    }
+  }
+
+  // Menu & catering
+  if (fs.menu && typeof fs.menu === 'object') {
+    const menuRows = Object.keys(fs.menu)
+      .filter(k => (fs.menu[k] || '').toString().trim())
+      .map(k => `<div style="padding:8px 0; border-bottom:1px dotted rgba(74,47,35,0.18);">
+        <span style="font-family:var(--ui); font-size:10.5px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:3px;">${escapeHtml(FS_MENU_LABELS[k] || k)}</span>
+        <span style="font-family:var(--body); font-size:14.5px; color:var(--ink); white-space:pre-wrap;">${escapeHtml(fs.menu[k])}</span>
+      </div>`);
+    if (menuRows.length) {
+      parts.push(`<div style="margin-bottom:24px;"><h3 style="font-family:var(--display); font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin-bottom:8px;">Menu &amp; catering</h3>${menuRows.join('')}</div>`);
+    }
+  }
+
+  // Legacy free-form day builder (older sheets only)
   if (Array.isArray(fs.days) && fs.days.length) {
     fs.days.forEach((day, i) => {
       parts.push(`<div style="margin-bottom:24px;">`);
