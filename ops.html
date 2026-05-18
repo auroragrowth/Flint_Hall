@@ -783,6 +783,38 @@ a:hover { text-decoration: underline; }
   border-color: var(--border);
 }
 
+/* Structured schedule rows */
+.fs-sched-grid { display: flex; flex-direction: column; }
+.fs-sched-row {
+  display: grid; grid-template-columns: 190px 120px 1fr; gap: 12px;
+  align-items: center; padding: 9px 0; border-bottom: 1px solid var(--linen-dark);
+}
+.fs-sched-row:last-child { border-bottom: none; }
+.fs-sched-row .fs-sched-label {
+  font-family: var(--font-ui); font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0.04em; color: var(--brown-700);
+}
+.fs-sched-row input {
+  font-family: var(--font-body); font-size: 13.5px;
+  background: var(--paper); border: 1px solid var(--border);
+  padding: 7px 10px; border-radius: 4px; color: var(--brown-800); width: 100%;
+}
+.fs-sched-row input.fs-sched-time { font-family: var(--font-ui); font-weight: 600; }
+.fs-sched-row input:focus { outline: none; border-color: var(--brown-500); background: var(--paper-warm); }
+.fs-overnight {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 6px;
+  background: var(--linen-soft); border: 1px solid var(--linen-dark); border-radius: 5px;
+}
+.fs-overnight label { font-family: var(--font-ui); font-size: 12px; font-weight: 600; color: var(--brown-700); cursor: pointer; }
+.fs-overnight input[type=text] {
+  flex: 1; font-family: var(--font-body); font-size: 13px;
+  background: var(--paper); border: 1px solid var(--border); padding: 6px 10px; border-radius: 4px;
+}
+@media (max-width: 640px) {
+  .fs-sched-row { grid-template-columns: 1fr; gap: 4px; padding: 12px 0; }
+  .fs-overnight { flex-wrap: wrap; }
+}
+
 /* ============== MODAL ============== */
 .modal-overlay {
   position: fixed;
@@ -2567,6 +2599,7 @@ const App = {
         title.textContent = `${b.client.firstName} ${b.client.lastName}${b.partnerName ? ' & ' + b.partnerName : ''}`;
         subtitle.textContent = `${b.event.type} · ${this.fmtDateLong(b.event.date)}`;
         actions.innerHTML = `
+          <button class="btn btn-gold" onclick="App.openFunctionSheet('${b.id}')">📋 Function Sheet</button>
           <button class="btn btn-secondary btn-sm" onclick="App.deleteBooking('${b.id}')">Delete</button>
           <button class="btn btn-secondary btn-sm" onclick="App.navigate('pipeline')">← Pipeline</button>`;
         content.innerHTML = this.viewBooking(b);
@@ -4004,55 +4037,150 @@ const App = {
   },
 
   // -- FUNCTION SHEET TAB --
-  viewBookingFunctionSheet(b) {
-    const fs = b.functionSheet || { days: [], catering: '', notes: '' };
-    if (!fs.days || fs.days.length === 0) {
+  // Field definitions for the structured function sheet.
+  FS_SCHEDULE: [
+    { key: 'arrival',        label: 'Arrival' },
+    { key: 'arrivalDrinks',  label: 'Arrival drinks' },
+    { key: 'guestsArriving', label: 'Guests arriving' },
+    { key: 'ceremony',       label: 'Ceremony' },
+    { key: 'preDrinks',      label: 'Pre-drinks / reception' },
+    { key: 'foodService',    label: 'Food — service' },
+    { key: 'djArrive',       label: 'DJ / band arrives' },
+    { key: 'firstDance',     label: 'First dance' },
+    { key: 'cakeCutting',    label: 'Cutting the cake' },
+    { key: 'speeches',       label: 'Speeches' }
+  ],
+  FS_MENU: [
+    { key: 'canapes',     label: 'Canapés / arrival' },
+    { key: 'starter',     label: 'Starter' },
+    { key: 'main',        label: 'Main' },
+    { key: 'dessert',     label: 'Dessert' },
+    { key: 'eveningFood', label: 'Evening food' },
+    { key: 'dietary',     label: 'Dietary / allergies' }
+  ],
+  FS_CONTACTS: [
+    { key: 'dayContact',      label: 'On-the-day contact' },
+    { key: 'dayContactPhone', label: 'Contact phone' },
+    { key: 'dj',              label: 'DJ / band' },
+    { key: 'caterer',         label: 'Caterer' },
+    { key: 'photographer',    label: 'Photographer' }
+  ],
+
+  // Make sure a booking's functionSheet has every section we expect.
+  fsEnsure(b) {
+    b.functionSheet = b.functionSheet || {};
+    const fs = b.functionSheet;
+    fs.days     = fs.days     || [];
+    fs.schedule = fs.schedule || {};
+    fs.menu     = fs.menu     || {};
+    fs.contacts = fs.contacts || {};
+    if (fs.catering == null) fs.catering = '';
+    if (fs.notes == null)    fs.notes = '';
+    if (fs.days.length === 0) {
       fs.days = [{ label: this.fmtDateShort(b.event.date) || 'Day 1', items: [] }];
-      b.functionSheet = fs;
     }
+    return fs;
+  },
+
+  viewBookingFunctionSheet(b) {
+    const fs = this.fsEnsure(b);
+    const sc = fs.schedule;
+
+    const schedRows = this.FS_SCHEDULE.map(f => `
+      <div class="fs-sched-row">
+        <span class="fs-sched-label">${f.label}</span>
+        <input type="text" class="fs-sched-time" data-fs="schedule" data-k="${f.key}" value="${this.esc(sc[f.key] || '')}" placeholder="Time">
+        <input type="text" data-fs="schedule" data-k="${f.key}Note" value="${this.esc(sc[f.key + 'Note'] || '')}" placeholder="Note (optional)">
+      </div>`).join('');
+
+    const menuRows = this.FS_MENU.map(f => `
+      <div class="field full">
+        <label>${f.label}</label>
+        <input type="text" data-fs="menu" data-k="${f.key}" value="${this.esc(fs.menu[f.key] || '')}" placeholder="${f.key === 'dietary' ? 'e.g. 2 vegan, 1 coeliac, 1 nut allergy' : '—'}">
+      </div>`).join('');
+
+    const contactRows = this.FS_CONTACTS.map(f => `
+      <div class="field">
+        <label>${f.label}</label>
+        <input type="text" data-fs="contacts" data-k="${f.key}" value="${this.esc(fs.contacts[f.key] || '')}" placeholder="—">
+      </div>`).join('');
 
     return `
       <div class="fs-toolbar">
-        <div class="muted italic">Build the running order for the day. Times can be free-form (e.g. "2pm" or "11 - 1pm").</div>
+        <div class="muted italic">The day, hour by hour — fill the timings, menu and key people. Times are free-form (e.g. "2pm" or "14:00").</div>
         <div class="row gap-sm">
-          <button class="btn btn-secondary btn-sm" onclick="App.fsAddDay('${b.id}')">+ Add day</button>
           <button class="btn btn-gold btn-sm" onclick="App.printFunctionSheet('${b.id}')">Generate / Print</button>
         </div>
       </div>
 
-      ${fs.days.map((day, dIdx) => `
-        <div class="fs-day">
-          <div class="fs-day-head">
-            <input type="text" class="fs-day-date" data-day="${dIdx}" data-field="label" value="${this.esc(day.label || '')}" placeholder="e.g. 16th May" style="background:transparent; border: 1px solid transparent; padding: 4px 7px; border-radius: 4px; font-family: var(--font-display); font-size: 14px; font-weight: 500; flex:1;">
-            <button class="btn btn-ghost btn-sm" onclick="App.fsAddRow('${b.id}', ${dIdx})">+ Row</button>
-            ${fs.days.length > 1 ? `<button class="btn btn-ghost btn-sm" onclick="App.fsRemoveDay('${b.id}', ${dIdx})">Remove day</button>` : ''}
+      <div class="card mt-3">
+        <div class="card-header"><div class="card-title">The day, hour by hour</div></div>
+        <div class="card-body">
+          <div class="fs-overnight">
+            <input type="checkbox" id="fs-overnight-chk" data-fs="schedule" data-k="overnightBefore" ${sc.overnightBefore ? 'checked' : ''}>
+            <label for="fs-overnight-chk">Staying the night before</label>
+            <input type="text" data-fs="schedule" data-k="overnightNote" value="${this.esc(sc.overnightNote || '')}" placeholder="Who's staying / check-in time / where">
           </div>
-          <div class="fs-rows">
-            ${day.items.map((item, iIdx) => `
-              <div class="fs-row">
-                <input type="text" class="fs-time" data-day="${dIdx}" data-row="${iIdx}" data-field="time" value="${this.esc(item.time || '')}" placeholder="Time">
-                <div class="fs-content">
-                  <textarea class="fs-act" data-day="${dIdx}" data-row="${iIdx}" data-field="activity" placeholder="Activity / event">${this.esc(item.activity || '')}</textarea>
-                  <textarea class="fs-note" data-day="${dIdx}" data-row="${iIdx}" data-field="notes" placeholder="Notes (italic on the printed sheet)">${this.esc(item.notes || '')}</textarea>
-                </div>
-                <button class="btn btn-ghost btn-sm" onclick="App.fsRemoveRow('${b.id}', ${dIdx}, ${iIdx})">×</button>
-              </div>`).join('')}
-            ${day.items.length === 0 ? `<div class="empty-state" style="padding: 20px;"><p>No items yet — click "+ Row" to add.</p></div>` : ''}
-          </div>
-        </div>`).join('')}
+          <div class="fs-sched-grid">${schedRows}</div>
+        </div>
+      </div>
 
       <div class="card mt-3">
-        <div class="card-header"><div class="card-title">Catering & Notes</div></div>
+        <div class="card-header"><div class="card-title">Menu choices</div></div>
         <div class="card-body">
           <div class="form-grid">
+            ${menuRows}
             <div class="field full">
-              <label>Catering</label>
-              <textarea id="fs-catering" rows="2" placeholder="e.g. Hog roast x 50, Pizzas x 20, Cake">${this.esc(fs.catering || '')}</textarea>
+              <label>Catering notes / extras</label>
+              <textarea id="fs-catering" rows="2" placeholder="e.g. Hog roast x 50, cake by supplier, late-night bacon rolls">${this.esc(fs.catering || '')}</textarea>
             </div>
-            <div class="field full">
-              <label>Operational Notes</label>
-              <textarea id="fs-notes" rows="3" placeholder="Anything you want to remember on the day">${this.esc(fs.notes || '')}</textarea>
-            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header"><div class="card-title">Key people &amp; suppliers</div></div>
+        <div class="card-body">
+          <div class="form-grid cols-2">${contactRows}</div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          <div class="card-title">Detailed running order</div>
+          <button class="btn btn-secondary btn-sm" onclick="App.fsAddDay('${b.id}')">+ Add day</button>
+        </div>
+        <div class="card-body">
+          <div class="muted italic" style="margin-bottom: 10px;">Optional — for anything the timings above don't cover.</div>
+          ${fs.days.map((day, dIdx) => `
+            <div class="fs-day">
+              <div class="fs-day-head">
+                <input type="text" class="fs-day-date" data-day="${dIdx}" data-field="label" value="${this.esc(day.label || '')}" placeholder="e.g. 16th May" style="background:transparent; border: 1px solid transparent; padding: 4px 7px; border-radius: 4px; font-family: var(--font-display); font-size: 14px; font-weight: 500; flex:1;">
+                <button class="btn btn-ghost btn-sm" onclick="App.fsAddRow('${b.id}', ${dIdx})">+ Row</button>
+                ${fs.days.length > 1 ? `<button class="btn btn-ghost btn-sm" onclick="App.fsRemoveDay('${b.id}', ${dIdx})">Remove day</button>` : ''}
+              </div>
+              <div class="fs-rows">
+                ${day.items.map((item, iIdx) => `
+                  <div class="fs-row">
+                    <input type="text" class="fs-time" data-day="${dIdx}" data-row="${iIdx}" data-field="time" value="${this.esc(item.time || '')}" placeholder="Time">
+                    <div class="fs-content">
+                      <textarea class="fs-act" data-day="${dIdx}" data-row="${iIdx}" data-field="activity" placeholder="Activity / event">${this.esc(item.activity || '')}</textarea>
+                      <textarea class="fs-note" data-day="${dIdx}" data-row="${iIdx}" data-field="notes" placeholder="Notes (italic on the printed sheet)">${this.esc(item.notes || '')}</textarea>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" onclick="App.fsRemoveRow('${b.id}', ${dIdx}, ${iIdx})">×</button>
+                  </div>`).join('')}
+                ${day.items.length === 0 ? `<div class="empty-state" style="padding: 20px;"><p>No extra rows — click "+ Row" if you need them.</p></div>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header"><div class="card-title">Operational notes</div></div>
+        <div class="card-body">
+          <div class="field full">
+            <label>Anything you want to remember on the day</label>
+            <textarea id="fs-notes" rows="3" placeholder="Parking, access, supplier quirks, weather plan…">${this.esc(fs.notes || '')}</textarea>
           </div>
         </div>
       </div>
@@ -4060,30 +4188,47 @@ const App = {
   },
 
   bindFunctionSheet(b) {
-    const handler = (e) => {
+    const fs = this.fsEnsure(b);
+
+    // Free-form running order rows
+    const rowHandler = (e) => {
       const t = e.target;
-      const dIdx = t.dataset.day;
-      const iIdx = t.dataset.row;
-      const field = t.dataset.field;
+      const dIdx = t.dataset.day, iIdx = t.dataset.row, field = t.dataset.field;
       if (dIdx == null || field == null) return;
-      const day = b.functionSheet.days[Number(dIdx)];
+      const day = fs.days[Number(dIdx)];
       if (!day) return;
-      if (iIdx != null) {
-        day.items[Number(iIdx)][field] = t.value;
-      } else {
-        day[field] = t.value;
-      }
+      if (iIdx != null) day.items[Number(iIdx)][field] = t.value;
+      else day[field] = t.value;
       this.save();
     };
     document.querySelectorAll('.fs-time, .fs-act, .fs-note, .fs-day-date').forEach(el => {
-      el.addEventListener('input', handler);
-      el.addEventListener('blur', handler);
+      el.addEventListener('input', rowHandler);
+      el.addEventListener('blur', rowHandler);
+    });
+
+    // Structured sections — schedule / menu / contacts
+    const structHandler = (e) => {
+      const t = e.target;
+      const section = t.dataset.fs, key = t.dataset.k;
+      if (!section || !key) return;
+      fs[section] = fs[section] || {};
+      fs[section][key] = (t.type === 'checkbox') ? t.checked : t.value;
+      this.save();
+    };
+    document.querySelectorAll('[data-fs]').forEach(el => {
+      el.addEventListener(el.type === 'checkbox' ? 'change' : 'blur', structHandler);
     });
 
     const cat = document.getElementById('fs-catering');
-    if (cat) cat.addEventListener('blur', () => { b.functionSheet.catering = cat.value; this.save(); });
+    if (cat) cat.addEventListener('blur', () => { fs.catering = cat.value; this.save(); });
     const notes = document.getElementById('fs-notes');
-    if (notes) notes.addEventListener('blur', () => { b.functionSheet.notes = notes.value; this.save(); });
+    if (notes) notes.addEventListener('blur', () => { fs.notes = notes.value; this.save(); });
+  },
+
+  // Prominent entry point — opens the booking and jumps to its Function Sheet.
+  openFunctionSheet(id) {
+    this.state.currentTab = 'function';
+    this.navigate('booking', id);
   },
 
   fsAddDay(id) {
@@ -4119,11 +4264,65 @@ const App = {
   printFunctionSheet(id) {
     const b = this.state.bookings.find(x => x.id === id);
     if (!b) return;
-    const fs = b.functionSheet || { days: [], catering: '', notes: '' };
+    const fs = this.fsEnsure(b);
+    const sc = fs.schedule || {};
     const cName = `${b.client.firstName} ${b.client.lastName}${b.partnerName ? ' & ' + b.partnerName : ''}`;
     const guestLine = (b.event.ceremonyGuests && b.event.eveningGuests)
       ? `${b.event.ceremonyGuests} / ${b.event.eveningGuests}`
       : (b.event.expectedGuests || '');
+
+    // Structured schedule rows that have a time entered
+    const schedFilled = this.FS_SCHEDULE.filter(f => (sc[f.key] || '').trim());
+    const schedHtml = (schedFilled.length || sc.overnightBefore) ? `
+      <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #d3c6ad;">
+        <tbody>
+          <tr><td colspan="2" style="padding: 9px 14px; font-weight:700; background: #faf6ec; border-bottom: 1px solid #d3c6ad; font-family: Montserrat, sans-serif;">The day, hour by hour</td></tr>
+          ${sc.overnightBefore ? `
+            <tr style="background:#fefcf8;">
+              <td style="width:140px; padding: 9px 14px; font-weight:700; border-bottom: 1px solid #ece4d3; vertical-align: top; font-family: Montserrat, sans-serif; font-size: 12px;">Night before</td>
+              <td style="padding: 9px 14px; border-bottom: 1px solid #ece4d3; font-family: Montserrat, sans-serif; font-size: 12px;">Staying the night before${sc.overnightNote ? ` <span style="font-family:'Lora',serif; font-style:italic; color:#5a4332;">— ${this.esc(sc.overnightNote)}</span>` : ''}</td>
+            </tr>` : ''}
+          ${schedFilled.map(f => `
+            <tr style="${sc[f.key + 'Note'] ? 'background:#fefcf8;' : 'background:#faf6ec;'}">
+              <td style="width:140px; padding: 9px 14px; font-weight:700; border-bottom: 1px solid #ece4d3; vertical-align: top; font-family: Montserrat, sans-serif; font-size: 12px;">${this.esc(sc[f.key])}</td>
+              <td style="padding: 9px 14px; border-bottom: 1px solid #ece4d3; font-family: Montserrat, sans-serif; font-size: 12px;">
+                <div>${this.esc(f.label)}</div>
+                ${sc[f.key + 'Note'] ? `<div style="font-family:'Lora', serif; font-style:italic; color:#5a4332; font-size: 11.5px; margin-top:3px;">${this.esc(sc[f.key + 'Note'])}</div>` : ''}
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>` : '';
+
+    // Menu rows that have a value
+    const menuFilled = this.FS_MENU.filter(f => (fs.menu[f.key] || '').trim());
+    const menuHtml = menuFilled.length ? `
+      <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #d3c6ad;">
+        <tbody>
+          <tr><td colspan="2" style="padding: 9px 14px; font-weight:700; background: #faf6ec; border-bottom: 1px solid #d3c6ad; font-family: Montserrat, sans-serif;">Menu</td></tr>
+          ${menuFilled.map(f => `
+            <tr style="background:#faf6ec;">
+              <td style="width:140px; padding: 9px 14px; font-weight:700; border-bottom: 1px solid #ece4d3; vertical-align: top; font-family: Montserrat, sans-serif; font-size: 12px;">${this.esc(f.label)}</td>
+              <td style="padding: 9px 14px; border-bottom: 1px solid #ece4d3; font-family: 'Lora', serif; font-size: 12px;">${this.esc(fs.menu[f.key])}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>` : '';
+
+    // Key people rows that have a value
+    const contactsFilled = this.FS_CONTACTS.filter(f => (fs.contacts[f.key] || '').trim());
+    const contactsHtml = contactsFilled.length ? `
+      <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #d3c6ad;">
+        <tbody>
+          <tr><td colspan="2" style="padding: 9px 14px; font-weight:700; background: #faf6ec; border-bottom: 1px solid #d3c6ad; font-family: Montserrat, sans-serif;">Key people &amp; suppliers</td></tr>
+          ${contactsFilled.map(f => `
+            <tr style="background:#faf6ec;">
+              <td style="width:140px; padding: 9px 14px; font-weight:700; border-bottom: 1px solid #ece4d3; vertical-align: top; font-family: Montserrat, sans-serif; font-size: 12px;">${this.esc(f.label)}</td>
+              <td style="padding: 9px 14px; border-bottom: 1px solid #ece4d3; font-family: 'Lora', serif; font-size: 12px;">${this.esc(fs.contacts[f.key])}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>` : '';
+
+    // Free-form running-order days that actually have rows
+    const daysFilled = fs.days.filter(d => d.items && d.items.length);
 
     const html = `
       <div style="display:flex; align-items:flex-start; gap:30px; margin-bottom: 30px; border-bottom: 2px solid #2a1d12; padding-bottom: 20px;">
@@ -4138,7 +4337,11 @@ const App = {
         </div>
       </div>
 
-      ${fs.days.map(day => `
+      ${schedHtml}
+      ${menuHtml}
+      ${contactsHtml}
+
+      ${daysFilled.map(day => `
         <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #d3c6ad;">
           <tbody>
             <tr><td colspan="2" style="padding: 9px 14px; font-weight:700; background: #faf6ec; border-bottom: 1px solid #d3c6ad; font-family: Montserrat, sans-serif;">${this.esc(day.label)}</td></tr>
@@ -4154,7 +4357,7 @@ const App = {
         </table>
       `).join('')}
 
-      ${fs.catering ? `<div style="margin-bottom:14px;"><strong style="font-family:'Cinzel', serif; letter-spacing:.08em;">CATERING:</strong> <span style="font-family:'Lora', serif;">${this.esc(fs.catering)}</span></div>` : ''}
+      ${fs.catering ? `<div style="margin-bottom:14px;"><strong style="font-family:'Cinzel', serif; letter-spacing:.08em;">CATERING NOTES:</strong> <span style="font-family:'Lora', serif;">${this.esc(fs.catering)}</span></div>` : ''}
       ${fs.notes ? `<div style="margin-bottom:14px;"><strong style="font-family:'Cinzel', serif; letter-spacing:.08em;">NOTES:</strong> <span style="font-family:'Lora', serif; white-space:pre-wrap;">${this.esc(fs.notes)}</span></div>` : ''}
 
       <div style="margin-top: 30px; padding-top: 14px; border-top: 1px solid #d3c6ad; font-size: 10px; color: #6b5544; font-family: Montserrat, sans-serif; letter-spacing: 0.05em;">
