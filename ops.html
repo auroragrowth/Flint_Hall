@@ -4909,10 +4909,25 @@ const App = {
     const booking = this.state.bookings.find(b => b.id === bookingId);
     if (!booking) { this.toast('Booking not found', 'error'); return; }
 
-    // 1) Flip the per-booking flag (direct DB write, surgical)
+    // The portal matches a client's sign-in to a booking by client_email,
+    // so the booking's email MUST equal the email they requested with —
+    // otherwise they sign in and see "Not on the list yet".
+    const request = this.state.accessRequests.find(x => x.id === requestId);
+    const reqEmail = request ? (request.email || '').trim().toLowerCase() : '';
+    if (!reqEmail) { this.toast('Request has no email — cannot approve', 'error'); return; }
+    const existingEmail = (booking.client.email || '').trim().toLowerCase();
+    if (existingEmail && existingEmail !== reqEmail) {
+      const ok = confirm(
+        `This booking's client email is "${existingEmail}", but the request is from "${reqEmail}".\n\n` +
+        `The portal sign-in must match. Update the booking's client email to "${reqEmail}" so they can get in?`
+      );
+      if (!ok) return;
+    }
+
+    // 1) Enable the portal AND align the booking's client_email
     const { error: bookingErr } = await sb
       .from('bookings')
-      .update({ client_portal_enabled: true })
+      .update({ client_portal_enabled: true, client_email: reqEmail })
       .eq('id', bookingId);
     if (bookingErr) { this.toast('Approve failed: ' + bookingErr.message, 'error'); return; }
 
@@ -4932,6 +4947,7 @@ const App = {
 
     // 3) Update local state
     booking.clientPortalEnabled = true;
+    booking.client.email = reqEmail;
     const r = this.state.accessRequests.find(x => x.id === requestId);
     if (r) Object.assign(r, updates);
 
