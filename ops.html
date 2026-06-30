@@ -1471,6 +1471,9 @@ a:hover { text-decoration: underline; }
       <div class="nav-item" data-route="gallery">
         <span>◇</span> Gallery <span class="count" id="count-gallery">0</span>
       </div>
+      <div class="nav-item" data-route="contractors">
+        <span>⛨</span> Supplier Docs <span class="count" id="count-contractors">0</span>
+      </div>
 
       <div class="nav-section">Insights</div>
       <div class="nav-item" data-route="leadsources">
@@ -2693,6 +2696,12 @@ const App = {
         content.innerHTML = this.viewGallery();
         this.bindGallery();
         break;
+      case 'contractors':
+        title.textContent = 'Supplier Docs';
+        subtitle.textContent = 'External contractors declared by clients — review their evidence';
+        content.innerHTML = this.viewContractors();
+        this.bindContractors();
+        break;
       default:
         content.innerHTML = '<div class="empty-state"><h3>Not found</h3></div>';
     }
@@ -2710,6 +2719,11 @@ const App = {
     if (arCount) arCount.textContent = pendingReqs;
     const gCount = document.getElementById('count-gallery');
     if (gCount) gCount.textContent = (this.state.galleryPhotos || []).length;
+    const cCount = document.getElementById('count-contractors');
+    if (cCount) window.fhSupabase.from('event_contractors')
+      .select('id', { count: 'exact', head: true })
+      .then(({ count }) => { cCount.textContent = count || 0; })
+      .catch(() => {});
   },
 
   updateNavActive() {
@@ -5028,6 +5042,89 @@ const App = {
   // ───────── GALLERY (public photo gallery) ─────────
   galleryPublicUrl(path) {
     return `https://dgrbazpcytwusnsvoaou.supabase.co/storage/v1/object/public/gallery/${path}`;
+  },
+
+  // ─────────── EXTERNAL SUPPLIER / CONTRACTOR DOCS ───────────
+  viewContractors() {
+    return `<div class="card"><div class="card-body" id="contractor-admin"><div class="muted italic">Loading…</div></div></div>`;
+  },
+
+  async bindContractors() {
+    const sb = window.fhSupabase;
+    const host = document.getElementById('contractor-admin');
+    const { data, error } = await sb.from('event_contractors')
+      .select('*').order('created_at', { ascending: false });
+    if (error) {
+      host.innerHTML = `<div class="empty-state"><h3>Couldn’t load supplier docs</h3><p>${this.esc(error.message)}</p></div>`;
+      return;
+    }
+    this.renderContractorsAdmin(data || []);
+  },
+
+  renderContractorsAdmin(list) {
+    const host = document.getElementById('contractor-admin');
+    const DT = [['PLI','Public Liability Insurance'],['PAT','PAT testing'],['FoodHygiene','Food Hygiene'],['RiskAssessment','Risk assessment / other']];
+    const cnt = document.getElementById('count-contractors'); if (cnt) cnt.textContent = list.length;
+    if (!list.length) {
+      host.innerHTML = `<div class="empty-state"><div class="icon">⛨</div><h3>No supplier declarations yet</h3><p>When a client declares an external contractor in their portal, it’ll appear here.</p></div>`;
+      return;
+    }
+    const inputStyle = 'background: var(--linen); border: 1px solid var(--paper-edge); color: var(--brown-900); padding: 6px 8px; border-radius: 3px; font-family: var(--font-body); font-size: 12.5px;';
+    host.innerHTML = list.map(c => {
+      const docs = DT.map(([k,label]) => {
+        const d = (c.documents||[]).find(x => x.type === k);
+        return `<div style="display:flex; gap:10px; align-items:center; padding:3px 0; font-size:13px;">
+          <span style="min-width:210px; color:var(--brown-700);">${label}</span>
+          ${d
+            ? `<button class="btn btn-secondary btn-sm" data-act="cview" data-path="${this.esc(d.path)}">View &middot; ${this.esc(d.filename)}</button>`
+            : `<span class="muted italic">— not provided —</span>`}
+        </div>`;
+      }).join('');
+      return `<div class="card mb-2"><div class="card-body">
+        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div>
+            <strong style="font-size:15px;">${this.esc(c.company)}</strong>
+            <div class="muted" style="font-size:12.5px;">${this.esc(c.client_email)} &middot; added ${this.fmtRelative(c.created_at)}</div>
+            <div style="margin-top:4px;">${this.esc(c.service || '')}</div>
+            <div class="muted" style="font-size:12.5px;">${[c.contact_name,c.contact_phone,c.contact_email].filter(Boolean).map(x=>this.esc(x)).join(' &middot; ')}</div>
+          </div>
+          <div>
+            <select data-act="cstatus" data-id="${this.esc(c.id)}" style="${inputStyle}">
+              <option value="submitted"${c.status==='submitted'?' selected':''}>Under review</option>
+              <option value="approved"${c.status==='approved'?' selected':''}>Approved</option>
+              <option value="rejected"${c.status==='rejected'?' selected':''}>Rejected / needs work</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:12px;">${docs}</div>
+        <div style="margin-top:12px; display:flex; gap:8px; align-items:flex-start;">
+          <textarea data-act="cnotes" data-id="${this.esc(c.id)}" placeholder="Note to the client (shown in their portal)…" style="flex:1; min-height:44px; resize:vertical; ${inputStyle}">${this.esc(c.staff_notes || '')}</textarea>
+          <button class="btn btn-primary btn-sm" data-act="csave" data-id="${this.esc(c.id)}">Save</button>
+        </div>
+      </div></div>`;
+    }).join('');
+
+    host.querySelectorAll('[data-act="cview"]').forEach(b =>
+      b.addEventListener('click', () => this.contractorViewDoc(b.dataset.path)));
+    host.querySelectorAll('[data-act="csave"]').forEach(b =>
+      b.addEventListener('click', () => this.contractorSave(b.dataset.id, host)));
+  },
+
+  async contractorViewDoc(path) {
+    const sb = window.fhSupabase;
+    const { data, error } = await sb.storage.from('contractor-docs').createSignedUrl(path, 120);
+    if (error) { this.toast('Could not open: ' + error.message, 'error'); return; }
+    window.open(data.signedUrl, '_blank');
+  },
+
+  async contractorSave(id, host) {
+    const sb = window.fhSupabase;
+    const status = host.querySelector(`[data-act="cstatus"][data-id="${CSS.escape(id)}"]`)?.value;
+    const notesEl = host.querySelector(`[data-act="cnotes"][data-id="${CSS.escape(id)}"]`);
+    const notes = (notesEl?.value || '').trim() || null;
+    const { error } = await sb.from('event_contractors').update({ status, staff_notes: notes }).eq('id', id);
+    if (error) { this.toast('Could not save: ' + error.message, 'error'); return; }
+    this.toast('Supplier updated', 'success');
   },
 
   viewGallery() {

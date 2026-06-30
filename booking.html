@@ -715,6 +715,32 @@ textarea { resize: vertical; min-height: 100px; }
         <div id="dash-extras"></div>
       </article>
 
+      <style>
+        .contractor-card { border:1px solid var(--paper-edge); border-radius:4px; padding:16px 18px; margin-bottom:14px; background:var(--paper); }
+        .contractor-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+        .contractor-sub { font-family:var(--body); font-size:13px; color:var(--ink); margin-top:2px; }
+        .contractor-sub.muted { color:var(--ink-faded); font-size:12px; }
+        .cstatus { font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border-radius:10px; margin-left:6px; white-space:nowrap; }
+        .cstatus.ok { background:#e6f3e6; color:#2e6b2e; }
+        .cstatus.no { background:#f6e2e2; color:#9a2b2b; }
+        .cstatus.pend { background:#f1ead8; color:#6b5a2e; }
+        .contractor-docs { margin-top:12px; display:grid; gap:7px; }
+        .contractor-doc { display:flex; align-items:center; gap:10px; font-family:var(--body); font-size:13px; flex-wrap:wrap; }
+        .cd-label { min-width:190px; color:var(--ink); }
+        .cd-have { color:#2e6b2e; }
+        .cd-link, .cd-upload { background:none; border:none; color:var(--rust); cursor:pointer; font-size:12.5px; text-decoration:underline; padding:0; font-family:var(--body); }
+        .cd-del { color:#9a2b2b; }
+        .contractor-add { margin-top:18px; padding-top:18px; border-top:1px solid var(--paper-edge); }
+      </style>
+      <article class="card card-wide">
+        <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          External suppliers &amp; contractors
+        </h2>
+        <p class="lead" style="font-size:13.5px; text-align:left; margin:0 0 18px;">Bringing in any outside suppliers &mdash; caterers, bars, entertainers, stylists? Please declare each one here, tell us what they&rsquo;re doing, and upload their certificates. We&rsquo;re required to hold valid <strong>Public Liability Insurance</strong>, <strong>PAT testing</strong>, <strong>Food Hygiene</strong> and <strong>risk assessments</strong> for everyone working on site <em>before</em> your event.</p>
+        <div id="dash-contractors">Loading&hellip;</div>
+      </article>
+
       <article class="card card-wide">
         <h2 class="h-section">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -976,6 +1002,151 @@ function renderDashboard(b) {
 
   // Extras catalogue — static, members-only
   $('dash-extras').innerHTML = renderExtras();
+
+  // External suppliers & contractors — load async
+  loadContractors(c.email);
+}
+
+// ─────────────────── EXTERNAL SUPPLIERS / CONTRACTORS ───────────────────
+const CONTRACTOR_DOC_TYPES = [
+  { key: 'PLI',            label: 'Public Liability Insurance' },
+  { key: 'PAT',            label: 'PAT testing' },
+  { key: 'FoodHygiene',    label: 'Food Hygiene' },
+  { key: 'RiskAssessment', label: 'Risk assessment / other' }
+];
+let contractorEmail = '';
+
+async function loadContractors(email) {
+  contractorEmail = (email || '').toLowerCase();
+  const wrap = $('dash-contractors');
+  const { data, error } = await supabase
+    .from('event_contractors').select('*').order('created_at', { ascending: true });
+  if (error) {
+    console.warn('loadContractors', error);
+    wrap.innerHTML = '<div class="notice error">Couldn&rsquo;t load your suppliers right now. Refresh, or email info@flinthall.uk.</div>';
+    return;
+  }
+  renderContractors(data || []);
+}
+
+function renderContractors(list) {
+  const wrap = $('dash-contractors');
+  const rows = list.map(c => {
+    const docs = CONTRACTOR_DOC_TYPES.map(dt => {
+      const d = (c.documents || []).find(x => x.type === dt.key);
+      return `<div class="contractor-doc">
+        <span class="cd-label">${dt.label}</span>
+        ${d
+          ? `<span class="cd-have">&check; ${escapeHtml(d.filename)}</span>
+             <button class="cd-link" data-act="view" data-path="${escapeHtml(d.path)}">view</button>
+             <button class="cd-link cd-del" data-act="deldoc" data-id="${c.id}" data-type="${dt.key}">remove</button>`
+          : `<label class="cd-upload">upload<input type="file" hidden data-act="upload" data-id="${c.id}" data-type="${dt.key}" accept=".pdf,.jpg,.jpeg,.png,.webp"></label>`
+        }
+      </div>`;
+    }).join('');
+    const pill = c.status === 'approved'
+      ? '<span class="cstatus ok">Approved</span>'
+      : c.status === 'rejected'
+        ? '<span class="cstatus no">Needs attention</span>'
+        : '<span class="cstatus pend">Under review</span>';
+    return `<div class="contractor-card">
+      <div class="contractor-head">
+        <div>
+          <strong>${escapeHtml(c.company)}</strong>${pill}
+          <div class="contractor-sub">${escapeHtml(c.service || '')}</div>
+          <div class="contractor-sub muted">${[c.contact_name, c.contact_phone, c.contact_email].filter(Boolean).map(escapeHtml).join(' &middot; ')}</div>
+          ${c.staff_notes ? `<div class="notice warn" style="margin-top:8px;">${escapeHtml(c.staff_notes)}</div>` : ''}
+        </div>
+        <button class="cd-link cd-del" data-act="delc" data-id="${c.id}" title="Remove supplier">remove</button>
+      </div>
+      <div class="contractor-docs">${docs}</div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    ${list.length
+      ? `<div class="contractor-list">${rows}</div>`
+      : '<div class="notice info" style="margin-bottom:16px;">No external suppliers declared yet. If everything is arranged through Flint Hall, there&rsquo;s nothing to add here.</div>'}
+    <form id="contractor-add" class="contractor-add">
+      <div class="form-row"><label>Company / supplier name</label><input type="text" name="company" required placeholder="e.g. Smoky Joe&rsquo;s Mobile Bar"></div>
+      <div class="form-row"><label>What are they providing?</label><input type="text" name="service" required placeholder="e.g. Mobile bar &amp; bartending"></div>
+      <div class="form-row"><label>Contact name</label><input type="text" name="contact_name" placeholder="Optional"></div>
+      <div class="form-row"><label>Contact phone</label><input type="text" name="contact_phone" placeholder="Optional"></div>
+      <div class="form-row"><label>Contact email</label><input type="email" name="contact_email" placeholder="Optional"></div>
+      <button type="submit" class="btn btn-leather">+ Add supplier</button>
+      <div class="notice error" id="contractor-add-err" hidden></div>
+    </form>`;
+
+  $('contractor-add').addEventListener('submit', addContractor);
+  wrap.querySelectorAll('[data-act="upload"]').forEach(el =>
+    el.addEventListener('change', e => uploadContractorDoc(e.target.dataset.id, e.target.dataset.type, e.target.files[0], e.target)));
+  wrap.querySelectorAll('[data-act="view"]').forEach(b =>
+    b.addEventListener('click', () => viewContractorDoc(b.dataset.path)));
+  wrap.querySelectorAll('[data-act="deldoc"]').forEach(b =>
+    b.addEventListener('click', () => removeContractorDoc(b.dataset.id, b.dataset.type)));
+  wrap.querySelectorAll('[data-act="delc"]').forEach(b =>
+    b.addEventListener('click', () => removeContractor(b.dataset.id)));
+}
+
+async function addContractor(e) {
+  e.preventDefault();
+  const f = e.target;
+  const err = $('contractor-add-err');
+  clearError(err);
+  const row = {
+    client_email:  contractorEmail,
+    company:       f.company.value.trim(),
+    service:       f.service.value.trim(),
+    contact_name:  f.contact_name.value.trim()  || null,
+    contact_phone: f.contact_phone.value.trim() || null,
+    contact_email: f.contact_email.value.trim() || null
+  };
+  if (!row.company || !row.service) { showError(err, 'Company and what they&rsquo;re providing are both required.'); return; }
+  const btn = f.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  const { error } = await supabase.from('event_contractors').insert(row);
+  if (error) { showError(err, 'Could not add: ' + error.message); btn.disabled = false; btn.textContent = '+ Add supplier'; return; }
+  await loadContractors(contractorEmail);
+}
+
+async function uploadContractorDoc(id, type, file, inputEl) {
+  if (!file) return;
+  if (file.size > 15 * 1024 * 1024) { alert('That file is over 15MB — please upload a smaller PDF or photo.'); return; }
+  if (inputEl) inputEl.disabled = true;
+  const safe = file.name.replace(/[^\w.\-]+/g, '_');
+  const path = `${contractorEmail}/${id}/${crypto.randomUUID()}-${safe}`;
+  const { error: upErr } = await supabase.storage.from('contractor-docs').upload(path, file, { upsert: false });
+  if (upErr) { alert('Upload failed: ' + upErr.message); if (inputEl) inputEl.disabled = false; return; }
+  const { data: cur } = await supabase.from('event_contractors').select('documents').eq('id', id).single();
+  const docs = (cur?.documents || []).filter(d => d.type !== type); // one file per type — replace
+  docs.push({ type, path, filename: file.name, uploaded_at: new Date().toISOString() });
+  const { error: updErr } = await supabase.from('event_contractors').update({ documents: docs, status: 'submitted' }).eq('id', id);
+  if (updErr) alert('File saved but could not be recorded: ' + updErr.message);
+  await loadContractors(contractorEmail);
+}
+
+async function viewContractorDoc(path) {
+  const { data, error } = await supabase.storage.from('contractor-docs').createSignedUrl(path, 120);
+  if (error) { alert('Could not open that file: ' + error.message); return; }
+  window.open(data.signedUrl, '_blank');
+}
+
+async function removeContractorDoc(id, type) {
+  const { data: cur } = await supabase.from('event_contractors').select('documents').eq('id', id).single();
+  const doc  = (cur?.documents || []).find(d => d.type === type);
+  const docs = (cur?.documents || []).filter(d => d.type !== type);
+  if (doc?.path) await supabase.storage.from('contractor-docs').remove([doc.path]).catch(() => {});
+  await supabase.from('event_contractors').update({ documents: docs }).eq('id', id);
+  await loadContractors(contractorEmail);
+}
+
+async function removeContractor(id) {
+  if (!confirm('Remove this supplier and any documents uploaded for it?')) return;
+  const { data: cur } = await supabase.from('event_contractors').select('documents').eq('id', id).single();
+  const paths = (cur?.documents || []).map(d => d.path).filter(Boolean);
+  if (paths.length) await supabase.storage.from('contractor-docs').remove(paths).catch(() => {});
+  await supabase.from('event_contractors').delete().eq('id', id);
+  await loadContractors(contractorEmail);
 }
 
 // Members-only extras catalogue. Single source of truth for the price list.
