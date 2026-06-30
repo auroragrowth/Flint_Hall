@@ -3,3 +3,7 @@
 .DS_Store
 **/.DS_Store
 .claude/
+
+# Raw photo/video dump from WhatsApp — keep locally, don't bloat the repo.
+# The selected, web-optimised shots live in photos/ (e.g. event-*.jpg).
+photos/New/

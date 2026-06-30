@@ -1403,7 +1403,10 @@ a:hover { text-decoration: underline; }
     <form id="auth-state-signin" hidden>
       <label for="auth-email">Email address</label>
       <input type="email" id="auth-email" placeholder="you@flinthall.uk" autocomplete="email" required>
-      <button type="submit" class="auth-btn" id="auth-signin-btn">Send magic link</button>
+      <label for="auth-password">Password</label>
+      <input type="password" id="auth-password" placeholder="Your password" autocomplete="current-password">
+      <button type="submit" class="auth-btn" id="auth-signin-btn">Sign in</button>
+      <button type="button" class="auth-btn ghost" id="auth-magic-btn">Email me a magic link instead</button>
       <div id="auth-signin-error" class="auth-msg error" hidden></div>
     </form>
 
@@ -1593,13 +1596,49 @@ async function checkSessionAndProceed() {
   }
 }
 
-// Form submit — send magic link
+// Form submit — password sign-in
 $('auth-state-signin').addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = $('auth-email').value.trim().toLowerCase();
+  const password = $('auth-password').value;
   const btn = $('auth-signin-btn');
   const err = $('auth-signin-error');
   err.hidden = true;
+
+  if (!password) {
+    err.textContent = 'Enter your password, or use the magic-link option below.';
+    err.hidden = false;
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    err.textContent = 'Sign-in failed: ' + error.message;
+    err.hidden = false;
+    btn.disabled = false;
+    btn.textContent = 'Sign in';
+    return;
+  }
+  // onAuthStateChange ('SIGNED_IN') reveals the app from here.
+});
+
+// Magic-link fallback — emails a one-time sign-in link instead
+$('auth-magic-btn').addEventListener('click', async () => {
+  const email = $('auth-email').value.trim().toLowerCase();
+  const btn = $('auth-magic-btn');
+  const err = $('auth-signin-error');
+  err.hidden = true;
+
+  if (!email) {
+    err.textContent = 'Enter your email address first.';
+    err.hidden = false;
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = 'Sending…';
 
@@ -1612,7 +1651,7 @@ $('auth-state-signin').addEventListener('submit', async (e) => {
     err.textContent = 'Could not send: ' + error.message;
     err.hidden = false;
     btn.disabled = false;
-    btn.textContent = 'Send magic link';
+    btn.textContent = 'Email me a magic link instead';
     return;
   }
 
@@ -2014,7 +2053,9 @@ This agreement is made between Flint Hall Events ("The Venue") and {client_full_
    • Any deviation from agreed times must be discussed and agreed in writing with FH.
    • Venue access depends on the package booked. Times will be tailored.
    • Prohibited Areas — the outbuildings and main house are strictly off limits.
-   • Music — all live / amplified music in the Ranch MUST be facing the house and must end by 11pm sharp.
+   • Music — all live / amplified music in the Ranch MUST be facing the house and must STOP by 22:45 sharp. This is a hard curfew and is non-negotiable.
+   • Noise limit — a strict 90 dB sound limit applies across the entire site, enforced by Environmental Health and the local council. A dB noise limiter/monitor is installed in the Ranch; if the 90 dB limit is exceeded the power to the music system will cut out.
+   • Live bands & DJs — if you are booking a live band or DJ, it is YOUR responsibility to make them aware of the 90 dB sound limit and the 22:45 curfew before the event. Any act that cannot perform within these limits is not suitable for this venue.
 
 3. PAYMENT TERMS — VENUE HIRE
    Total Venue Cost:  £{total_cost}
