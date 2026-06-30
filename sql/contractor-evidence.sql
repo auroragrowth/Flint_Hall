@@ -49,7 +49,7 @@ create index if not exists event_contractors_client_email_idx
 
 -- keep updated_at fresh
 create or replace function public.touch_event_contractors()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = '' as $$
 begin new.updated_at = now(); return new; end; $$;
 
 drop trigger if exists trg_touch_event_contractors on public.event_contractors;
