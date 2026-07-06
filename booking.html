@@ -691,7 +691,53 @@ textarea { resize: vertical; min-height: 100px; }
           <span>Outstanding</span>
           <span class="totals-amount" id="dash-outstanding-amount">£0</span>
         </div>
-        <p class="lead" style="font-size:12.5px; margin-top:18px; text-align:left;">All payments by BACS unless agreed otherwise. Your invoices and receipts will appear here once the document downloads section is live.</p>
+        <p class="lead" style="font-size:12.5px; margin-top:18px; text-align:left;">All payments by BACS unless agreed otherwise. Your catering order and invoices appear below.</p>
+      </article>
+
+      <style>
+        .cat-item { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:14px 0; border-top:1px solid var(--paper-edge); }
+        .cat-item:first-child { border-top:none; }
+        .cat-item .ci-body { flex:1; }
+        .cat-item .ci-name { font-family:var(--display); font-size:14px; letter-spacing:0.04em; color:var(--brown-dk); }
+        .cat-item .ci-name .ci-price { color:var(--rust); font-size:12.5px; letter-spacing:0.02em; }
+        .cat-item .ci-desc { font-family:var(--body); font-size:12.5px; color:var(--ink-faded); margin-top:3px; line-height:1.5; }
+        .cat-item .ci-qty { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+        .cat-item .ci-qty input { width:64px; text-align:center; padding:8px; border:1px solid var(--paper-edge); border-radius:3px; background:var(--paper); font-family:var(--body); font-size:14px; }
+        .cat-item .ci-line { min-width:78px; text-align:right; font-family:var(--body); font-size:13px; color:var(--brown-dk); }
+        .cat-foot { display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:16px; border-top:2px solid var(--brown-dk); }
+        .cat-foot .cat-total { font-family:var(--display); font-size:17px; color:var(--brown-dk); }
+        .invoice { border:1px solid var(--paper-edge); border-radius:4px; padding:18px 20px; margin-bottom:16px; background:var(--paper); }
+        .invoice h4 { font-family:var(--display); font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:var(--brown-dk); margin:0 0 12px; display:flex; justify-content:space-between; align-items:center; }
+        .invoice .inv-badge { font-size:10.5px; letter-spacing:0.08em; padding:2px 8px; border-radius:10px; }
+        .inv-badge.paid { background:#e6f3e6; color:#2e6b2e; } .inv-badge.due { background:#f1ead8; color:#6b5a2e; }
+        .invoice .inv-row { display:flex; justify-content:space-between; font-family:var(--body); font-size:13px; padding:3px 0; }
+        .invoice .inv-row.total { border-top:1px solid var(--paper-edge); margin-top:6px; padding-top:8px; font-weight:600; color:var(--brown-dk); }
+        .invoice .inv-bacs { margin-top:14px; padding:12px 14px; background:var(--paper-warm,#f6efe0); border-radius:3px; font-family:var(--body); font-size:12.5px; white-space:pre-line; color:var(--brown-dk); }
+        .invoice .inv-bacs strong { display:block; font-family:var(--display); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--rust); margin-bottom:5px; }
+      </style>
+      <article class="card card-wide">
+        <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+          Order your catering
+        </h2>
+        <p class="lead" style="font-size:13.5px; text-align:left; margin:0 0 6px;">Choose your feasting for the day &mdash; prices are <strong>per head</strong>. Enter the number of covers for anything you&rsquo;d like; we&rsquo;ll email our catering team and add it to your invoice below. You can update this any time before the event.</p>
+        <div id="dash-catering-order">Loading&hellip;</div>
+      </article>
+
+      <article class="card card-wide">
+        <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8"/></svg>
+          Invoices &amp; payment
+        </h2>
+        <div id="dash-invoices">Loading&hellip;</div>
+      </article>
+
+      <article class="card card-wide">
+        <h2 class="h-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>
+          Your agreement
+        </h2>
+        <div id="dash-agreement">Loading&hellip;</div>
       </article>
 
       <article class="card card-wide">
@@ -1005,6 +1051,251 @@ function renderDashboard(b) {
 
   // External suppliers & contractors — load async
   loadContractors(c.email);
+
+  // Catering ordering + invoices — load async
+  loadCateringAndInvoices(b);
+}
+
+// ─────────────────── CATERING ORDERING + INVOICES ───────────────────
+const CATERING_MENU = [
+  { name: 'The Hog Roast',   price: 20.00, desc: 'Slow-roasted, with soft bread rolls, homemade apple sauce, smoky bacon jam and sage & onion stuffing.' },
+  { name: 'Meat BBQ Feast',  price: 20.00, desc: 'Butcher’s sausages, 4oz beef burgers, peri-peri chicken thighs, smoked baby back ribs and chicken & chorizo skewers, with salads, breads and sauces.' },
+  { name: 'Vegan BBQ Feast', price: 18.00, desc: 'Oyster mushroom, onion & beetroot burgers, Quorn vegan strips and spiced vegetable couscous, with salads, breads and vegan sauces.' },
+  { name: 'Classic Pizza',   price: 18.50, desc: 'Stone-baked — Margherita, Pepperoni, BBQ Chicken and Vegetarian — with mixed leaf salad, coleslaw and pesto pasta salad.' },
+  { name: 'Gourmet Pizza',   price: 20.00, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket — with Caesar salad, tomato & feta, slaw and potato wedges.' },
+  { name: 'Jacket Potato Bar', price: 9.00, desc: 'Fluffy baked potatoes with a spread of toppings — cheese, beans, chilli con carne, tuna mayo, pulled pork, curry and more.' }
+];
+
+let paymentInfoCache = null;
+async function getPaymentInfo() {
+  if (paymentInfoCache) return paymentInfoCache;
+  const { data } = await supabase.rpc('get_payment_info');
+  paymentInfoCache = data || { bacs: '' };
+  return paymentInfoCache;
+}
+
+function money(n) {
+  return '£' + Number(n || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function paymentReference(b) {
+  const surname = (b.client?.lastName || b.client?.firstName || 'Booking').replace(/\s+/g, '');
+  const d = b.event?.date ? new Date(b.event.date) : null;
+  const ds = d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
+  return [surname, ds].filter(Boolean).join(' ');
+}
+
+let currentBooking = null;
+async function loadCateringAndInvoices(b) {
+  currentBooking = b;
+  const email = (b.client?.email || '').toLowerCase();
+  const [{ data: orders }, bacsInfo] = await Promise.all([
+    supabase.from('catering_orders').select('*').eq('status', 'submitted').order('created_at', { ascending: false }),
+    getPaymentInfo()
+  ]);
+  const activeOrder = (orders && orders[0]) || null;
+  renderCateringOrder(b, activeOrder);
+  renderInvoices(b, activeOrder, bacsInfo?.bacs || '');
+  loadAgreement(b);
+}
+
+function renderCateringOrder(b, activeOrder) {
+  const wrap = $('dash-catering-order');
+  const existing = {};
+  (activeOrder?.items || []).forEach(it => { existing[it.name] = it.qty; });
+  const rows = CATERING_MENU.map((m, i) => `
+    <div class="cat-item">
+      <div class="ci-body">
+        <div class="ci-name">${escapeHtml(m.name)} &middot; <span class="ci-price">${money(m.price)} pp</span></div>
+        <div class="ci-desc">${escapeHtml(m.desc)}</div>
+      </div>
+      <div class="ci-qty">
+        <input type="number" min="0" step="1" inputmode="numeric" data-idx="${i}" value="${existing[m.name] || ''}" placeholder="0" aria-label="Covers for ${escapeHtml(m.name)}">
+        <span style="font-size:12px;color:var(--ink-faded);">covers</span>
+      </div>
+      <div class="ci-line" data-line="${i}">${money(0)}</div>
+    </div>`).join('');
+
+  wrap.innerHTML = `
+    ${activeOrder ? '<div class="notice success" style="margin-bottom:14px;">Your catering order is in with our team. You can adjust the numbers below and re-submit any time before the event.</div>' : ''}
+    <div class="cat-menu">${rows}</div>
+    <div class="cat-foot">
+      <span class="cat-total" id="cat-total">${money(0)}</span>
+      <button type="button" class="btn btn-leather" id="cat-submit">${activeOrder ? 'Update my order' : 'Submit catering order'}</button>
+    </div>
+    <div class="notice error" id="cat-err" hidden style="margin-top:12px;"></div>`;
+
+  const recompute = () => {
+    let total = 0;
+    wrap.querySelectorAll('input[data-idx]').forEach(inp => {
+      const i = Number(inp.dataset.idx);
+      const qty = Math.max(0, parseInt(inp.value || '0', 10) || 0);
+      const line = qty * CATERING_MENU[i].price;
+      total += line;
+      wrap.querySelector(`[data-line="${i}"]`).textContent = money(line);
+    });
+    $('cat-total').textContent = money(total);
+    return total;
+  };
+  wrap.querySelectorAll('input[data-idx]').forEach(inp => inp.addEventListener('input', recompute));
+  recompute();
+  $('cat-submit').addEventListener('click', () => submitCateringOrder(b, activeOrder));
+}
+
+async function submitCateringOrder(b, activeOrder) {
+  const wrap = $('dash-catering-order');
+  const err = $('cat-err');
+  clearError(err);
+  const items = [];
+  let subtotal = 0;
+  wrap.querySelectorAll('input[data-idx]').forEach(inp => {
+    const i = Number(inp.dataset.idx);
+    const qty = Math.max(0, parseInt(inp.value || '0', 10) || 0);
+    if (qty > 0) {
+      const m = CATERING_MENU[i];
+      const line = qty * m.price;
+      subtotal += line;
+      items.push({ name: m.name, unit_price: m.price, qty, line_total: line });
+    }
+  });
+  if (!items.length) { showError(err, 'Add covers to at least one item before submitting.'); return; }
+
+  const btn = $('cat-submit');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const payload = {
+    client_email: (b.client?.email || '').toLowerCase(),
+    booking_id: b.id || null,
+    items, subtotal,
+    status: 'submitted',
+    reference: paymentReference(b)
+  };
+
+  let orderId = activeOrder?.id;
+  let saveErr;
+  if (orderId) {
+    ({ error: saveErr } = await supabase.from('catering_orders').update(payload).eq('id', orderId));
+  } else {
+    const { data, error } = await supabase.from('catering_orders').insert(payload).select('id').single();
+    saveErr = error; orderId = data?.id;
+  }
+  if (saveErr) { showError(err, 'Could not save your order: ' + saveErr.message); btn.disabled = false; btn.textContent = activeOrder ? 'Update my order' : 'Submit catering order'; return; }
+
+  // Fire the catering-team email (non-blocking on failure).
+  try { await supabase.functions.invoke('notify-catering-order', { body: { order_id: orderId } }); }
+  catch (e) { console.warn('notify-catering-order failed', e); }
+
+  // Refresh the booking so the payments card + invoices reflect the new catering cost.
+  const { data: fresh } = await supabase.rpc('get_my_booking');
+  if (fresh) { renderDashboard(fresh); }
+  else { await loadCateringAndInvoices(b); }
+}
+
+function invRow(label, amount, paidDate) {
+  const paid = !!paidDate;
+  return `<div class="inv-row"><span>${escapeHtml(label)}${paid ? ' <span style="color:#2e6b2e;">&middot; paid</span>' : ''}</span><span>${money(amount)}</span></div>`;
+}
+
+function renderInvoices(b, activeOrder, bacs) {
+  const wrap = $('dash-invoices');
+  const f = b.financial || {};
+  const ref = paymentReference(b);
+  const bacsBlock = bacs
+    ? `<div class="inv-bacs"><strong>Pay by bank transfer</strong>${escapeHtml(bacs)}\nReference: ${escapeHtml(ref)}</div>`
+    : '';
+
+  // Venue hire invoice (staff-set fee)
+  let venueHtml = '';
+  const venueTotal = Number(f.totalCost || 0);
+  if (venueTotal > 0 || Number(f.depositAmount || 0) > 0) {
+    const allPaid = f.depositPaidDate && f.balancePaidDate;
+    venueHtml = `<div class="invoice">
+      <h4>Venue hire <span class="inv-badge ${allPaid ? 'paid' : 'due'}">${allPaid ? 'Paid' : 'Payment due'}</span></h4>
+      ${invRow('Deposit (50%)', f.depositAmount, f.depositPaidDate)}
+      ${invRow('Balance (50%)', f.balanceAmount, f.balancePaidDate)}
+      ${Number(f.damageDeposit || 0) > 0 ? invRow('Damage deposit (refundable)', f.damageDeposit, f.damageDepositPaidDate) : ''}
+      <div class="inv-row total"><span>Total venue hire</span><span>${money(venueTotal)}</span></div>
+      ${allPaid ? '' : bacsBlock}
+    </div>`;
+  }
+
+  // Catering invoice (from the client's order)
+  let cateringHtml = '';
+  if (activeOrder && Number(activeOrder.subtotal || 0) > 0) {
+    const cAllPaid = f.cateringDepositPaidDate && f.cateringBalancePaidDate;
+    const lines = (activeOrder.items || []).map(it =>
+      `<div class="inv-row"><span>${escapeHtml(it.name)} &times; ${escapeHtml(it.qty)} @ ${money(it.unit_price)}</span><span>${money(it.line_total)}</span></div>`
+    ).join('');
+    cateringHtml = `<div class="invoice">
+      <h4>Catering <span class="inv-badge ${cAllPaid ? 'paid' : 'due'}">${cAllPaid ? 'Paid' : 'Payment due'}</span></h4>
+      ${lines}
+      <div class="inv-row total"><span>Total catering</span><span>${money(activeOrder.subtotal)}</span></div>
+      <div class="inv-row" style="margin-top:6px;"><span>Deposit (50%)${f.cateringDepositPaidDate ? ' <span style="color:#2e6b2e;">&middot; paid</span>' : ''}</span><span>${money(f.cateringDepositAmount)}</span></div>
+      <div class="inv-row"><span>Balance (50%)${f.cateringBalancePaidDate ? ' <span style="color:#2e6b2e;">&middot; paid</span>' : ''}</span><span>${money(f.cateringBalanceAmount)}</span></div>
+      ${cAllPaid ? '' : bacsBlock}
+    </div>`;
+  }
+
+  lastInvoiceHtml = venueHtml + cateringHtml;
+  const body = lastInvoiceHtml ||
+    '<div class="notice info">Your invoices will appear here once your venue fee is set or you place a catering order.</div>';
+  wrap.innerHTML = `${body}
+    ${lastInvoiceHtml ? `<div style="text-align:right; margin-top:4px;"><button type="button" class="btn btn-parchment" id="inv-print">Print / save as PDF</button></div>` : ''}`;
+  const pb = document.getElementById('inv-print');
+  if (pb) pb.addEventListener('click', () => printInvoices(b));
+}
+
+// ─────────────────── PRINTABLE DOCS + SIGNED AGREEMENT ───────────────────
+let lastInvoiceHtml = '';
+let agreementText = '';
+
+function openPrintWindow(title, innerHtml) {
+  const w = window.open('', '_blank');
+  if (!w) { alert('Please allow pop-ups to view or download this document.'); return; }
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+    <style>
+      body{font-family:Georgia,'Times New Roman',serif;color:#2a2018;max-width:720px;margin:32px auto;padding:0 24px;line-height:1.55;}
+      h1{font-size:20px;letter-spacing:0.04em;margin:0;} .muted{color:#7a6a58;font-size:12px;}
+      .doc-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #4a2f23;padding-bottom:12px;margin-bottom:20px;}
+      .invoice{border:1px solid #ddd0bb;border-radius:4px;padding:16px 18px;margin-bottom:16px;}
+      .invoice h4{margin:0 0 10px;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;display:flex;justify-content:space-between;}
+      .inv-row{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;}
+      .inv-row.total{border-top:1px solid #ddd0bb;margin-top:6px;padding-top:8px;font-weight:bold;}
+      .inv-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#eee;}
+      .inv-bacs{margin-top:12px;padding:10px 12px;background:#f6efe0;border-radius:3px;font-size:13px;white-space:pre-line;}
+      pre{white-space:pre-wrap;font-family:Georgia,serif;font-size:13.5px;}
+    </style></head><body>
+    <div class="doc-head"><h1>Flint Hall Events</h1><div class="muted">Suffolk &middot; info@flinthall.uk</div></div>
+    ${innerHtml}
+    <p class="muted" style="margin-top:24px;">Flint Hall Events &middot; payments by BACS</p>
+    </body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
+}
+
+function printInvoices(b) {
+  const ref = paymentReference(b);
+  openPrintWindow('Invoice — Flint Hall',
+    `<h2 style="font-size:16px;margin:0 0 4px;">Invoice</h2><p class="muted" style="margin-top:0;">Reference: ${escapeHtml(ref)}</p>${lastInvoiceHtml}`);
+}
+
+async function loadAgreement(b) {
+  const wrap = $('dash-agreement');
+  const signed = !!b.contract?.signedInPortal;
+  const { data: terms } = await supabase.rpc('get_my_terms');
+  agreementText = (terms && terms.rendered) || '';
+  if (!signed) {
+    wrap.innerHTML = '<div class="notice info">Once you&rsquo;ve signed your terms, your agreement will be available to view and download here.</div>';
+    return;
+  }
+  const signedName = b.contract?.signedName || '';
+  const signedAt = b.contract?.signedAt;
+  const when = signedAt ? new Date(signedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  wrap.innerHTML = `
+    <div class="notice success" style="margin-bottom:14px;">Signed${signedName ? ' by ' + escapeHtml(signedName) : ''}${when ? ' on ' + escapeHtml(when) : ''}. A copy is kept with your booking.</div>
+    <button type="button" class="btn btn-parchment" id="agr-view">View &amp; download your agreement</button>`;
+  const vb = document.getElementById('agr-view');
+  if (vb) vb.addEventListener('click', () => openPrintWindow('Agreement — Flint Hall',
+    `<h2 style="font-size:16px;margin:0 0 12px;">Venue Hire Agreement</h2><pre>${escapeHtml(agreementText)}</pre>`));
 }
 
 // ─────────────────── EXTERNAL SUPPLIERS / CONTRACTORS ───────────────────

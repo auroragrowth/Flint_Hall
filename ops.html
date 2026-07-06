@@ -1474,6 +1474,9 @@ a:hover { text-decoration: underline; }
       <div class="nav-item" data-route="contractors">
         <span>⛨</span> Supplier Docs <span class="count" id="count-contractors">0</span>
       </div>
+      <div class="nav-item" data-route="catering-orders">
+        <span>🍽</span> Catering Orders <span class="count" id="count-catering">0</span>
+      </div>
 
       <div class="nav-section">Insights</div>
       <div class="nav-item" data-route="leadsources">
@@ -2702,6 +2705,12 @@ const App = {
         content.innerHTML = this.viewContractors();
         this.bindContractors();
         break;
+      case 'catering-orders':
+        title.textContent = 'Catering Orders';
+        subtitle.textContent = 'Food ordered by clients through the portal';
+        content.innerHTML = this.viewCateringOrders();
+        this.bindCateringOrders();
+        break;
       default:
         content.innerHTML = '<div class="empty-state"><h3>Not found</h3></div>';
     }
@@ -2723,6 +2732,12 @@ const App = {
     if (cCount) window.fhSupabase.from('event_contractors')
       .select('id', { count: 'exact', head: true })
       .then(({ count }) => { cCount.textContent = count || 0; })
+      .catch(() => {});
+    const coCount = document.getElementById('count-catering');
+    if (coCount) window.fhSupabase.from('catering_orders')
+      .select('id', { count: 'exact', head: true })
+      .neq('status', 'cancelled')
+      .then(({ count }) => { coCount.textContent = count || 0; })
       .catch(() => {});
   },
 
@@ -5125,6 +5140,64 @@ const App = {
     const { error } = await sb.from('event_contractors').update({ status, staff_notes: notes }).eq('id', id);
     if (error) { this.toast('Could not save: ' + error.message, 'error'); return; }
     this.toast('Supplier updated', 'success');
+  },
+
+  // ─────────── CATERING ORDERS ───────────
+  viewCateringOrders() {
+    return `<div class="card"><div class="card-body" id="catering-admin"><div class="muted italic">Loading…</div></div></div>`;
+  },
+
+  async bindCateringOrders() {
+    const sb = window.fhSupabase;
+    const host = document.getElementById('catering-admin');
+    const { data, error } = await sb.from('catering_orders').select('*').order('created_at', { ascending: false });
+    if (error) { host.innerHTML = `<div class="empty-state"><h3>Couldn’t load orders</h3><p>${this.esc(error.message)}</p></div>`; return; }
+    this.renderCateringOrdersAdmin(data || []);
+  },
+
+  renderCateringOrdersAdmin(list) {
+    const host = document.getElementById('catering-admin');
+    const cnt = document.getElementById('count-catering');
+    if (cnt) cnt.textContent = list.filter(o => o.status !== 'cancelled').length;
+    if (!list.length) {
+      host.innerHTML = `<div class="empty-state"><div class="icon">🍽</div><h3>No catering orders yet</h3><p>Orders placed by clients in the portal appear here.</p></div>`;
+      return;
+    }
+    const money = n => '£' + Number(n || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const inputStyle = 'background: var(--linen); border:1px solid var(--paper-edge); color: var(--brown-900); padding:6px 8px; border-radius:3px; font-family: var(--font-body); font-size:12.5px;';
+    host.innerHTML = list.map(o => {
+      const lines = (o.items || []).map(it =>
+        `<div style="display:flex; justify-content:space-between; font-size:13px; padding:2px 0;"><span>${this.esc(it.name)} &times; ${this.esc(it.qty)} @ ${money(it.unit_price)}</span><span>${money(it.line_total)}</span></div>`).join('');
+      return `<div class="card mb-2"><div class="card-body">
+        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div>
+            <strong style="font-size:15px;">${this.esc(o.client_email)}</strong>
+            <div class="muted" style="font-size:12.5px;">${o.reference ? 'Ref ' + this.esc(o.reference) + ' &middot; ' : ''}ordered ${this.fmtRelative(o.created_at)}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--font-display); font-size:16px; color:var(--brown-900);">${money(o.subtotal)}</div>
+            <select data-act="costatus" data-id="${this.esc(o.id)}" style="${inputStyle} margin-top:4px;">
+              <option value="submitted"${o.status === 'submitted' ? ' selected' : ''}>Submitted</option>
+              <option value="paid"${o.status === 'paid' ? ' selected' : ''}>Paid</option>
+              <option value="cancelled"${o.status === 'cancelled' ? ' selected' : ''}>Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:10px; max-width:480px;">${lines}</div>
+        <div style="margin-top:10px; text-align:right;"><button class="btn btn-primary btn-sm" data-act="cosave" data-id="${this.esc(o.id)}">Save</button></div>
+      </div></div>`;
+    }).join('');
+    host.querySelectorAll('[data-act="cosave"]').forEach(b =>
+      b.addEventListener('click', () => this.cateringOrderSave(b.dataset.id, host)));
+  },
+
+  async cateringOrderSave(id, host) {
+    const sb = window.fhSupabase;
+    const status = host.querySelector(`[data-act="costatus"][data-id="${CSS.escape(id)}"]`)?.value;
+    const { error } = await sb.from('catering_orders').update({ status }).eq('id', id);
+    if (error) { this.toast('Could not save: ' + error.message, 'error'); return; }
+    this.toast('Order updated', 'success');
+    this.bindCateringOrders();
   },
 
   viewGallery() {
