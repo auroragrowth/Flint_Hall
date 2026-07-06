@@ -1058,12 +1058,12 @@ function renderDashboard(b) {
 
 // ─────────────────── CATERING ORDERING + INVOICES ───────────────────
 const CATERING_MENU = [
-  { name: 'The Hog Roast',   price: 20.00, desc: 'Slow-roasted, with soft bread rolls, homemade apple sauce, smoky bacon jam and sage & onion stuffing.' },
-  { name: 'Meat BBQ Feast',  price: 20.00, desc: 'Butcher’s sausages, 4oz beef burgers, peri-peri chicken thighs, smoked baby back ribs and chicken & chorizo skewers, with salads, breads and sauces.' },
-  { name: 'Vegan BBQ Feast', price: 18.00, desc: 'Oyster mushroom, onion & beetroot burgers, Quorn vegan strips and spiced vegetable couscous, with salads, breads and vegan sauces.' },
-  { name: 'Classic Pizza',   price: 18.50, desc: 'Stone-baked — Margherita, Pepperoni, BBQ Chicken and Vegetarian — with mixed leaf salad, coleslaw and pesto pasta salad.' },
-  { name: 'Gourmet Pizza',   price: 20.00, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket — with Caesar salad, tomato & feta, slaw and potato wedges.' },
-  { name: 'Jacket Potato Bar', price: 9.00, desc: 'Fluffy baked potatoes with a spread of toppings — cheese, beans, chilli con carne, tuna mayo, pulled pork, curry and more.' }
+  { name: 'The Hog Roast',   price: 20.00, min: 50, desc: 'Slow-roasted, with soft bread rolls, homemade apple sauce, smoky bacon jam and sage & onion stuffing.' },
+  { name: 'Meat BBQ Feast',  price: 20.00, min: 40, desc: 'Butcher’s sausages, 4oz beef burgers, peri-peri chicken thighs, smoked baby back ribs and chicken & chorizo skewers, with salads, breads and sauces.' },
+  { name: 'Vegan BBQ Feast', price: 18.00, min: 0,  desc: 'Oyster mushroom, onion & beetroot burgers, Quorn vegan strips and spiced vegetable couscous, with salads, breads and vegan sauces.' },
+  { name: 'Classic Pizza',   price: 18.50, min: 40, desc: 'Stone-baked — Margherita, Pepperoni, BBQ Chicken and Vegetarian — with mixed leaf salad, coleslaw and pesto pasta salad.' },
+  { name: 'Gourmet Pizza',   price: 20.00, min: 40, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket — with Caesar salad, tomato & feta, slaw and potato wedges.' },
+  { name: 'Jacket Potato Bar', price: 9.00, min: 0, desc: 'Fluffy baked potatoes with a spread of toppings — cheese, beans, chilli con carne, tuna mayo, pulled pork, curry and more.' }
 ];
 
 let paymentInfoCache = null;
@@ -1105,7 +1105,7 @@ function renderCateringOrder(b, activeOrder) {
   const rows = CATERING_MENU.map((m, i) => `
     <div class="cat-item">
       <div class="ci-body">
-        <div class="ci-name">${escapeHtml(m.name)} &middot; <span class="ci-price">${money(m.price)} pp</span></div>
+        <div class="ci-name">${escapeHtml(m.name)} &middot; <span class="ci-price">${money(m.price)} pp</span>${m.min ? ` <span style="color:var(--ink-faded); font-size:11.5px; letter-spacing:0.02em;">&middot; min ${m.min} covers</span>` : ''}</div>
         <div class="ci-desc">${escapeHtml(m.desc)}</div>
       </div>
       <div class="ci-qty">
@@ -1146,18 +1146,21 @@ async function submitCateringOrder(b, activeOrder) {
   const err = $('cat-err');
   clearError(err);
   const items = [];
+  const belowMin = [];
   let subtotal = 0;
   wrap.querySelectorAll('input[data-idx]').forEach(inp => {
     const i = Number(inp.dataset.idx);
     const qty = Math.max(0, parseInt(inp.value || '0', 10) || 0);
     if (qty > 0) {
       const m = CATERING_MENU[i];
+      if (m.min && qty < m.min) belowMin.push(`${m.name} (min ${m.min})`);
       const line = qty * m.price;
       subtotal += line;
       items.push({ name: m.name, unit_price: m.price, qty, line_total: line });
     }
   });
   if (!items.length) { showError(err, 'Add covers to at least one item before submitting.'); return; }
+  if (belowMin.length) { showError(err, 'These items need more covers to meet their minimum: ' + belowMin.join(', ') + '. Adjust the numbers or drop them from your order.'); return; }
 
   const btn = $('cat-submit');
   btn.disabled = true; btn.textContent = 'Sending…';
