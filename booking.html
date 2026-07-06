@@ -1628,8 +1628,8 @@ async function onSession(session) {
     return;
   }
 
-  if (status?.isTeamMember) {
-    // Staff signed in here by accident — point them at ops.
+  if (status?.isTeamMember && !status?.approved) {
+    // Staff signed in here without a client booking — point them at ops.
     show('pending');
     $('pending-title').textContent = 'You&rsquo;re on the team';
     $('pending-lead').textContent  = 'This portal is for clients. Head to the operations system instead.';
