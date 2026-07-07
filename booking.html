@@ -518,14 +518,19 @@ textarea { resize: vertical; min-height: 100px; }
       <span class="eyebrow">Sign in</span>
       <h1>Welcome back</h1>
       <div class="divider"></div>
-      <p class="lead">We&rsquo;ll email you a one-time link to sign in &mdash; no password to remember.</p>
+      <p class="lead">Sign in with your password &mdash; or we can email you a one-time link instead.</p>
 
       <form id="form-signin" style="margin-top:28px;">
         <div class="form-row">
           <label for="signin-email">Email address</label>
           <input type="email" id="signin-email" required autocomplete="email" placeholder="the email you booked with">
         </div>
-        <button type="submit" class="btn btn-leather btn-block" id="signin-submit">Send sign-in link</button>
+        <div class="form-row">
+          <label for="signin-password">Password</label>
+          <input type="password" id="signin-password" autocomplete="current-password" placeholder="Your password">
+        </div>
+        <button type="submit" class="btn btn-leather btn-block" id="signin-submit">Sign in</button>
+        <button type="button" class="btn btn-parchment btn-block" id="signin-magic" style="margin-top:10px;">Email me a sign-in link instead</button>
         <div class="form-foot">
           <a href="#" id="signin-back">← Back</a>
           <a href="mailto:info@flinthall.uk?subject=Booking%20portal%20access">Lost access?</a>
@@ -533,7 +538,7 @@ textarea { resize: vertical; min-height: 100px; }
       </form>
 
       <p style="font-family: var(--body); font-size: 12.5px; color: var(--ink-faded); font-style: italic; text-align: center; margin-top: 18px;">
-        No password needed &mdash; the link is your sign-in. If a previous one&rsquo;s expired, just request a fresh one.
+        No password yet? Use the link option &mdash; it signs you straight in.
       </p>
 
       <div class="notice error" id="signin-err" hidden></div>
@@ -868,13 +873,37 @@ $('signin-back').addEventListener('click',  e => { e.preventDefault(); show('lan
 $('request-back').addEventListener('click', e => { e.preventDefault(); show('landing'); });
 $('signin-sent-retry').addEventListener('click', () => { show('signin'); });
 
-// ─── Sign-in (magic link) ───
+// ─── Sign-in (password) ───
 $('form-signin').addEventListener('submit', async (e) => {
   e.preventDefault();
   const errEl = $('signin-err');
   clearError(errEl);
   const email = $('signin-email').value.trim().toLowerCase();
+  const password = $('signin-password').value;
+  if (!password) {
+    showError(errEl, 'Enter your password, or use the “email me a link” option below.');
+    return;
+  }
   const btn = $('signin-submit');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    btn.disabled = false; btn.textContent = 'Sign in';
+    showError(errEl, escapeHtml(error.message || 'Sign-in failed. Check your details or use the link option.'));
+    return;
+  }
+  // onAuthStateChange picks it up and boots the portal.
+});
+
+// ─── Sign-in (magic link fallback) ───
+$('signin-magic').addEventListener('click', async () => {
+  const errEl = $('signin-err');
+  clearError(errEl);
+  const email = $('signin-email').value.trim().toLowerCase();
+  if (!email) { showError(errEl, 'Enter your email address first.'); return; }
+  const btn = $('signin-magic');
   btn.disabled = true; btn.textContent = 'Sending…';
 
   const { error } = await supabase.auth.signInWithOtp({
@@ -882,7 +911,7 @@ $('form-signin').addEventListener('submit', async (e) => {
     options: { emailRedirectTo: window.location.origin + '/booking' }
   });
 
-  btn.disabled = false; btn.textContent = 'Send sign-in link';
+  btn.disabled = false; btn.textContent = 'Email me a sign-in link instead';
   if (error) {
     showError(errEl, escapeHtml(error.message || 'Could not send the link. Try again or email info@flinthall.uk.'));
     return;
