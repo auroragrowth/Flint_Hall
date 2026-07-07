@@ -740,16 +740,27 @@ textarea { resize: vertical; min-height: 100px; }
         <div id="dash-agreement">Loading&hellip;</div>
       </article>
 
+      <style>
+        .ro-row { display:flex; gap:10px; align-items:center; padding:6px 0; }
+        .ro-row input.ro-time { width:88px; padding:8px; border:1px solid var(--paper-edge); border-radius:4px; background:var(--paper); font-family:var(--body); font-size:13px; text-align:center; }
+        .ro-row input.ro-what { flex:1; padding:8px 10px; border:1px solid var(--paper-edge); border-radius:4px; background:var(--paper); font-family:var(--body); font-size:14px; }
+        .ro-row .ro-del { background:none; border:none; color:#9a2b2b; cursor:pointer; font-size:16px; line-height:1; padding:4px; }
+        .ro-hist-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--paper-edge); font-family:var(--body); font-size:12.5px; }
+        .ro-hist-item .rh-when { color:var(--ink-faded); }
+      </style>
       <article class="card card-wide">
         <h2 class="h-section">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
-          Function sheet
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Running order of the day
         </h2>
-        <div id="dash-fs-empty" class="notice info" hidden>
-          <strong>Not started yet</strong>
-          Your function sheet will appear here once we start fleshing it out together. We usually kick this off four to six weeks before your event.
+        <p class="lead" style="font-size:13.5px; text-align:left; margin:0 0 14px;">Design the shape of your day &mdash; add each moment with a time and what&rsquo;s happening. You and the Flint Hall team can both edit this, and every save is kept in the history below.</p>
+        <div id="dash-ro-editor">Loading&hellip;</div>
+        <div id="dash-ro-history" style="margin-top:18px;"></div>
+        <div id="dash-fs-empty" class="notice info" hidden style="margin-top:18px;">
+          <strong>The rest of your function sheet</strong>
+          Menu, breakfast and finer details will appear here as we flesh them out together.
         </div>
-        <div id="dash-fs-content" hidden></div>
+        <div id="dash-fs-content" hidden style="margin-top:20px; border-top:1px solid var(--paper-edge); padding-top:18px;"></div>
       </article>
 
       <article class="card card-wide">
@@ -1044,29 +1055,25 @@ function renderDashboard(b) {
   if (paid > 0)        { $('dash-paid-row').hidden = false;        $('dash-paid-amount').textContent = fmtMoney(paid); }
   if (outstanding > 0) { $('dash-outstanding-row').hidden = false; $('dash-outstanding-amount').textContent = fmtMoney(outstanding); }
 
-  // Function sheet
+  // Running order of the day — client-editable, versioned
+  loadRunningOrder(b);
+
+  // The rest of the function sheet (menu, breakfast, extras) — read-only
   const fs = b.functionSheet;
-  const roHasContent = fs && Array.isArray(fs.runningOrder) &&
-    fs.runningOrder.some(r => (r.time || '').trim() || (r.what || '').trim());
   const menuHasContent = fs && fs.menu &&
     Object.values(fs.menu).some(v => (v || '').toString().trim());
   const bkHasContent = fs && fs.breakfast && (
     fs.breakfast.needed ||
     ['time','covers','menu'].some(k => (fs.breakfast[k] || '').toString().trim())
   );
-  const extrasHasContent = fs && Array.isArray(fs.extras) &&
-    fs.extras.some(x => x.added);
-  const fsHasContent = fs && (
-    roHasContent || menuHasContent || bkHasContent || extrasHasContent ||
-    (Array.isArray(fs.days) && fs.days.length > 0) ||
-    (fs.catering && fs.catering.trim()) ||
-    (fs.notes && fs.notes.trim())
+  const extrasHasContent = fs && Array.isArray(fs.extras) && fs.extras.some(x => x.added);
+  const restHasContent = fs && (
+    menuHasContent || bkHasContent || extrasHasContent ||
+    (fs.catering && fs.catering.trim()) || (fs.notes && fs.notes.trim())
   );
-  if (!fsHasContent) {
-    $('dash-fs-empty').hidden = false;
-  } else {
+  if (restHasContent) {
     $('dash-fs-content').hidden = false;
-    $('dash-fs-content').innerHTML = renderFunctionSheet(fs);
+    $('dash-fs-content').innerHTML = renderFunctionSheet(fs, true);
   }
 
   // Extras catalogue — static, members-only
@@ -1649,11 +1656,104 @@ const FS_MENU_LABELS = {
   eveningFood: 'Evening food', dietary: 'Dietary / allergies'
 };
 
-function renderFunctionSheet(fs) {
+// ─────────────────── RUNNING ORDER OF THE DAY (client-editable, versioned) ───────────────────
+let roBooking = null;
+function loadRunningOrder(b) {
+  roBooking = b;
+  const rows = (b.functionSheet && Array.isArray(b.functionSheet.runningOrder)) ? b.functionSheet.runningOrder : [];
+  renderROEditor(rows);
+  loadROHistory(b);
+}
+
+function roRowHtml(r) {
+  return `<div class="ro-row">
+    <input class="ro-time" placeholder="14:00" value="${escapeHtml(r.time || '')}">
+    <input class="ro-what" placeholder="What&rsquo;s happening?" value="${escapeHtml(r.what || '')}">
+    <button type="button" class="ro-del" title="Remove">&times;</button>
+  </div>`;
+}
+
+function renderROEditor(rows) {
+  const wrap = $('dash-ro-editor');
+  const list = (rows.length ? rows : [{ time: '', what: '' }]).map(roRowHtml).join('');
+  wrap.innerHTML = `
+    <div id="ro-list">${list}</div>
+    <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;">
+      <button type="button" class="btn btn-parchment" id="ro-add">+ Add a moment</button>
+      <button type="button" class="btn btn-leather" id="ro-save" style="margin-left:auto;">Save running order</button>
+    </div>
+    <div class="notice error" id="ro-err" hidden style="margin-top:10px;"></div>
+    <div class="notice success" id="ro-ok" hidden style="margin-top:10px;">Saved — your running order is updated.</div>`;
+  bindRORows();
+  $('ro-add').addEventListener('click', () => {
+    document.getElementById('ro-list').insertAdjacentHTML('beforeend', roRowHtml({ time: '', what: '' }));
+    bindRORows();
+  });
+  $('ro-save').addEventListener('click', saveRunningOrder);
+}
+
+function bindRORows() {
+  document.querySelectorAll('#ro-list .ro-del').forEach(btn => {
+    btn.onclick = () => {
+      const row = btn.closest('.ro-row');
+      if (document.querySelectorAll('#ro-list .ro-row').length > 1) row.remove();
+      else { row.querySelector('.ro-time').value = ''; row.querySelector('.ro-what').value = ''; }
+    };
+  });
+}
+
+async function saveRunningOrder() {
+  const err = $('ro-err'); const ok = $('ro-ok');
+  clearError(err); ok.hidden = true;
+  const rows = [];
+  document.querySelectorAll('#ro-list .ro-row').forEach(row => {
+    const time = row.querySelector('.ro-time').value.trim();
+    const what = row.querySelector('.ro-what').value.trim();
+    if (time || what) rows.push({ time, what });
+  });
+  const btn = $('ro-save'); btn.disabled = true; btn.textContent = 'Saving…';
+  const b = roBooking;
+  const name = [b.client?.firstName, b.client?.lastName].filter(Boolean).join(' ') || null;
+  const { error } = await supabase.rpc('save_my_running_order', { p_rows: rows, p_editor_name: name });
+  btn.disabled = false; btn.textContent = 'Save running order';
+  if (error) { showError(err, 'Could not save: ' + error.message); return; }
+  ok.hidden = false;
+  if (b.functionSheet) b.functionSheet.runningOrder = rows; else b.functionSheet = { runningOrder: rows };
+  loadROHistory(b);
+}
+
+async function loadROHistory(b) {
+  const wrap = $('dash-ro-history');
+  const { data, error } = await supabase.from('running_order_versions')
+    .select('id, editor, editor_name, created_at, content')
+    .order('created_at', { ascending: false }).limit(20);
+  if (error || !data || !data.length) { wrap.innerHTML = ''; return; }
+  const items = data.map((v, idx) => `
+    <div class="ro-hist-item">
+      <span>${idx === 0 ? '<strong>Current</strong>' : 'Version'} &middot; ${v.editor === 'client' ? escapeHtml(v.editor_name || 'You') : 'Flint Hall'} <span class="rh-when">&middot; ${fmtDateShort(v.created_at) || ''}</span></span>
+      <button type="button" class="cd-link" data-ver="${escapeHtml(v.id)}">${idx === 0 ? 'view' : 'view / restore'}</button>
+    </div>`).join('');
+  wrap.innerHTML = `<h3 style="font-family:var(--display); font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin:4px 0 6px;">History (${data.length})</h3>${items}`;
+  wrap.querySelectorAll('[data-ver]').forEach(btn => {
+    const v = data.find(x => x.id === btn.dataset.ver);
+    btn.addEventListener('click', () => viewROVersion(v));
+  });
+}
+
+function viewROVersion(v) {
+  const rows = Array.isArray(v.content) ? v.content : [];
+  const preview = rows.map(r => `${r.time || ''}  ${r.what || ''}`).join('\n') || '(empty)';
+  const who = v.editor === 'client' ? (v.editor_name || 'you') : 'Flint Hall';
+  if (confirm(`Running order saved ${fmtDateShort(v.created_at)} by ${who}:\n\n${preview}\n\nLoad this into the editor? You'll still need to Save to make it current.`)) {
+    renderROEditor(rows);
+  }
+}
+
+function renderFunctionSheet(fs, skipRunningOrder) {
   const parts = [];
 
   // Running order — the draggable list built in ops
-  if (Array.isArray(fs.runningOrder) && fs.runningOrder.length) {
+  if (!skipRunningOrder && Array.isArray(fs.runningOrder) && fs.runningOrder.length) {
     const rows = fs.runningOrder.filter(r => (r.time || '').trim() || (r.what || '').trim());
     if (rows.length) {
       parts.push(`<div style="margin-bottom:24px;"><h3 style="font-family:var(--display); font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:var(--brown-dk); margin-bottom:12px;">Running order</h3>`);

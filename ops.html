@@ -2663,7 +2663,7 @@ const App = {
         title.textContent = `${b.client.firstName} ${b.client.lastName}${b.partnerName ? ' & ' + b.partnerName : ''}`;
         subtitle.textContent = `${b.event.type} · ${this.fmtDateLong(b.event.date)}`;
         actions.innerHTML = `
-          <button class="btn btn-gold" onclick="App.openFunctionSheet('${b.id}')">📋 Function Sheet</button>
+          <button class="btn btn-gold" onclick="App.openFunctionSheet('${b.id}')">📋 Running Order</button>
           <button class="btn btn-secondary btn-sm" onclick="App.deleteBooking('${b.id}')">Delete</button>
           <button class="btn btn-secondary btn-sm" onclick="App.navigate('pipeline')">← Pipeline</button>`;
         content.innerHTML = this.viewBooking(b);
@@ -3431,7 +3431,7 @@ const App = {
   // ─────────── BOOKING DETAIL ───────────
   viewBooking(b) {
     const tabs = ['details','payments','comms','function','contract'];
-    const tabLabel = { details:'Details', payments:'Payments', comms:'Communications', function:'Function Sheet', contract:'Contract' };
+    const tabLabel = { details:'Details', payments:'Payments', comms:'Communications', function:'Running Order', contract:'Contract' };
     const balanceDue = this.computeBalanceDueDate(b);
     const lateFee = this.computeLateFee(b);
 
@@ -4387,12 +4387,13 @@ const App = {
 
       <div class="card mt-3">
         <div class="card-header">
-          <div class="card-title">Running order</div>
+          <div class="card-title">Running order of the day</div>
           <button class="btn btn-secondary btn-sm" onclick="App.fsRoAdd('${b.id}')">+ Add row</button>
         </div>
         <div class="card-body">
-          <div class="muted italic" style="margin-bottom: 10px;">Pre-filled with the usual milestones — edit the times, drag to reorder, add or remove rows as the day takes shape.</div>
+          <div class="muted italic" style="margin-bottom: 10px;">Pre-filled with the usual milestones — edit the times, drag to reorder, add or remove rows. The client can also edit this in their portal; every save is versioned in the history below.</div>
           <div class="fs-list" id="fs-ro-list">${roRows}</div>
+          <div id="fs-ro-history" style="margin-top:14px;"></div>
         </div>
       </div>
 
@@ -4502,6 +4503,40 @@ const App = {
     // Drag-and-drop reordering for both lists
     this.fsBindDrag('fs-ro-list',  'fs-ro-row',  fs.runningOrder);
     this.fsBindDrag('fs-sup-list', 'fs-sup-row', fs.suppliers);
+
+    this.loadOpsRoHistory(b);
+  },
+
+  async loadOpsRoHistory(b) {
+    const host = document.getElementById('fs-ro-history'); if (!host) return;
+    const email = (b.client?.email || '').toLowerCase();
+    if (!email) { host.innerHTML = ''; return; }
+    const { data } = await window.fhSupabase.from('running_order_versions')
+      .select('id, editor, editor_name, created_at, content')
+      .ilike('client_email', email).order('created_at', { ascending: false }).limit(20);
+    if (!data || !data.length) { host.innerHTML = ''; return; }
+    host.innerHTML = `<div class="card-title" style="font-size:12px; margin:4px 0 6px;">Version history (${data.length})</div>` +
+      data.map((v, idx) => `<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 0; border-top:1px solid var(--paper-edge); font-size:12.5px;">
+        <span>${idx === 0 ? '<strong>Current</strong>' : 'Version'} &middot; ${v.editor === 'client' ? this.esc(v.editor_name || 'Client') : 'Flint Hall'} <span class="muted">&middot; ${this.fmtDateShort(v.created_at)} &middot; ${Array.isArray(v.content) ? v.content.length : 0} rows</span></span>
+        <button class="btn btn-ghost btn-sm" data-act="rorestore" data-id="${this.esc(v.id)}">${idx === 0 ? 'view' : 'restore'}</button>
+      </div>`).join('');
+    host.querySelectorAll('[data-act="rorestore"]').forEach(btn => {
+      const v = data.find(x => x.id === btn.dataset.id);
+      btn.addEventListener('click', () => this.opsRestoreRoVersion(b, v));
+    });
+  },
+
+  opsRestoreRoVersion(b, v) {
+    const rows = Array.isArray(v.content) ? v.content : [];
+    const preview = rows.map(r => `${r.time || ''}  ${r.what || ''}`).join('\n') || '(empty)';
+    const who = v.editor === 'client' ? (v.editor_name || 'the client') : 'Flint Hall';
+    if (!confirm(`Running order saved ${this.fmtDateShort(v.created_at)} by ${who}:\n\n${preview}\n\nLoad this version into the editor and save it as the current running order?`)) return;
+    const fs = this.fsEnsure(b);
+    fs.runningOrder = rows.map(r => ({ id: this.fsRowId(), time: r.time || '', what: r.what || '', note: r.note || '' }));
+    this.save();
+    document.getElementById('tab-content').innerHTML = this.renderBookingTab(b);
+    this.bindBookingTabContent(b);
+    this.toast('Running order restored', 'success');
   },
 
   // Wires HTML5 drag-and-drop on a list of rows, reordering `arr` in place.
