@@ -768,14 +768,6 @@ textarea { resize: vertical; min-height: 100px; }
         <div id="dash-fs-content" hidden style="margin-top:20px; border-top:1px solid var(--paper-edge); padding-top:18px;"></div>
       </article>
 
-      <article class="card card-wide">
-        <h2 class="h-section">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-          Extras &amp; hire
-        </h2>
-        <p class="lead" style="font-size:13.5px; text-align:left; margin:0 0 18px;">Feasts, fires and a few flourishes to add to your day. To add any of these, just <a href="mailto:info@flinthall.uk?subject=Extras%20for%20our%20booking" style="color:var(--rust); border-bottom:1px solid var(--rust);">drop us a line</a> and we&rsquo;ll fold them into your quote.</p>
-        <div id="dash-extras"></div>
-      </article>
 
       <style>
         .contractor-card { border:1px solid var(--paper-edge); border-radius:4px; padding:16px 18px; margin-bottom:14px; background:var(--paper); }
@@ -1105,8 +1097,6 @@ function renderDashboard(b) {
     $('dash-fs-content').innerHTML = renderFunctionSheet(fs, true);
   }
 
-  // Extras catalogue — static, members-only
-  $('dash-extras').innerHTML = renderExtras();
 
   // External suppliers & contractors — load async
   loadContractors(c.email);
