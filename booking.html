@@ -1087,7 +1087,8 @@ const CATERING_MENU = [
   { name: 'Classic Pizza',   price: 18.50, min: 40, desc: 'Stone-baked — Margherita, Pepperoni, BBQ Chicken and Vegetarian — with mixed leaf salad, coleslaw and pesto pasta salad.' },
   { name: 'Gourmet Pizza',   price: 20.00, min: 40, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket — with Caesar salad, tomato & feta, slaw and potato wedges.' },
   { name: 'Jacket Potato Bar', price: 9.00, min: 0, desc: 'Fluffy baked potatoes with a spread of toppings — cheese, beans, chilli con carne, tuna mayo, pulled pork, curry and more.' },
-  { name: 'The Ice Cream Bike', price: 3.80, min: 50, desc: 'Scoops for the children and the young at heart — and it doubles as a drinks cart for the evening.' }
+  { name: 'The Ice Cream Bike', price: 3.80, min: 50, desc: 'Scoops for the children and the young at heart — and it doubles as a drinks cart for the evening.' },
+  { name: 'The Tuk Tuk Bar', price: 100.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall', desc: 'Our little three-wheeled bar, parked up wherever the party needs it. £100 hire — beer is bought from Flint Hall.' }
 ];
 
 let paymentInfoCache = null;
@@ -1225,18 +1226,23 @@ function renderCateringOrder(b, activeOrder) {
   const wrap = $('dash-catering-order');
   const existing = {};
   (activeOrder?.items || []).forEach(it => { existing[it.name] = it.qty; });
-  const rows = CATERING_MENU.map((m, i) => `
-    <div class="cat-item">
+  const rows = CATERING_MENU.map((m, i) => {
+    const isFlat = !!m.flat;
+    const meta = [];
+    if (!isFlat && m.min) meta.push(`min ${m.min} covers`);
+    if (m.note) meta.push(m.note);
+    const control = isFlat
+      ? `<label class="ci-qty" style="cursor:pointer;"><input type="checkbox" data-idx="${i}" data-flat="1" ${existing[m.name] ? 'checked' : ''}> <span style="font-size:12px;color:var(--ink-faded);">add</span></label>`
+      : `<div class="ci-qty"><input type="number" min="0" step="1" inputmode="numeric" data-idx="${i}" value="${existing[m.name] || ''}" placeholder="0" aria-label="Covers for ${escapeHtml(m.name)}"><span style="font-size:12px;color:var(--ink-faded);">covers</span></div>`;
+    return `<div class="cat-item">
       <div class="ci-body">
-        <div class="ci-name">${escapeHtml(m.name)} &middot; <span class="ci-price">${money(m.price)} pp</span>${m.min ? ` <span style="color:var(--ink-faded); font-size:11.5px; letter-spacing:0.02em;">&middot; min ${m.min} covers</span>` : ''}</div>
+        <div class="ci-name">${escapeHtml(m.name)} &middot; <span class="ci-price">${money(m.price)}${isFlat ? ' hire' : ' pp'}</span>${meta.length ? ` <span style="color:var(--ink-faded); font-size:11.5px; letter-spacing:0.02em;">&middot; ${escapeHtml(meta.join(' · '))}</span>` : ''}</div>
         <div class="ci-desc">${escapeHtml(m.desc)}</div>
       </div>
-      <div class="ci-qty">
-        <input type="number" min="0" step="1" inputmode="numeric" data-idx="${i}" value="${existing[m.name] || ''}" placeholder="0" aria-label="Covers for ${escapeHtml(m.name)}">
-        <span style="font-size:12px;color:var(--ink-faded);">covers</span>
-      </div>
+      ${control}
       <div class="ci-line" data-line="${i}">${money(0)}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   wrap.innerHTML = `
     ${activeOrder ? '<div class="notice success" style="margin-bottom:14px;">Your catering order is in with our team. You can adjust the numbers below and re-submit any time before the event.</div>' : ''}
@@ -1251,15 +1257,17 @@ function renderCateringOrder(b, activeOrder) {
     let total = 0;
     wrap.querySelectorAll('input[data-idx]').forEach(inp => {
       const i = Number(inp.dataset.idx);
-      const qty = Math.max(0, parseInt(inp.value || '0', 10) || 0);
-      const line = qty * CATERING_MENU[i].price;
+      const m = CATERING_MENU[i];
+      const line = inp.dataset.flat
+        ? (inp.checked ? m.price : 0)
+        : Math.max(0, parseInt(inp.value || '0', 10) || 0) * m.price;
       total += line;
       wrap.querySelector(`[data-line="${i}"]`).textContent = money(line);
     });
     $('cat-total').textContent = money(total);
     return total;
   };
-  wrap.querySelectorAll('input[data-idx]').forEach(inp => inp.addEventListener('input', recompute));
+  wrap.querySelectorAll('input[data-idx]').forEach(inp => { inp.addEventListener('input', recompute); inp.addEventListener('change', recompute); });
   recompute();
   $('cat-submit').addEventListener('click', () => submitCateringOrder(b, activeOrder));
 }
@@ -1273,9 +1281,13 @@ async function submitCateringOrder(b, activeOrder) {
   let subtotal = 0;
   wrap.querySelectorAll('input[data-idx]').forEach(inp => {
     const i = Number(inp.dataset.idx);
+    const m = CATERING_MENU[i];
+    if (inp.dataset.flat) {
+      if (inp.checked) { subtotal += m.price; items.push({ name: m.name, unit_price: m.price, qty: 1, line_total: m.price }); }
+      return;
+    }
     const qty = Math.max(0, parseInt(inp.value || '0', 10) || 0);
     if (qty > 0) {
-      const m = CATERING_MENU[i];
       if (m.min && qty < m.min) belowMin.push(`${m.name} (min ${m.min})`);
       const line = qty * m.price;
       subtotal += line;
