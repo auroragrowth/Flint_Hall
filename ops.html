@@ -1860,7 +1860,7 @@ I can hardly believe we're already inside the three-month mark for your day at F
 Now feels like the right moment to start firming up the details. When you have a spare half hour, could you have a think about the following and reply to this email — no rush, this week or next is grand:
 
   1. Confirmed guest count (adults / children)
-  2. Catering — would you like me to send our menus, or are you bringing in an outside caterer?
+  2. Catering — you can browse the menus and build your catering order any time in your planning portal (flinthall.uk → Client login); just let me know if you'd rather bring in an outside caterer.
   3. Rough running order — ceremony time, drinks, dinner, first dance, bar close, etc.
   4. Any suppliers we should know about — DJ, florist, photographer, stylist
   5. Decoration plans — anything that needs fixing to a building structure?
@@ -2024,16 +2024,17 @@ Flint Hall Events
   {
     id: 'tmpl_login_credentials',
     name: 'Client — Website Login Credentials',
-    trigger: 'After contract signed — share access to client area',
+    trigger: 'After the quote — give the client access to their planning portal',
     subject: 'Your Flint Hall planning login — {client_full_name}',
     body: `Hello {first_name},
 
-Now that everything's confirmed, here's your login for the Flint Hall planning area where you can keep an eye on payments, function-sheet drafts and shared documents in one place.
+Here's your login for the Flint Hall planning portal — the online home for your booking. It's where you build your catering order, shape your running order of the day, upload supplier documents, message us and keep an eye on payments, all in one place.
 
-  Username:   {login_username}
-  Password:   {login_password}
+  Sign in at:  flinthall.uk  →  "Client login"
+  Your email:  {client_email}
+  Password:    {login_password}
 
-Visit flinthall.uk and choose "Client login" at the top of the page. Do let me know if anything looks off.
+You can change your password once you're in. Do let me know if anything looks off.
 
 Warmly,
 {your_name}
@@ -2087,24 +2088,18 @@ This agreement is made between Flint Hall Events ("The Venue") and {client_full_
    Deposit (50%):     £{deposit_amount}  (non-refundable, due on booking)
    Balance (50%):     £{balance_amount}  due no later than {balance_due_date}
 
-4. PAYMENT TERMS — CATERING (where Flint Hall provides catering)
-   Total Catering:    £{catering_total}
-   Deposit (50%):     £{catering_deposit}  (non-refundable, due on booking)
-   Balance (50%):     £{catering_balance}  due no later than {balance_due_date}
-
-5. PAYMENT GENERAL
+4. PAYMENT GENERAL
    Damage Deposit:    £250  (refundable, due 30 days prior)
    • Payments by BACS only — see remittance details on each invoice / receipt.
    • Late payments incur £10/day until settled.
-   • All deposits (venue and catering) are non-refundable.
+   • The venue deposit is non-refundable.
 
-6. CANCELLATION POLICY
+5. CANCELLATION POLICY
    • The 50% venue deposit is non-refundable on cancellation by the Client.
-   • The 50% catering deposit (where applicable) is non-refundable on cancellation by the Client.
-   • Cancellations within 30 days of the event make the Client liable for the full rental fee and full catering charge.
+   • Cancellations within 30 days of the event make the Client liable for the full rental fee.
    • If the Venue cancels, the Client is entitled to a full refund of monies paid.
 
-7. DAMAGE DEPOSIT & RESPONSIBILITIES
+6. DAMAGE DEPOSIT & RESPONSIBILITIES
    • £250 refundable deposit due no later than 30 days prior.
    • Refunds processed within 10 days post-event, subject to inspection.
    • Deductions for damage or excessive cleaning will be discussed before any charges applied.
@@ -2112,38 +2107,32 @@ This agreement is made between Flint Hall Events ("The Venue") and {client_full_
    • The Client is responsible for damage caused by their guests, vendors or external caterers.
    • Glassware permitted only inside the Barn; plastic or alternatives elsewhere.
 
-8. CATERING
-   • In-house options: hog roast, stone-baked pizzas, BBQ, rôtissoire, loaded fries.
-   • Bar — a Flint Hall bar is included when you book a Flint Hall catering option. Without a Flint Hall catering option, use of the bar is charged at £300.
-   • External caterers permitted on provision of full contact details and valid insurance.
-   • External caterers may not directly duplicate the Venue's in-house services.
-
-9. DECORATIONS & ENTERTAINMENT
+7. DECORATIONS & ENTERTAINMENT
    • Candles in designated areas only.
    • Fireworks strictly prohibited without prior written permission.
    • Biodegradable confetti only.
    • Notify the Venue if anything needs fixing to a building structure.
 
-10. INSURANCE & VENDOR REQUIREMENTS
+8. INSURANCE & VENDOR REQUIREMENTS
     The Client is advised to obtain wedding/event insurance. Vendors must provide valid public liability certificates.
 
-11. EXTREME WEATHER CLAUSE
+9. EXTREME WEATHER CLAUSE
     Flint Hall is primarily an outdoor venue. The Venue cannot be held responsible for extreme weather. A contingency plan is recommended.
 
-12. LIABILITY WAIVER
+10. LIABILITY WAIVER
     The Venue is not responsible for injuries, theft or loss of property. The Client agrees to release Flint Hall from any claims arising from use of the Venue.
 
-13. GENERAL TERMS
+11. GENERAL TERMS
     This agreement is the entire understanding. Amendments must be in writing. The Venue reserves the right to refuse entry to guests or vendors who violate the terms.
 
-14. PRE-EVENT MEETINGS
+12. PRE-EVENT MEETINGS
     Site visits and planning meetings can be scheduled to finalise details.
 
-15. INCLUDED & EXCLUDED SERVICES
+13. INCLUDED & EXCLUDED SERVICES
     INCLUDED: basic on-site support — emptying bins, restocking restroom supplies, addressing facility-related emergencies.
     NOT INCLUDED: event coordination — set-up & decorating, vendor management, timeline oversight. Available at additional cost.
 
-16. INCLUDED VENUE FACILITIES
+14. INCLUDED VENUE FACILITIES
     • Car park in the adjacent field
     • Use of the Ranch and fridges
     • Padel court
@@ -2154,11 +2143,9 @@ This agreement is made between Flint Hall Events ("The Venue") and {client_full_
     • 25 picnic benches, 100 wooden fold-up chairs
     • 3x fire pits
     • Sweet cart and card box
-    • Tuk tuk bar (when beer is bought from Flint Hall)
     • Permission for additional tents and camper vans in the field
-    EXCLUDED: use of the pizza oven and walk-in chiller (reserved for Flint Hall Catering only).
 
-17. SIGNATURES
+15. SIGNATURES
 
     Client:    ______________________________  Date: __________
                {client_full_name}
@@ -2848,6 +2835,11 @@ const App = {
     }
     if (b.status === 'inquiry' && lastSent('tmpl_inquiry_ack') && !lastSent('tmpl_availability') && !queued('tmpl_availability')) {
       actions.push({ kind:'send', tplId:'tmpl_availability', label:'Send availability + brochure', icon:'✉', tone:'gold' });
+    }
+    // Once the quote has gone out (sent through the system or stage marked
+    // "quoted"), give the client their planning-portal login.
+    if ((lastSent('tmpl_quote') || b.status === 'quoted') && !b.clientLogin?.sentDate && !lastSent('tmpl_login_credentials') && !queued('tmpl_login_credentials')) {
+      actions.push({ kind:'portal-login', label:'Send portal login', icon:'🔑', tone:'gold' });
     }
     if (['inquiry','quoted'].includes(b.status) && !b.contract.sentDate) {
       actions.push({ kind:'mark', label:'Mark contract sent (when ready)', icon:'§', tone:'info' });
@@ -5711,9 +5703,47 @@ const App = {
   handleActionClick(bookingId, kind, tplId) {
     if (kind === 'send' && tplId) {
       this.openComposeModal(bookingId, tplId);
+    } else if (kind === 'portal-login') {
+      this.sendPortalLogin(bookingId);
     } else {
       this.navigate('booking', bookingId);
     }
+  },
+
+  // One-click: provision the client's portal account, enable the portal and
+  // email them their sign-in details (via the provision-client-login function).
+  async sendPortalLogin(bookingId) {
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    if (!b) return;
+    const email = (b.client.email || '').trim();
+    if (!email) { this.toast('Add the client’s email to the booking first.', 'error'); return; }
+    if (!confirm(`Create a planning-portal login for ${email} and email it to them now?`)) return;
+
+    this.toast('Setting up portal access…', 'info');
+    const { data, error } = await window.fhSupabase.functions.invoke('provision-client-login', { body: { booking_id: bookingId } });
+    if (error || (data && data.ok === false)) {
+      this.toast('Could not set up login: ' + (error?.message || data?.error || 'unknown error'), 'error');
+      return;
+    }
+
+    // Mirror what the function saved so ops shows the credentials immediately.
+    b.clientLogin = b.clientLogin || { username: '', password: '', sentDate: null };
+    b.clientLogin.username = data.email || email;
+    if (data.password) b.clientLogin.password = data.password;
+    b.clientLogin.sentDate = this.todayISO();
+    b.clientPortalEnabled = true;
+    b.communications = b.communications || [];
+    b.communications.push({
+      id: 'c_' + Date.now().toString(36), templateId: 'tmpl_login_credentials',
+      toEmail: email, subject: 'Your Flint Hall planning login',
+      body: `Portal login provisioned. Password: ${data.password || '(set)'}`,
+      status: 'sent', sentDate: this.todayISO()
+    });
+    this.save();
+    this.toast(data.sent
+      ? `Portal login emailed to ${email}`
+      : `Login created (password ${data.password}) — email not sent; share it manually`, data.sent ? 'success' : 'warn');
+    this.render();
   },
 
   // ─────────── EXPORT / IMPORT ───────────
