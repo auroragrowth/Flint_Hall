@@ -524,6 +524,25 @@ a:hover { text-decoration: underline; }
   font-weight: 500;
   color: var(--brown-900);
 }
+.detail-quickmail {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+}
+.detail-quickmail .dqm-label {
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--brown-700);
+}
+.detail-quickmail .dqm-select {
+  flex: 1; min-width: 200px; max-width: 340px;
+  background: var(--linen); border: 1px solid var(--gold, var(--border));
+  color: var(--brown-900); padding: 9px 12px; border-radius: 4px;
+  font-family: var(--font-body); font-size: 13px; cursor: pointer;
+}
+.detail-quickmail .dqm-manage {
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--brown-500); border-bottom: 1px solid transparent;
+}
+.detail-quickmail .dqm-manage:hover { color: var(--brown-700); border-color: var(--brown-500); }
 
 .detail-tabs {
   display: flex;
@@ -3465,6 +3484,15 @@ const App = {
             <div class="label">Contract</div>
             <div class="value">${b.contract.signedDate ? '✓ Signed' : (b.contract.sentDate ? 'Sent' : 'Not sent')}</div>
           </div>
+        </div>
+        <div class="detail-quickmail">
+          <span class="dqm-label">✉ Email the client</span>
+          <select class="dqm-select" onchange="if(this.value){App.openComposeModal('${b.id}', this.value); this.value='';}">
+            <option value="">Pick a template…</option>
+            ${this.state.templates.map(t => `<option value="${this.esc(t.id)}">${this.esc(t.name)}</option>`).join('')}
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="App.openComposeModal('${b.id}', null, true)">Blank email</button>
+          <a class="dqm-manage" href="#templates" title="Edit templates">Manage templates</a>
         </div>
       </div>
 
