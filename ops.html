@@ -4106,8 +4106,9 @@ const App = {
     `;
     document.getElementById('modal-foot').innerHTML = `
       <button class="btn btn-ghost" onclick="App.closeModal()">Cancel</button>
-      <button class="btn btn-secondary" onclick="App.queueEmail('${b.id}')">Queue (send later)</button>
-      <button class="btn btn-gold" onclick="App.queueAndSendEmail('${b.id}')">Copy & Open in Mail →</button>
+      <button class="btn btn-secondary" onclick="App.queueEmail('${b.id}')">Queue</button>
+      <button class="btn btn-secondary" onclick="App.queueAndSendEmail('${b.id}')">Copy &amp; open in mail</button>
+      <button class="btn btn-gold" onclick="App.sendEmailNow('${b.id}')">Send now →</button>
     `;
     document.getElementById('modal').classList.add('open');
   },
@@ -4120,6 +4121,34 @@ const App = {
     if (!tpl) return;
     document.getElementById('compose-subject').value = this.fillMergeFields(tpl.subject, b);
     document.getElementById('compose-body').value = this.fillMergeFields(tpl.body, b);
+  },
+
+  async sendEmailNow(bookingId) {
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    if (!b) return;
+    const subject = document.getElementById('compose-subject').value.trim();
+    const body = document.getElementById('compose-body').value;
+    const toEmail = document.getElementById('compose-to').value.trim();
+    const tplId = document.getElementById('compose-template').value;
+    if (!toEmail || !subject || !body.trim()) { this.toast('Add a recipient, subject and body first.', 'error'); return; }
+    const foot = document.getElementById('modal-foot');
+    foot.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    this.toast('Sending…', 'info');
+    const { data, error } = await window.fhSupabase.functions.invoke('send-client-email', { body: { to: toEmail, subject, body } });
+    if (error || (data && data.ok === false)) {
+      foot.querySelectorAll('button').forEach(btn => btn.disabled = false);
+      this.toast('Could not send: ' + (error?.message || data?.reason || 'unknown error'), 'error');
+      return;
+    }
+    b.communications = b.communications || [];
+    b.communications.push({
+      id: 'c_' + Date.now().toString(36), templateId: tplId || null,
+      toEmail, subject, body, status: 'sent', sentDate: this.todayISO()
+    });
+    this.save();
+    this.toast('Email sent to ' + toEmail, 'success');
+    this.closeModal();
+    this.render();
   },
 
   queueEmail(bookingId) {
