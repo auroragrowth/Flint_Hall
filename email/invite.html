@@ -1,0 +1,88 @@
+<!-- Flint Hall Events — Invite user email -->
+<!-- Paste into Supabase > Authentication > Email Templates > Invite user -->
+<!-- {{ .ConfirmationURL }} is Supabase's default variable, wired into the button. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Lora:ital@0;1&display=swap');
+  a { text-decoration: none; }
+  @media only screen and (max-width: 620px) {
+    .card { width: 100% !important; }
+    .pad { padding-left: 28px !important; padding-right: 28px !important; }
+  }
+</style>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#4a2f23; margin:0; padding:0;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+
+      <table role="presentation" class="card" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px; max-width:560px; background-color:#faf3e2; border:1px solid #b8924a;">
+        <tr>
+          <td style="padding:4px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #d9c48f;">
+              <tr>
+                <td class="pad" align="center" style="padding:44px 48px 40px 48px; font-family:Georgia,'Times New Roman',serif;">
+
+                  <a href="https://flinthall.uk/" style="display:inline-block; margin:0 auto 28px auto;"><img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="170" style="display:block; margin:0 auto; max-width:170px; height:auto; border:0;"></a>
+
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 26px auto;">
+                    <tr>
+                      <td style="width:70px; border-bottom:1px solid #b8924a; font-size:0; line-height:0;">&nbsp;</td>
+                      <td style="padding:0 12px; color:#b8924a; font-size:16px; line-height:16px;">&#10022;</td>
+                      <td style="width:70px; border-bottom:1px solid #b8924a; font-size:0; line-height:0;">&nbsp;</td>
+                    </tr>
+                  </table>
+
+                  <h1 style="margin:0 0 14px 0; font-family:'Cinzel',Georgia,serif; font-size:22px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:#4a2f23;">
+                    You're Invited
+                  </h1>
+
+                  <p style="margin:0 0 30px 0; font-family:'Lora',Georgia,serif; font-size:16px; line-height:1.6; color:#6e3014;">
+                    You've been invited to the Flint Hall planning portal. Follow the link below to set up your account and get started.
+                  </p>
+
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 30px auto;">
+                    <tr>
+                      <td align="center" style="border-radius:4px; background-color:#a64a18;">
+                        <a href="{{ .ConfirmationURL }}" style="display:inline-block; padding:15px 46px; font-family:Georgia,serif; font-size:15px; font-weight:bold; letter-spacing:2px; text-transform:uppercase; color:#faf3e2; border-radius:4px;">
+                          Accept Invitation
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin:0 0 8px 0; font-family:'Lora',Georgia,serif; font-size:13px; line-height:1.6; color:#8c6a52;">
+                    This invitation link expires after a short while. Not expecting it? You can safely ignore this email.
+                  </p>
+
+                  <p style="margin:0; font-family:'Lora',Georgia,serif; font-size:12px; line-height:1.6; color:#a9917a;">
+                    Button not working? Copy and paste this into your browser:<br>
+                    <span style="color:#8c4a2f; word-break:break-all;">{{ .ConfirmationURL }}</span>
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px; max-width:560px;">
+        <tr>
+          <td align="center" style="padding:24px 24px 8px 24px; font-family:Georgia,serif;">
+            <p style="margin:0 0 4px 0; font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#d9c48f;">
+              Flint Hall Events
+            </p>
+            <p style="margin:0; font-size:12px; line-height:1.6; color:#c9b48f;">
+              Creeting St Peter &middot; Suffolk &middot; hello@flinthall.uk
+            </p>
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>
