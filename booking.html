@@ -1139,13 +1139,14 @@ let currentBooking = null;
 async function loadCateringAndInvoices(b) {
   currentBooking = b;
   const email = (b.client?.email || '').toLowerCase();
-  const [{ data: orders }, bacsInfo] = await Promise.all([
+  const [{ data: orders }, bacsInfo, { data: formalInvoices }] = await Promise.all([
     supabase.from('catering_orders').select('*').eq('status', 'submitted').order('created_at', { ascending: false }),
-    getPaymentInfo()
+    getPaymentInfo(),
+    supabase.from('invoices').select('*').order('issued_date', { ascending: false })
   ]);
   const activeOrder = (orders && orders[0]) || null;
   renderCateringOrder(b, activeOrder);
-  renderInvoices(b, activeOrder, bacsInfo?.bacs || '');
+  renderInvoices(b, activeOrder, bacsInfo?.bacs || '', formalInvoices || []);
   loadAgreement(b);
   loadComms(b);
 }
@@ -1358,13 +1359,33 @@ function invRow(label, amount, paidDate) {
   return `<div class="inv-row"><span>${escapeHtml(label)}${paid ? ' <span style="color:#2e6b2e;">&middot; paid</span>' : ''}</span><span>${money(amount)}</span></div>`;
 }
 
-function renderInvoices(b, activeOrder, bacs) {
+function renderInvoices(b, activeOrder, bacs, formal) {
   const wrap = $('dash-invoices');
   const f = b.financial || {};
   const ref = paymentReference(b);
   const bacsBlock = bacs
     ? `<div class="inv-bacs"><strong>Pay by bank transfer</strong>${escapeHtml(bacs)}\nReference: ${escapeHtml(ref)}</div>`
     : '';
+  const invBacs = (r) => bacs
+    ? `<div class="inv-bacs"><strong>Pay by bank transfer</strong>${escapeHtml(bacs)}\nReference: ${escapeHtml(r)}</div>`
+    : '';
+
+  // Formal invoices issued by Flint Hall (from the invoices table)
+  let formalHtml = '';
+  (formal || []).forEach(inv => {
+    const paid = inv.status === 'paid';
+    const lines = (inv.items || []).map(it =>
+      `<div class="inv-row"><span>${escapeHtml(it.description || '')}${Number(it.qty) > 1 ? ' &times; ' + escapeHtml(it.qty) : ''}</span><span>${money(it.amount)}</span></div>`
+    ).join('');
+    formalHtml += `<div class="invoice">
+      <h4>Invoice ${escapeHtml(inv.number || '')} <span class="inv-badge ${paid ? 'paid' : 'due'}">${paid ? 'Paid' : 'Payment due'}</span></h4>
+      <div class="muted" style="font-size:12px; margin:-4px 0 8px;">Issued ${fmtDateShort(inv.issued_date) || ''}${inv.due_date ? ' &middot; due ' + (fmtDateShort(inv.due_date) || '') : ''}</div>
+      ${lines}
+      <div class="inv-row total"><span>Total</span><span>${money(inv.subtotal)}</span></div>
+      ${inv.notes ? `<div class="muted" style="font-size:12px; margin-top:8px; white-space:pre-line;">${escapeHtml(inv.notes)}</div>` : ''}
+      ${paid ? '' : invBacs(inv.number)}
+    </div>`;
+  });
 
   // Venue hire invoice (staff-set fee)
   let venueHtml = '';
@@ -1398,7 +1419,7 @@ function renderInvoices(b, activeOrder, bacs) {
     </div>`;
   }
 
-  lastInvoiceHtml = venueHtml + cateringHtml;
+  lastInvoiceHtml = formalHtml + venueHtml + cateringHtml;
   const body = lastInvoiceHtml ||
     '<div class="notice info">Your invoices will appear here once your venue fee is set or you place a catering order.</div>';
   wrap.innerHTML = `${body}

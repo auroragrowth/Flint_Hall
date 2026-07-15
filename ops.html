@@ -3671,8 +3671,8 @@ const App = {
 
   // ─────────── BOOKING DETAIL ───────────
   viewBooking(b) {
-    const tabs = ['details','payments','comms','function','contract'];
-    const tabLabel = { details:'Details', payments:'Payments', comms:'Communications', function:'Running Order', contract:'Contract' };
+    const tabs = ['details','payments','invoices','comms','function','contract'];
+    const tabLabel = { details:'Details', payments:'Payments', invoices:'Invoices', comms:'Communications', function:'Running Order', contract:'Contract' };
     const balanceDue = this.computeBalanceDueDate(b);
     const lateFee = this.computeLateFee(b);
 
@@ -3743,6 +3743,7 @@ const App = {
     switch (this.state.currentTab) {
       case 'details': return this.viewBookingDetails(b);
       case 'payments': return this.viewBookingPayments(b);
+      case 'invoices': return this.viewBookingInvoices(b);
       case 'comms': return this.viewBookingComms(b);
       case 'function': return this.viewBookingFunctionSheet(b);
       case 'contract': return this.viewBookingContract(b);
@@ -3754,6 +3755,7 @@ const App = {
     if (this.state.currentTab === 'details') this.bindBookingDetailsForm(b);
     if (this.state.currentTab === 'function') this.bindFunctionSheet(b);
     if (this.state.currentTab === 'comms') this.bindOpsComms(b);
+    if (this.state.currentTab === 'invoices') this.bindInvoices(b);
   },
 
   // -- DETAILS TAB --
@@ -5111,6 +5113,290 @@ const App = {
     `;
     document.getElementById('printable-fs').innerHTML = html;
     setTimeout(() => window.print(), 100);
+  },
+
+  // ─────────── INVOICES ───────────
+  viewBookingInvoices(b) {
+    return `<div id="invoices-host"><div class="muted italic" style="padding:12px;">Loading invoices…</div></div>`;
+  },
+
+  async bindInvoices(b) {
+    const sb = window.fhSupabase;
+    if (!sb) return;
+    const { data, error } = await sb.from('invoices').select('*').eq('booking_id', b.id).order('created_at', { ascending: false });
+    this.state.invoices = error ? [] : (data || []);
+    if (!this.state.invoiceDraft) this.newInvoiceDraft(b);
+    this.renderInvoicesHost(b);
+  },
+
+  newInvoiceDraft(b) {
+    const due = new Date(); due.setDate(due.getDate() + 14);
+    this.state.invoiceDraft = {
+      id: null, number: null, status: 'draft',
+      issued_date: this.todayISO(), due_date: due.toISOString().slice(0, 10),
+      items: [], notes: ''
+    };
+  },
+
+  invTotal(items) { return (items || []).reduce((s, it) => s + Number(it.amount || 0), 0); },
+  invById(id) { return (this.state.invoices || []).find(x => x.id === id); },
+  invCurrentBooking() { return this.state.bookings.find(x => x.id === this.state.routeParam); },
+
+  renderInvoicesHost(b) {
+    const host = document.getElementById('invoices-host');
+    if (!host) return;
+    const d = this.state.invoiceDraft;
+    const money = n => `£${this.fmtMoney(n)}`;
+    const inp = 'padding:6px 8px; border:1px solid var(--linen-dark); border-radius:4px; font-family:var(--font-body); font-size:13px; background:#fff;';
+
+    const lineRows = (d.items || []).map((it, i) => `
+      <tr>
+        <td style="padding:2px 6px 2px 0;"><input style="${inp} width:100%;" value="${this.esc(it.description || '')}" onchange="App.invEditLine(${i},'description',this.value)"></td>
+        <td style="padding:2px 6px;"><input type="number" step="1" style="${inp} width:60px; text-align:right;" value="${this.esc(it.qty ?? 1)}" onchange="App.invEditLine(${i},'qty',this.value)"></td>
+        <td style="padding:2px 6px;"><input type="number" step="0.01" style="${inp} width:96px; text-align:right;" value="${this.esc(it.unit_price ?? 0)}" onchange="App.invEditLine(${i},'unit_price',this.value)"></td>
+        <td style="padding:2px 6px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">${money(it.amount)}</td>
+        <td style="padding:2px 0; text-align:center;"><button class="btn btn-ghost btn-sm" onclick="App.invRemoveLine(${i})" title="Remove">✕</button></td>
+      </tr>`).join('');
+
+    const builder = `
+      <div class="card mb-2"><div class="card-body">
+        <div class="row" style="justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;">
+          <div class="card-title">${d.id ? 'Edit invoice ' + this.esc(d.number || '') : 'New invoice'}</div>
+          <div class="row gap-sm" style="align-items:center;">
+            <label class="muted" style="font-size:12px;">Issued <input type="date" style="${inp}" value="${d.issued_date}" onchange="App.invField('issued_date',this.value)"></label>
+            <label class="muted" style="font-size:12px;">Due <input type="date" style="${inp}" value="${d.due_date || ''}" onchange="App.invField('due_date',this.value)"></label>
+          </div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:12px;">
+          <thead><tr style="text-align:left; color:var(--brown-600); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">
+            <th style="padding:4px 0;">Description</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit £</th><th style="text-align:right;">Amount</th><th></th>
+          </tr></thead>
+          <tbody>${lineRows || `<tr><td colspan="5" class="muted italic" style="padding:8px 0;">No lines yet — add from the buttons below.</td></tr>`}</tbody>
+        </table>
+        <div class="row gap-sm" style="margin-top:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('venue')">+ Venue hire</button>
+          <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('deposit')">+ Deposit (50%)</button>
+          <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('balance')">+ Balance</button>
+          <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('catering')">+ Catering</button>
+          <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('blank')">+ Blank line</button>
+          <span class="spacer" style="flex:1;"></span>
+          <strong style="font-size:16px;">Total: ${money(this.invTotal(d.items))}</strong>
+        </div>
+        <textarea placeholder="Notes shown on the invoice (optional)…" style="${inp} width:100%; min-height:44px; margin-top:12px; resize:vertical;" onchange="App.invField('notes',this.value)">${this.esc(d.notes || '')}</textarea>
+        <div class="row gap-sm" style="margin-top:12px;">
+          <button class="btn btn-primary btn-sm" onclick="App.invSaveDraft('${b.id}')">${d.id ? 'Save changes' : 'Save draft'}</button>
+          <button class="btn btn-gold btn-sm" onclick="App.invSaveAndSend('${b.id}')">Save &amp; send →</button>
+          ${d.id ? `<button class="btn btn-ghost btn-sm" onclick="App.invNewDraft('${b.id}')">Cancel edit</button>` : ''}
+        </div>
+      </div></div>`;
+
+    const statusPill = s => s === 'paid' ? 'pill-balance_paid' : (s === 'sent' ? 'pill-balance_due' : 'pill-inquiry');
+    const list = (this.state.invoices || []).map(inv => `
+      <div class="card mb-2"><div class="card-body">
+        <div class="row" style="justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;">
+          <div>
+            <strong style="font-size:15px;">${this.esc(inv.number || '(draft)')}</strong>
+            <span class="pill ${statusPill(inv.status)}" style="margin-left:8px;">${this.esc(inv.status)}</span>
+            <div class="muted" style="font-size:12.5px; margin-top:2px;">Issued ${this.fmtDateShort(inv.issued_date)}${inv.due_date ? ' · due ' + this.fmtDateShort(inv.due_date) : ''}${inv.paid_date ? ' · paid ' + this.fmtDateShort(inv.paid_date) : ''}</div>
+          </div>
+          <strong style="font-size:16px;">${money(inv.subtotal)}</strong>
+        </div>
+        <div class="row gap-sm" style="margin-top:10px; flex-wrap:wrap;">
+          ${inv.status === 'draft' ? `<button class="btn btn-secondary btn-sm" onclick="App.invEdit('${inv.id}','${b.id}')">Edit</button>` : ''}
+          <button class="btn btn-gold btn-sm" onclick="App.invSend('${inv.id}','${b.id}')">${inv.status === 'draft' ? 'Send →' : 'Resend →'}</button>
+          ${inv.status !== 'paid' ? `<button class="btn btn-secondary btn-sm" onclick="App.invMarkPaid('${inv.id}','${b.id}')">Mark paid</button>` : ''}
+          <button class="btn btn-secondary btn-sm" onclick="App.invPrint('${inv.id}')">Print / PDF</button>
+          <button class="btn btn-ghost btn-sm" onclick="App.invDelete('${inv.id}','${b.id}')">Delete</button>
+        </div>
+      </div></div>`).join('');
+
+    host.innerHTML = builder + (list ? `<div style="margin-top:18px;"><div class="card-title" style="margin-bottom:8px;">Invoices for this booking</div>${list}</div>` : '');
+  },
+
+  invField(field, value) { if (this.state.invoiceDraft) this.state.invoiceDraft[field] = value; },
+
+  invEditLine(i, field, value) {
+    const d = this.state.invoiceDraft; if (!d || !d.items[i]) return;
+    if (field === 'qty' || field === 'unit_price') {
+      d.items[i][field] = Number(value) || 0;
+      d.items[i].amount = (Number(d.items[i].qty) || 0) * (Number(d.items[i].unit_price) || 0);
+    } else { d.items[i][field] = value; }
+    this.renderInvoicesHost(this.invCurrentBooking());
+  },
+
+  invRemoveLine(i) {
+    const d = this.state.invoiceDraft; if (!d) return;
+    d.items.splice(i, 1);
+    this.renderInvoicesHost(this.invCurrentBooking());
+  },
+
+  invAddPreset(kind) {
+    const d = this.state.invoiceDraft; if (!d) return;
+    const b = this.invCurrentBooking(); const f = b.financial;
+    const line = (description, amount) => ({ description, qty: 1, unit_price: Number(amount) || 0, amount: Number(amount) || 0 });
+    if (kind === 'venue') d.items.push(line('Venue hire', f.totalCost));
+    else if (kind === 'deposit') d.items.push(line('Venue hire — deposit (50%)', f.depositAmount));
+    else if (kind === 'balance') d.items.push(line('Venue hire — balance', f.balanceAmount));
+    else if (kind === 'catering') d.items.push(line('Catering', f.cateringCost));
+    else d.items.push(line('', 0));
+    this.renderInvoicesHost(b);
+  },
+
+  invNewDraft(bookingId) {
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    this.newInvoiceDraft(b);
+    this.renderInvoicesHost(b);
+  },
+
+  invDraftRow(b) {
+    const d = this.state.invoiceDraft;
+    return {
+      booking_id: b.id,
+      client_email: (b.client.email || '').toLowerCase(),
+      issued_date: d.issued_date || this.todayISO(),
+      due_date: d.due_date || null,
+      items: d.items || [],
+      notes: d.notes || null,
+    };
+  },
+
+  async invSaveDraft(bookingId, opts) {
+    const sb = window.fhSupabase;
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    const d = this.state.invoiceDraft;
+    if (!d || !d.items.length) { this.toast('Add at least one line first.', 'error'); return null; }
+    if (!b.client.email) { this.toast('Add the client’s email to the booking first.', 'error'); return null; }
+    const row = this.invDraftRow(b);
+    let saved;
+    if (d.id) {
+      const { data, error } = await sb.from('invoices').update(row).eq('id', d.id).select().single();
+      if (error) { this.toast('Save failed: ' + error.message, 'error'); return null; }
+      saved = data;
+    } else {
+      const { data, error } = await sb.from('invoices').insert(row).select().single();
+      if (error) { this.toast('Save failed: ' + error.message, 'error'); return null; }
+      saved = data;
+    }
+    if (!opts || !opts.silent) this.toast('Invoice saved', 'success');
+    this.newInvoiceDraft(b);
+    await this.bindInvoices(b);
+    return saved;
+  },
+
+  async invSaveAndSend(bookingId) {
+    const saved = await this.invSaveDraft(bookingId, { silent: true });
+    if (saved) await this.invSend(saved.id, bookingId);
+  },
+
+  invEdit(id, bookingId) {
+    const inv = this.invById(id); if (!inv) return;
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    this.state.invoiceDraft = {
+      id: inv.id, number: inv.number, status: inv.status,
+      issued_date: inv.issued_date, due_date: inv.due_date,
+      items: JSON.parse(JSON.stringify(inv.items || [])), notes: inv.notes || ''
+    };
+    this.renderInvoicesHost(b);
+    const host = document.getElementById('invoices-host'); if (host) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
+  async invSend(id, bookingId) {
+    const sb = window.fhSupabase;
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    const inv = this.invById(id);
+    if (!inv || !b) return;
+    if (!b.client.email) { this.toast('No client email on the booking.', 'error'); return; }
+    if (!confirm(`Email invoice ${inv.number} to ${b.client.email}?`)) return;
+    this.toast('Sending invoice…', 'info');
+    const html = this.buildInvoiceHtml(inv, b);
+    const text = this.buildInvoiceText(inv, b);
+    const { data, error } = await sb.functions.invoke('send-client-email', {
+      body: { to: b.client.email, subject: `Invoice ${inv.number} — Flint Hall Events`, body: text, html }
+    });
+    if (error || (data && data.ok === false)) { this.toast('Could not send: ' + (error?.message || data?.error || 'error'), 'error'); return; }
+    await sb.from('invoices').update({ status: inv.status === 'paid' ? 'paid' : 'sent', sent_date: this.todayISO() }).eq('id', id);
+    this.toast('Invoice sent to ' + b.client.email, 'success');
+    await this.bindInvoices(b);
+  },
+
+  async invMarkPaid(id, bookingId) {
+    const sb = window.fhSupabase;
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    await sb.from('invoices').update({ status: 'paid', paid_date: this.todayISO() }).eq('id', id);
+    this.toast('Invoice marked paid', 'success');
+    await this.bindInvoices(b);
+  },
+
+  async invDelete(id, bookingId) {
+    if (!confirm('Delete this invoice? This cannot be undone.')) return;
+    const sb = window.fhSupabase;
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    await sb.from('invoices').delete().eq('id', id);
+    this.toast('Invoice deleted', 'success');
+    await this.bindInvoices(b);
+  },
+
+  invPrint(id) {
+    const inv = this.invById(id);
+    const b = this.invCurrentBooking();
+    if (!inv || !b) return;
+    document.getElementById('printable-fs').innerHTML = this.buildInvoiceHtml(inv, b);
+    setTimeout(() => window.print(), 100);
+  },
+
+  buildInvoiceText(inv, b) {
+    const money = n => `£${this.fmtMoney(n)}`;
+    const lines = (inv.items || []).map(it => `  ${it.description} — ${it.qty} x ${money(it.unit_price)} = ${money(it.amount)}`).join('\n');
+    const bacs = this.state.settings.bacsDetails || '';
+    return [`Invoice ${inv.number} — Flint Hall Events`, '',
+      `Billed to: ${b.client.firstName || ''} ${b.client.lastName || ''} <${b.client.email || ''}>`,
+      `Issued: ${this.fmtDateShort(inv.issued_date)}${inv.due_date ? '   Due: ' + this.fmtDateShort(inv.due_date) : ''}`, '',
+      lines, '', `TOTAL: ${money(inv.subtotal)}`, '',
+      inv.notes ? `Notes: ${inv.notes}\n` : '',
+      bacs ? `Pay by bank transfer:\n${bacs}\nReference: ${inv.number}` : ''].join('\n');
+  },
+
+  buildInvoiceHtml(inv, b) {
+    const money = n => `£${this.fmtMoney(n)}`;
+    const rows = (inv.items || []).map(it => `
+      <tr>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd;">${this.esc(it.description || '')}</td>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${this.esc(it.qty ?? 1)}</td>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${money(it.unit_price)}</td>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${money(it.amount)}</td>
+      </tr>`).join('');
+    const bacs = (this.state.settings.bacsDetails || '').toString();
+    const clientName = `${b.client.firstName || ''} ${b.client.lastName || ''}`.trim() + (b.partnerName ? ' & ' + b.partnerName : '');
+    const paidBadge = inv.status === 'paid'
+      ? ` <span style="display:inline-block; background:#dfe9d8; color:#4a6a3a; padding:3px 11px; border-radius:20px; font-size:11px; letter-spacing:1px; text-transform:uppercase;">Paid</span>` : '';
+    return `<div style="font-family:Georgia,serif; max-width:600px; margin:0 auto; color:#3a2818; background:#faf3e2; padding:32px;">
+      <div style="text-align:center; margin-bottom:6px;"><img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="150" style="max-width:150px; height:auto; border:0;"></div>
+      <div style="text-align:center; font-family:'Cinzel',Georgia,serif; letter-spacing:3px; text-transform:uppercase; color:#4a2f23; font-size:20px; margin-bottom:22px;">Invoice</div>
+      <table style="width:100%; font-size:13px; margin-bottom:18px;">
+        <tr>
+          <td style="vertical-align:top;">
+            <div style="color:#806555; font-size:11px; text-transform:uppercase; letter-spacing:1px;">Billed to</div>
+            <div style="font-size:14px;">${this.esc(clientName || b.client.email || '')}</div>
+            <div style="color:#806555; font-size:12px;">${this.esc(b.client.email || '')}</div>
+          </td>
+          <td style="vertical-align:top; text-align:right;">
+            <div><strong>${this.esc(inv.number || '')}</strong>${paidBadge}</div>
+            <div style="color:#806555; font-size:12px;">Issued ${this.fmtDateShort(inv.issued_date)}</div>
+            ${inv.due_date ? `<div style="color:#806555; font-size:12px;">Due ${this.fmtDateShort(inv.due_date)}</div>` : ''}
+          </td>
+        </tr>
+      </table>
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead><tr style="color:#806555; font-size:11px; text-transform:uppercase; letter-spacing:1px; text-align:left; border-bottom:2px solid #4a2f23;">
+          <th style="padding:6px 0;">Description</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit</th><th style="text-align:right;">Amount</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr style="font-weight:bold; font-size:15px;"><td colspan="3" style="padding:12px 0 0; text-align:right;">Total</td><td style="padding:12px 0 0; text-align:right;">${money(inv.subtotal)}</td></tr></tfoot>
+      </table>
+      ${inv.notes ? `<div style="margin-top:16px; font-size:13px; color:#5c4530; white-space:pre-line;">${this.esc(inv.notes)}</div>` : ''}
+      ${bacs ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px; white-space:pre-line;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">Pay by bank transfer</strong>${this.esc(bacs)}\nReference: ${this.esc(inv.number || '')}</div>` : ''}
+      <div style="margin-top:24px; padding-top:12px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555; text-align:center;">Flint Hall Events &middot; Creeting St Peter &middot; Suffolk &middot; hello@flinthall.uk</div>
+    </div>`;
   },
 
   // ─────────── TEMPLATES VIEW ───────────
