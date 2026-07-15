@@ -1391,13 +1391,15 @@ a:hover { text-decoration: underline; }
   font-size: 10.5px; font-weight: 600; letter-spacing: 0.22em;
   text-transform: uppercase; color: var(--brown-600); margin-bottom: 6px;
 }
-#auth-shell input[type=email] {
+#auth-shell input[type=email],
+#auth-shell input[type=password] {
   width: 100%; font-family: 'Lora', serif; font-size: 15px;
   background: var(--paper); border: 1px solid var(--linen-dark);
   padding: 12px 14px; color: var(--brown-800); border-radius: 2px;
-  margin-bottom: 16px;
+  margin-bottom: 16px; box-sizing: border-box;
 }
-#auth-shell input[type=email]:focus {
+#auth-shell input[type=email]:focus,
+#auth-shell input[type=password]:focus {
   outline: none; border-color: var(--brown-500);
 }
 
