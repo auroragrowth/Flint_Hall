@@ -290,6 +290,65 @@ a:hover { text-decoration: underline; }
 .pill-completed { background: var(--linen-dark); color: var(--brown-700); }
 .pill-cancelled { background: #ebe4e3; color: var(--brown-600); }
 
+/* ============== EVENTS OVERVIEW ============== */
+.ov-toolbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+.ov-table-wrap { overflow-x:auto; border:1px solid var(--linen-dark); border-radius:12px; background:#fff; }
+.ov-table { width:100%; border-collapse:collapse; font-size:13px; }
+.ov-table th, .ov-table td { padding:9px 12px; text-align:left; white-space:nowrap; border-bottom:1px solid var(--linen-dark); }
+.ov-table thead th { font-size:10.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--brown-600); background:var(--linen); position:sticky; top:0; }
+.ov-table tbody tr { cursor:pointer; }
+.ov-table tbody tr:hover { background:var(--linen); }
+.ov-table td.num, .ov-table th.num { text-align:right; font-variant-numeric:tabular-nums; }
+.ov-paid { color:var(--moss); font-weight:600; }
+.ov-owed { color:var(--brick); font-weight:600; }
+.ov-zero { color:var(--brown-500); }
+.ov-tfoot td { font-weight:700; border-top:2px solid var(--brown-700); background:var(--linen); }
+.ov-couple { font-weight:600; }
+.ov-sub { font-size:11px; color:var(--brown-600); }
+.ov-badge { display:inline-block; font-size:10.5px; padding:2px 7px; border-radius:20px; margin-right:4px; }
+.ov-badge.b-sent { background:var(--amber-light); color:var(--amber); }
+.ov-badge.b-signed { background:var(--moss-light); color:var(--moss); }
+.ov-badge.b-quote { background:#e7e0ec; color:#6a4f7a; }
+/* Kanban board */
+.kanban { display:flex; gap:12px; overflow-x:auto; padding-bottom:10px; align-items:flex-start; }
+.kanban-col { flex:0 0 210px; background:var(--linen); border-radius:12px; padding:10px; }
+.kanban-col h4 { margin:0 0 10px; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--brown-700); display:flex; justify-content:space-between; align-items:center; }
+.kanban-col h4 .kc-count { background:#fff; border-radius:20px; padding:1px 8px; font-size:11px; }
+.kanban-card { background:#fff; border:1px solid var(--linen-dark); border-radius:9px; padding:8px 10px; margin-bottom:8px; cursor:pointer; }
+.kanban-card:hover { border-color:var(--gold); }
+.kanban-card .kc-name { font-weight:600; font-size:12.5px; }
+.kanban-card .kc-meta { font-size:11px; color:var(--brown-600); margin-top:3px; display:flex; justify-content:space-between; gap:8px; }
+.kanban-empty { font-size:11px; color:var(--brown-500); font-style:italic; }
+
+/* ===== Journey tracker (dashboard) ===== */
+.jt-legend { display:flex; gap:14px; font-size:11px; color:var(--brown-600); flex-wrap:wrap; }
+.jt-legend span { display:inline-flex; align-items:center; gap:5px; }
+.jt-legend .jt-dot { width:11px; height:11px; box-shadow:none; }
+.jt-list { display:flex; flex-direction:column; gap:9px; padding:4px; }
+.jt-event { display:flex; align-items:center; gap:16px; background:#fff; border:1px solid var(--linen-dark); border-radius:12px; padding:11px 16px; cursor:pointer; transition:border-color .12s; }
+.jt-event:hover { border-color:var(--gold); }
+.jt-date { flex:0 0 50px; text-align:center; }
+.jt-day { font-size:20px; font-weight:700; color:var(--brown-700); line-height:1; }
+.jt-mon { font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--brown-600); }
+.jt-who { flex:0 0 180px; min-width:0; }
+.jt-name { font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.jt-meta { font-size:11.5px; color:var(--brown-600); }
+.jt-track { flex:1; display:flex; justify-content:space-between; gap:4px; position:relative; }
+.jt-track::before { content:''; position:absolute; top:7px; left:7%; right:7%; height:2px; background:var(--linen-dark); z-index:0; }
+.jt-step { display:flex; flex-direction:column; align-items:center; gap:5px; position:relative; z-index:1; flex:1; }
+.jt-dot { display:inline-block; width:15px; height:15px; border-radius:50%; background:#d8ccb8; box-shadow:0 0 0 3px #fff; }
+.jt-dot.jt-done { background:var(--moss); }
+.jt-dot.jt-due  { background:var(--amber); }
+.jt-dot.jt-over { background:var(--brick); }
+.jt-dot.jt-todo { background:#d8ccb8; }
+.jt-dot.jt-na   { background:#efe6d4; box-shadow:0 0 0 3px #fff, inset 0 0 0 1px #ddd0b8; }
+.jt-label { font-size:10px; color:var(--brown-600); text-align:center; white-space:nowrap; }
+.jt-count { flex:0 0 auto; }
+.jt-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
+.jt-pill.has { background:var(--amber-light); color:var(--amber); }
+.jt-pill.none { background:var(--moss-light); color:var(--moss); }
+@media (max-width: 920px) { .jt-label { display:none; } .jt-who { flex-basis:120px; } }
+
 /* ============== DASHBOARD ============== */
 .kpi-grid {
   display: grid;
@@ -1468,6 +1527,9 @@ a:hover { text-decoration: underline; }
       <div class="nav-item" data-route="calendar">
         <span>▦</span> Calendar
       </div>
+      <div class="nav-item" data-route="overview">
+        <span>▤</span> Events Overview
+      </div>
 
       <div class="nav-section">Bookings</div>
       <div class="nav-item" data-route="pipeline">
@@ -1806,17 +1868,17 @@ Flint Hall Events`
     subject: 'Your Flint Hall contract — please read & sign',
     body: `Hello {first_name},
 
-Wonderful news — thank you. Please find your contract attached for your {event_type} on {event_date_long}.
+Wonderful news — thank you. Please find your full contract below for your {event_type} on {event_date_long}.
 
 A quick summary:
   · Venue hire total: £{total_cost}
-  · Deposit (25%, non-refundable): £{deposit_amount}
+  · Deposit (non-refundable): £{deposit_amount}
   · Balance: £{balance_amount}, due by {balance_due_date}
   · Damage deposit (refundable): £250
 
 To confirm the booking, please:
-  1. Read through the contract — there's nothing unusual but it's important you know what's included and what isn't
-  2. Sign and return one copy to me
+  1. Read through the contract below — there's nothing unusual but it's important you know what's included and what isn't
+  2. Reply to confirm you're happy and we'll arrange signing
   3. Pay the £{deposit_amount} deposit and £250 damage deposit by BACS to:
        {bacs_details}
        Reference: "{client_surname} {event_date_short}"
@@ -1827,7 +1889,10 @@ Do shout if anything is unclear.
 
 Warmly,
 {your_name}
-Flint Hall Events`
+Flint Hall Events
+
+──────────────────────────────────────────────
+{contract_full}`
   },
   {
     id: 'tmpl_deposit_received',
@@ -2650,6 +2715,13 @@ const App = {
         content.innerHTML = this.viewCalendar();
         this.bindCalendar();
         break;
+      case 'overview':
+        title.textContent = 'Events Overview';
+        subtitle.textContent = 'Every event, money in and money owed, at a glance';
+        actions.innerHTML = `<button class="btn btn-gold" onclick="App.openNewBookingModal()">+ New Inquiry</button>`;
+        content.innerHTML = this.viewOverview();
+        this.bindOverview();
+        break;
       case 'leadsources':
         title.textContent = 'Lead Sources';
         subtitle.textContent = 'Where your bookings come from';
@@ -2942,10 +3014,12 @@ const App = {
   // ───────────────────── VIEWS ─────────────────────
   viewDashboard() {
     const today = this.todayISO();
-    const upcoming = this.state.bookings
-      .filter(b => b.status !== 'cancelled' && b.event.date >= today)
-      .sort((a,b) => a.event.date.localeCompare(b.event.date))
-      .slice(0, 6);
+    // Events for the journey tracker: everything active, from up to 90 days
+    // past (so post-event thank-you/review still surface) into the future.
+    const journeyEvents = this.state.bookings
+      .filter(b => b.status !== 'cancelled')
+      .filter(b => { const d = b.event.date ? this.daysBetween(today, b.event.date) : null; return d === null || d >= -90; })
+      .sort((a, b) => (a.event.date || '9999').localeCompare(b.event.date || '9999'));
 
     // collect all actions across bookings
     const actionRows = [];
@@ -2991,45 +3065,71 @@ const App = {
         </div>
       </div>
 
-      <div class="dash-grid">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">What needs doing</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Every event — what's outstanding</div>
+          <div class="jt-legend">
+            <span><i class="jt-dot jt-done"></i>Done</span>
+            <span><i class="jt-dot jt-due"></i>To do now</span>
+            <span><i class="jt-dot jt-over"></i>Overdue</span>
+            <span><i class="jt-dot jt-todo"></i>Later</span>
           </div>
-          ${actionRows.length === 0
-            ? `<div class="empty-state"><div class="icon">✓</div><h3>You're all caught up</h3><p>Nothing requires your attention right now.</p></div>`
-            : `<div class="action-list">${actionRows.slice(0, 12).map(({booking, action}) => `
-                <div class="action-row" onclick="App.handleActionClick('${booking.id}', '${action.kind}', '${action.tplId || ''}')">
-                  <div class="action-icon ${action.tone}">${action.icon}</div>
-                  <div class="action-text">
-                    <div class="action-title">${this.esc(action.label)}</div>
-                    <div class="action-meta">${this.esc(booking.client.firstName)} ${this.esc(booking.client.lastName)} · ${this.fmtDateShort(booking.event.date)}</div>
-                  </div>
-                  <div class="action-cta">→</div>
-                </div>`).join('')}</div>`}
         </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Upcoming Events</div>
-          </div>
-          ${upcoming.length === 0
-            ? `<div class="empty-state"><div class="icon">∅</div><h3>Nothing in the diary</h3><p>Add an inquiry to get started.</p></div>`
-            : `<div class="upcoming-list">${upcoming.map(b => `
-                <div class="upcoming-row" onclick="App.navigate('booking','${b.id}')">
-                  <div class="upcoming-date">
-                    <div class="upcoming-day">${this.fmtDayNum(b.event.date)}</div>
-                    <div class="upcoming-month">${this.fmtMonthShort(b.event.date)}</div>
-                  </div>
-                  <div class="upcoming-info">
-                    <div class="name">${this.esc(b.client.firstName)} ${this.esc(b.client.lastName)}${b.partnerName ? ' & ' + this.esc(b.partnerName) : ''}</div>
-                    <div class="meta">${this.esc(b.event.type)} · ${b.event.expectedGuests || '—'} guests</div>
-                  </div>
-                  <span class="pill pill-${b.status}">${this.statusLabel(b.status)}</span>
-                </div>`).join('')}</div>`}
-        </div>
+        ${journeyEvents.length === 0
+          ? `<div class="empty-state"><div class="icon">✓</div><h3>Nothing outstanding</h3><p>No active events need attention right now.</p></div>`
+          : `<div class="jt-list">${journeyEvents.map(b => this.renderJourneyRow(b)).join('')}</div>`}
       </div>
     `;
+  },
+
+  // The client journey, as milestone dots for the dashboard tracker.
+  // state: done (green) · due (amber, act now) · over (red, overdue) · todo (later) · na
+  computeJourney(b) {
+    const today = this.todayISO();
+    const dTo = b.event.date ? this.daysBetween(today, b.event.date) : null;
+    const f = b.financial;
+    const sent = (id) => (b.communications || []).some(c => c.templateId === id && c.status === 'sent');
+    const quoteSent = sent('tmpl_quote')
+      || ['quoted','provisional','confirmed','planning','balance_due','balance_overdue','balance_paid','event_week','completed'].includes(b.status);
+
+    const quote    = quoteSent ? 'done' : 'due';
+    const contract = b.contract.signedDate ? 'done' : (quoteSent ? 'due' : 'todo');
+    const deposit  = f.depositPaidDate ? 'done' : (b.contract.signedDate ? 'due' : 'todo');
+    const food     = f.cateringDepositPaidDate ? 'done' : (Number(f.cateringCost || 0) > 0 ? 'due' : 'na');
+    let balance;
+    if (f.balancePaidDate) balance = 'done';
+    else if (!f.depositPaidDate) balance = 'todo';
+    else if (dTo !== null && dTo < 0) balance = 'over';
+    else if (dTo !== null && dTo <= 35) balance = 'due';
+    else balance = 'todo';
+    const thanks = sent('tmpl_thank_you')   ? 'done' : (dTo !== null && dTo < 0  ? 'due' : 'todo');
+    const review = sent('tmpl_photos_review') ? 'done' : (dTo !== null && dTo <= -1 ? 'due' : 'todo');
+
+    return [
+      { label:'Quote',    state: quote },
+      { label:'Contract', state: contract },
+      { label:'Deposit',  state: deposit },
+      { label:'Food',     state: food },
+      { label:'Balance',  state: balance },
+      { label:'Thanks',   state: thanks },
+      { label:'Review',   state: review },
+    ];
+  },
+
+  renderJourneyRow(b) {
+    const steps = this.computeJourney(b);
+    const outstanding = steps.filter(s => s.state === 'due' || s.state === 'over').length;
+    const word = { done:'done', due:'to do', over:'overdue', todo:'later', na:'n/a' };
+    const couple = `${this.esc(b.client.firstName || '')} ${this.esc(b.client.lastName || '')}`.trim()
+      + (b.partnerName ? ' & ' + this.esc(b.partnerName) : '');
+    return `<div class="jt-event" onclick="App.navigate('booking','${b.id}')">
+      <div class="jt-date"><div class="jt-day">${this.fmtDayNum(b.event.date)}</div><div class="jt-mon">${this.fmtMonthShort(b.event.date)}</div></div>
+      <div class="jt-who"><div class="jt-name">${couple || '—'}</div><div class="jt-meta">${this.esc(b.event.type || '')}</div></div>
+      <div class="jt-track">${steps.map(s =>
+        `<div class="jt-step"><span class="jt-dot jt-${s.state}" title="${s.label}: ${word[s.state]}"></span><span class="jt-label">${s.label}</span></div>`
+      ).join('')}</div>
+      <div class="jt-count"><span class="jt-pill ${outstanding ? 'has' : 'none'}">${outstanding ? outstanding + ' to do' : '✓ all done'}</span></div>
+    </div>`;
   },
 
 
@@ -3362,11 +3462,137 @@ const App = {
   },
 
 
+  // ─────────── EVENTS OVERVIEW ───────────
+  // Sum of chargeable extras/hire from a booking's function sheet (there is
+  // no separate "paid" state for extras, so this is the extras value).
+  extrasTotal(b) {
+    const fs = b.functionSheet;
+    if (!fs || !Array.isArray(fs.extras)) return 0;
+    return fs.extras.reduce((sum, x) => {
+      const p = parseFloat(String((x && x.price) || '').replace(/[^0-9.]/g, ''));
+      return sum + (isNaN(p) ? 0 : p);
+    }, 0);
+  },
+
+  viewOverview() {
+    let bookings = this.state.bookings.slice().filter(b => b.status !== 'cancelled');
+    const q = (this.state.overviewSearch || '').toLowerCase();
+    if (q) {
+      bookings = bookings.filter(b =>
+        (`${b.client.firstName} ${b.client.lastName} ${b.partnerName || ''} ${b.client.email || ''}`).toLowerCase().includes(q) ||
+        (b.event.type || '').toLowerCase().includes(q));
+    }
+    bookings.sort((a, b) => (a.event.date || '9999').localeCompare(b.event.date || '9999'));
+
+    const money    = n => `£${this.fmtMoney(n)}`;
+    const paidCell = n => n > 0 ? `<span class="ov-paid">${money(n)}</span>` : `<span class="ov-zero">—</span>`;
+    const owedCell = n => n > 0 ? `<span class="ov-owed">${money(n)}</span>` : `<span class="ov-zero">—</span>`;
+
+    let tDepPaid = 0, tDepOwed = 0, tFoodDepPaid = 0, tFoodOwed = 0, tExtras = 0;
+
+    const rows = bookings.map(b => {
+      const f = b.financial;
+      const depPaid     = f.depositPaidDate ? Number(f.depositAmount || 0) : 0;
+      const depOwed     = f.balancePaidDate ? 0 : Number(f.balanceAmount || 0);
+      const foodDepPaid = f.cateringDepositPaidDate ? Number(f.cateringDepositAmount || 0) : 0;
+      const foodOwed    = f.cateringBalancePaidDate ? 0 : Number(f.cateringBalanceAmount || 0);
+      const extras      = this.extrasTotal(b);
+      tDepPaid += depPaid; tDepOwed += depOwed; tFoodDepPaid += foodDepPaid; tFoodOwed += foodOwed; tExtras += extras;
+
+      const inquired = b.createdAt ? this.fmtDateShort(b.createdAt.slice(0, 10)) : '—';
+      const booked   = f.depositPaidDate ? this.fmtDateShort(f.depositPaidDate) : '—';
+
+      const quoteSent = (b.communications || []).some(c => c.templateId === 'tmpl_quote' && c.status === 'sent')
+        || ['quoted','provisional','confirmed','planning','balance_due','balance_overdue','balance_paid','event_week','completed'].includes(b.status);
+      let cq = '';
+      if (quoteSent) cq += `<span class="ov-badge b-quote">Quote</span>`;
+      if (b.contract.signedDate) cq += `<span class="ov-badge b-signed">Signed</span>`;
+      else if (b.contract.sentDate) cq += `<span class="ov-badge b-sent">Sent</span>`;
+      if (!cq) cq = `<span class="ov-zero">—</span>`;
+
+      const couple = `${this.esc(b.client.firstName || '')} ${this.esc(b.client.lastName || '')}`.trim()
+        + (b.partnerName ? ' & ' + this.esc(b.partnerName) : '');
+
+      return `<tr onclick="App.navigate('booking','${b.id}')">
+        <td><span class="cell-date">${this.fmtDateShort(b.event.date)}</span></td>
+        <td><div class="ov-couple">${couple || '—'}</div><div class="ov-sub">${this.esc(b.event.type || '')}</div></td>
+        <td>${inquired}</td>
+        <td>${booked}</td>
+        <td class="num">${paidCell(depPaid)}</td>
+        <td class="num">${owedCell(depOwed)}</td>
+        <td class="num">${paidCell(foodDepPaid)}</td>
+        <td class="num">${owedCell(foodOwed)}</td>
+        <td class="num">${extras > 0 ? money(extras) : '<span class="ov-zero">—</span>'}</td>
+        <td>${cq}</td>
+      </tr>`;
+    }).join('');
+
+    const table = bookings.length === 0
+      ? `<div class="card"><div class="empty-state"><div class="icon">∅</div><h3>No events</h3><p>Add an inquiry to see it here.</p></div></div>`
+      : `<div class="ov-table-wrap"><table class="ov-table">
+          <thead><tr>
+            <th>Date</th><th>Couple</th><th>Inquired</th><th>Booked</th>
+            <th class="num">Deposit paid</th><th class="num">Balance owed</th>
+            <th class="num">Food deposit</th><th class="num">Food owed</th>
+            <th class="num">Extras</th><th>Contract / Quote</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot class="ov-tfoot"><tr>
+            <td colspan="4">Totals — ${bookings.length} event${bookings.length === 1 ? '' : 's'}</td>
+            <td class="num">${money(tDepPaid)}</td>
+            <td class="num">${money(tDepOwed)}</td>
+            <td class="num">${money(tFoodDepPaid)}</td>
+            <td class="num">${money(tFoodOwed)}</td>
+            <td class="num">${money(tExtras)}</td>
+            <td></td>
+          </tr></tfoot>
+        </table></div>`;
+
+    const stages = ['inquiry','quoted','provisional','confirmed','planning','balance_due','balance_overdue','balance_paid','event_week','completed'];
+    const board = `<div class="kanban">${stages.map(s => {
+      const items = bookings.filter(b => b.status === s);
+      const cards = items.length ? items.map(b => {
+        const owed = (b.financial.balancePaidDate ? 0 : Number(b.financial.balanceAmount || 0))
+          + (b.financial.cateringBalancePaidDate ? 0 : Number(b.financial.cateringBalanceAmount || 0));
+        const couple = `${this.esc(b.client.firstName || '')} ${b.partnerName ? '& ' + this.esc(b.partnerName) : this.esc(b.client.lastName || '')}`.trim();
+        return `<div class="kanban-card" onclick="App.navigate('booking','${b.id}')">
+          <div class="kc-name">${couple || '—'}</div>
+          <div class="kc-meta"><span>${this.fmtDateShort(b.event.date)}</span><span>${owed > 0 ? '£' + this.fmtMoney(owed) + ' owed' : '✓'}</span></div>
+        </div>`;
+      }).join('') : `<div class="kanban-empty">—</div>`;
+      return `<div class="kanban-col"><h4>${this.statusLabel(s)} <span class="kc-count">${items.length}</span></h4>${cards}</div>`;
+    }).join('')}</div>`;
+
+    return `
+      <div class="ov-toolbar">
+        <input class="search-input" id="overview-search" placeholder="Search couple, email, event…" value="${this.esc(this.state.overviewSearch || '')}">
+      </div>
+      ${table}
+      <h3 style="margin:26px 0 12px; font-family:'Cinzel',Georgia,serif; color:var(--brown-700);">Pipeline board</h3>
+      ${board}
+    `;
+  },
+
+  bindOverview() {
+    const s = document.getElementById('overview-search');
+    if (s) s.addEventListener('input', (e) => {
+      this.state.overviewSearch = e.target.value;
+      this.render();
+      const s2 = document.getElementById('overview-search');
+      if (s2) { s2.focus(); s2.setSelectionRange(s2.value.length, s2.value.length); }
+    });
+  },
+
   // ─────────── PIPELINE ───────────
   viewPipeline() {
-    const allowed = this.state.pipelineFilter === 'all' ? null : this.state.pipelineFilter.split(',');
     let bookings = this.state.bookings.slice();
-    if (allowed) bookings = bookings.filter(b => allowed.includes(b.status));
+    if (this.state.pipelineFilter === 'all') {
+      // "All" means all active work — completed & cancelled live under Past / Cancelled.
+      bookings = bookings.filter(b => !['completed','cancelled'].includes(b.status));
+    } else {
+      const allowed = this.state.pipelineFilter.split(',');
+      bookings = bookings.filter(b => allowed.includes(b.status));
+    }
     if (this.state.pipelineSearch) {
       const q = this.state.pipelineSearch.toLowerCase();
       bookings = bookings.filter(b =>
@@ -4237,7 +4463,7 @@ const App = {
   },
 
   // ── Merge field substitution ──
-  fillMergeFields(text, b, extraContext) {
+  fillMergeFields(text, b, extraContext, _skipContract) {
     const balanceDueISO = this.computeBalanceDueDate(b);
     const lateFee = this.computeLateFee(b);
     const dToEvent = b.event.date ? this.daysBetween(this.todayISO(), b.event.date) : '—';
@@ -4289,6 +4515,9 @@ const App = {
       login_username: b.clientLogin?.username || '',
       login_password: b.clientLogin?.password || '',
       your_name: this.state.settings.yourName || '',
+      // Full merged contract text — for embedding in the contract email.
+      // Guarded so building the contract doesn't recurse into itself.
+      contract_full: _skipContract ? '' : this.fillMergeFields(this.state.contractTemplate || '', b, null, true),
       // Receipt-context fields (filled when extraContext supplied)
       payment_label: extraContext?.payment_label || '',
       payment_amount: extraContext?.payment_amount || '',
@@ -4820,6 +5049,7 @@ const App = {
         ${b.contract.signedDate
           ? `<span class="pill pill-confirmed">✓ Signed ${this.fmtDateShort(b.contract.signedDate)}</span>` : ''}
         <span class="spacer" style="flex:1;"></span>
+        <button class="btn btn-gold btn-sm" onclick="App.openComposeModal('${b.id}', 'tmpl_contract')">✉ Email contract &amp; BACS</button>
         <button class="btn btn-secondary btn-sm" onclick="App.printBookingContract('${b.id}')">Print / PDF</button>
         <button class="btn btn-primary btn-sm" onclick="App.copyContract('${b.id}')">Copy text</button>
       </div>
@@ -5078,8 +5308,6 @@ const App = {
   // ───────── ACCESS REQUESTS (Client Portal) ─────────
   viewAccessRequests() {
     const requests = this.state.accessRequests || [];
-    const pending  = requests.filter(r => r.status === 'pending');
-    const handled  = requests.filter(r => r.status !== 'pending').slice(0, 20);
 
     const reqCard = (r) => {
       const matches = this.state.bookings.filter(b =>
@@ -5144,22 +5372,36 @@ const App = {
         </div>`;
     };
 
+    const filter = this.state.arFilter || 'pending';
+    const byStatus = {
+      pending:  requests.filter(r => r.status === 'pending'),
+      approved: requests.filter(r => r.status === 'approved'),
+      rejected: requests.filter(r => r.status === 'rejected'),
+    };
+    const shown = filter === 'all' ? requests : (byStatus[filter] || []);
+    const chip = (val, label, n) =>
+      `<button class="filter-chip ${filter === val ? 'active' : ''}" data-arfilter="${val}">${label}${n != null ? ` <span style="opacity:.55;">${n}</span>` : ''}</button>`;
+
     return `
-      <section style="margin-bottom: 28px;">
-        <div style="font-family: var(--font-display); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brown-700); margin: 0 0 12px 4px;">Pending</div>
-        ${pending.length
-          ? pending.map(reqCard).join('')
-          : `<div class="card"><div class="empty-state"><div class="icon">✓</div><h3>Nothing pending</h3><p>You&rsquo;re all caught up on portal access requests.</p></div></div>`}
-      </section>
-      ${handled.length ? `
-        <section>
-          <div style="font-family: var(--font-display); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brown-700); margin: 0 0 12px 4px;">Recent</div>
-          ${handled.map(reqCard).join('')}
-        </section>` : ''}
+      <div class="pipeline-toolbar" style="margin-bottom: 18px;">
+        ${chip('pending','Pending', byStatus.pending.length)}
+        ${chip('approved','Approved', byStatus.approved.length)}
+        ${chip('rejected','Rejected', byStatus.rejected.length)}
+        ${chip('all','All', requests.length)}
+      </div>
+      ${shown.length
+        ? `<div>${shown.map(reqCard).join('')}</div>`
+        : `<div class="card"><div class="empty-state"><div class="icon">✓</div><h3>Nothing here</h3><p>No ${filter === 'all' ? '' : this.esc(filter) + ' '}access requests.</p></div></div>`}
     `;
   },
 
   bindAccessRequests() {
+    document.querySelectorAll('[data-arfilter]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        this.state.arFilter = chip.dataset.arfilter;
+        this.render();
+      });
+    });
     document.querySelectorAll('.ar-approve').forEach(btn => {
       btn.addEventListener('click', () => {
         const reqId = btn.dataset.req;
@@ -5291,7 +5533,8 @@ const App = {
       return;
     }
     const inputStyle = 'background: var(--linen); border: 1px solid var(--paper-edge); color: var(--brown-900); padding: 6px 8px; border-radius: 3px; font-family: var(--font-body); font-size: 12.5px;';
-    host.innerHTML = list.map(c => {
+
+    const contractorCard = (c) => {
       const docs = DT.map(([k,label]) => {
         const d = (c.documents||[]).find(x => x.type === k);
         return `<div style="display:flex; gap:10px; align-items:center; padding:3px 0; font-size:13px;">
@@ -5323,6 +5566,45 @@ const App = {
           <button class="btn btn-primary btn-sm" data-act="csave" data-id="${this.esc(c.id)}">Save</button>
         </div>
       </div></div>`;
+    };
+
+    // Group declarations by the event (booking) they belong to.
+    const bookingsById = {};
+    this.state.bookings.forEach(b => { bookingsById[b.id] = b; });
+    const groups = {};
+    list.forEach(c => {
+      const key = c.booking_id || '__unlinked__';
+      (groups[key] = groups[key] || []).push(c);
+    });
+    const keys = Object.keys(groups).sort((a, b) => {
+      const da = bookingsById[a]?.event.date || '9999-12-31';
+      const db = bookingsById[b]?.event.date || '9999-12-31';
+      return da.localeCompare(db);
+    });
+
+    host.innerHTML = keys.map(key => {
+      const bk = bookingsById[key];
+      let heading, sub, link = '';
+      if (bk) {
+        const couple = `${this.esc(bk.client.firstName || '')} ${this.esc(bk.client.lastName || '')}`.trim()
+          + (bk.partnerName ? ' & ' + this.esc(bk.partnerName) : '');
+        heading = couple || this.esc(bk.client.email || 'Event');
+        sub = `${this.esc(bk.event.type || 'Event')} · ${this.fmtDateLong(bk.event.date)}`;
+        link = `<button class="btn btn-ghost btn-sm" onclick="App.navigate('booking','${bk.id}')">Open event →</button>`;
+      } else {
+        heading = 'Not linked to an event';
+        sub = 'These declarations aren’t matched to a booking yet';
+      }
+      return `<div style="margin-bottom:22px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:10px; border-bottom:1px solid var(--linen-dark); padding-bottom:6px;">
+          <div>
+            <h3 style="margin:0; font-family:'Cinzel',Georgia,serif; color:var(--brown-700);">${heading}</h3>
+            <div class="muted" style="font-size:12.5px;">${sub} · ${groups[key].length} supplier${groups[key].length === 1 ? '' : 's'}</div>
+          </div>
+          ${link}
+        </div>
+        ${groups[key].map(contractorCard).join('')}
+      </div>`;
     }).join('');
 
     host.querySelectorAll('[data-act="cview"]').forEach(b =>

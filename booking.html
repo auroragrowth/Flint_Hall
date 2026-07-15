@@ -1550,6 +1550,7 @@ async function addContractor(e) {
   clearError(err);
   const row = {
     client_email:  contractorEmail,
+    booking_id:    currentBooking?.id || null,
     company:       f.company.value.trim(),
     service:       f.service.value.trim(),
     contact_name:  f.contact_name.value.trim()  || null,

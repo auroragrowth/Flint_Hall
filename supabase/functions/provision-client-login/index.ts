@@ -25,6 +25,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const NOTIFY_FROM     = Deno.env.get("NOTIFY_FROM") ?? "Flint Hall <noreply@flinthall.uk>";
 const REPLY_TO        = Deno.env.get("REPLY_TO") ?? "info@flinthall.uk";
+const CLIENT_CC       = Deno.env.get("CLIENT_CC") ?? "info@flinthall.uk";
 const SUPABASE_URL    = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY     = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -141,7 +142,7 @@ Deno.serve(async (req: Request) => {
     const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: NOTIFY_FROM, to: [email], subject, html, text, reply_to: REPLY_TO }),
+      body: JSON.stringify({ from: NOTIFY_FROM, to: [email], cc: CLIENT_CC.split(",").map(s => s.trim()).filter(a => a && a.toLowerCase() !== email.toLowerCase()), subject, html, text, reply_to: REPLY_TO }),
     });
     if (r.ok) { sent = true; }
     else { console.error("provision-client-login: resend failed", r.status, await r.text()); }

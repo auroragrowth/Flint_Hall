@@ -32,6 +32,7 @@ $$;
 create table if not exists public.event_contractors (
   id            uuid primary key default gen_random_uuid(),
   client_email  text not null,
+  booking_id    text,                                  -- event this supplier is attached to
   company       text not null,
   contact_name  text,
   contact_phone text,
@@ -46,6 +47,18 @@ create table if not exists public.event_contractors (
 
 create index if not exists event_contractors_client_email_idx
   on public.event_contractors (lower(client_email));
+
+-- Attach supplier declarations to a specific event (booking). Backfill links
+-- each existing row to the client's most recent booking by email.
+alter table public.event_contractors add column if not exists booking_id text;
+create index if not exists event_contractors_booking_idx on public.event_contractors (booking_id);
+update public.event_contractors ec
+set booking_id = (
+  select b.id from public.bookings b
+  where lower(b.client_email) = lower(ec.client_email)
+  order by b.created_at desc limit 1
+)
+where ec.booking_id is null;
 
 -- keep updated_at fresh
 create or replace function public.touch_event_contractors()
