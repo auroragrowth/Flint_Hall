@@ -2219,6 +2219,19 @@ This agreement is made between Flint Hall Events ("The Venue") and {client_full_
                Flint Hall Events
 `;
 
+// Catering menu — mirrors the public portal menu (booking.html). Used to
+// pre-populate food lines on invoices via a dropdown.
+const CATERING_MENU = [
+  { name: 'The Hog Roast',      price: 20.00, min: 50, perHead: true },
+  { name: 'Meat BBQ Feast',     price: 20.00, min: 40, perHead: true },
+  { name: 'Vegan BBQ Feast',    price: 18.00, min: 0,  perHead: true },
+  { name: 'Classic Pizza',      price: 18.50, min: 40, perHead: true },
+  { name: 'Gourmet Pizza',      price: 20.00, min: 40, perHead: true },
+  { name: 'Jacket Potato Bar',  price: 9.00,  min: 0,  perHead: true },
+  { name: 'The Ice Cream Bike', price: 3.80,  min: 50, perHead: true },
+  { name: 'The Tuk Tuk Bar',    price: 100.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall' }
+];
+
 // ─────────────────────── APPLICATION ───────────────────────
 const App = {
   state: {
@@ -5177,7 +5190,11 @@ const App = {
           <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('venue')">+ Venue hire</button>
           <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('deposit')">+ Deposit (50%)</button>
           <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('balance')">+ Balance</button>
-          <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('catering')">+ Catering</button>
+          <select class="btn btn-secondary btn-sm" style="padding-right:22px; cursor:pointer;" onchange="App.invAddFood(this.value); this.value='';" title="Add a food line from the menu">
+            <option value="">+ Food from menu…</option>
+            ${CATERING_MENU.map((m, i) => `<option value="${i}">${this.esc(m.name)} — ${m.flat ? '£' + m.price + ' flat' : '£' + m.price.toFixed(2) + '/head' + (m.min ? ' (min ' + m.min + ')' : '')}</option>`).join('')}
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('catering')">+ Catering (total)</button>
           <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('blank')">+ Blank line</button>
           <span class="spacer" style="flex:1;"></span>
           <strong style="font-size:16px;">Total: ${money(this.invTotal(d.items))}</strong>
@@ -5239,6 +5256,20 @@ const App = {
     else if (kind === 'balance') d.items.push(line('Venue hire — balance', f.balanceAmount));
     else if (kind === 'catering') d.items.push(line('Catering', f.cateringCost));
     else d.items.push(line('', 0));
+    this.renderInvoicesHost(b);
+  },
+
+  // Add a food line from the catering menu. Per-head items default their qty
+  // (covers) to the booking's expected guest count, then the menu minimum.
+  invAddFood(idx) {
+    const m = CATERING_MENU[Number(idx)];
+    const d = this.state.invoiceDraft;
+    if (!m || !d) return;
+    const b = this.invCurrentBooking();
+    let qty, unit;
+    if (m.flat) { qty = 1; unit = Number(m.price); }
+    else { qty = Number(b.event.expectedGuests) || m.min || 1; unit = Number(m.price); }
+    d.items.push({ description: m.name + (m.flat ? '' : ' (per head)'), qty, unit_price: unit, amount: qty * unit });
     this.renderInvoicesHost(b);
   },
 
