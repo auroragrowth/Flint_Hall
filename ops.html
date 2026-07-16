@@ -1821,6 +1821,26 @@ Warmly,
 Flint Hall Events`
   },
   {
+    id: 'tmpl_followup',
+    name: 'Inquiry — Follow-up (gone quiet)',
+    trigger: '10+ days after an inquiry with no reply',
+    subject: 'Still thinking it over? — Flint Hall',
+    body: `Hello {first_name},
+
+I hope you don't mind a gentle nudge — we were in touch a little while ago about your {event_type} at Flint Hall, and I didn't want you to slip through the net.
+
+There's no rush and no pressure at all. I know a day like this takes time to think through, and plans have a habit of shifting. But if we're still in your thoughts, just reply and I'll check the date is free and answer anything that's still open — however small.
+
+And if your plans have changed, or you've found somewhere that fits better, that's genuinely fine too. A quick word and I'll tidy things up at our end, with our very best wishes for the day.
+
+Either way, it would be lovely to hear from you.
+
+Warmly,
+{your_name}
+Flint Hall Events
+{venue_phone}  ·  flinthall.uk`
+  },
+  {
     id: 'tmpl_visit_invite',
     name: 'Inquiry — Site Visit Confirmation',
     trigger: 'When a viewing has been agreed',
@@ -2922,6 +2942,15 @@ const App = {
     }
     if (b.status === 'inquiry' && lastSent('tmpl_inquiry_ack') && !lastSent('tmpl_availability') && !queued('tmpl_availability')) {
       actions.push({ kind:'send', tplId:'tmpl_availability', label:'Send availability + brochure', icon:'✉', tone:'gold' });
+    }
+    // Enquiry has gone quiet — nudge once after 10+ days with no reply from us.
+    if (['inquiry','quoted'].includes(b.status) && !lastSent('tmpl_followup') && !queued('tmpl_followup')) {
+      const touches = ['tmpl_inquiry_ack','tmpl_availability','tmpl_quote'].map(lastSent).filter(Boolean).sort();
+      const lastTouch = touches[touches.length - 1];
+      const quiet = lastTouch ? this.daysBetween(lastTouch, today) : null;
+      if (quiet !== null && quiet >= 10) {
+        actions.push({ kind:'send', tplId:'tmpl_followup', label:`Follow up — quiet ${quiet} days`, icon:'✉', tone:'info' });
+      }
     }
     // Once the quote has gone out (sent through the system or stage marked
     // "quoted"), give the client their planning-portal login.
