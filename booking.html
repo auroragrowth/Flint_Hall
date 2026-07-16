@@ -1142,7 +1142,7 @@ async function loadCateringAndInvoices(b) {
   const [{ data: orders }, bacsInfo, { data: formalInvoices }] = await Promise.all([
     supabase.from('catering_orders').select('*').eq('status', 'submitted').order('created_at', { ascending: false }),
     getPaymentInfo(),
-    supabase.from('invoices').select('*').order('issued_date', { ascending: false })
+    supabase.from('invoices').select('*').eq('doc_type', 'invoice').order('issued_date', { ascending: false })
   ]);
   const activeOrder = (orders && orders[0]) || null;
   renderCateringOrder(b, activeOrder);

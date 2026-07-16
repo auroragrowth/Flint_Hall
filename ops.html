@@ -3716,7 +3716,7 @@ const App = {
   // ─────────── BOOKING DETAIL ───────────
   viewBooking(b) {
     const tabs = ['details','payments','invoices','comms','function','contract'];
-    const tabLabel = { details:'Details', payments:'Payments', invoices:'Invoices', comms:'Communications', function:'Running Order', contract:'Contract' };
+    const tabLabel = { details:'Details', payments:'Payments', invoices:'Quotes & Invoices', comms:'Communications', function:'Running Order', contract:'Contract' };
     const balanceDue = this.computeBalanceDueDate(b);
     const lateFee = this.computeLateFee(b);
 
@@ -5173,10 +5173,11 @@ const App = {
     this.renderInvoicesHost(b);
   },
 
-  newInvoiceDraft(b) {
-    const due = new Date(); due.setDate(due.getDate() + 14);
+  newInvoiceDraft(b, docType) {
+    const due = new Date(); due.setDate(due.getDate() + (docType === 'quote' ? 30 : 14));
     this.state.invoiceDraft = {
       id: null, number: null, status: 'draft',
+      doc_type: docType || 'invoice',
       issued_date: this.todayISO(), due_date: due.toISOString().slice(0, 10),
       items: [], notes: ''
     };
@@ -5205,10 +5206,16 @@ const App = {
     const builder = `
       <div class="card mb-2"><div class="card-body">
         <div class="row" style="justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;">
-          <div class="card-title">${d.id ? 'Edit invoice ' + this.esc(d.number || '') : 'New invoice'}</div>
+          <div class="row gap-sm" style="align-items:center;">
+            <div class="card-title">${d.id ? 'Edit ' + this.esc(d.number || '') : 'New'}</div>
+            ${d.id ? '' : `<select style="${inp} cursor:pointer;" onchange="App.invSetType(this.value)" title="Quote or invoice">
+              <option value="invoice"${d.doc_type !== 'quote' ? ' selected' : ''}>Invoice</option>
+              <option value="quote"${d.doc_type === 'quote' ? ' selected' : ''}>Quote</option>
+            </select>`}
+          </div>
           <div class="row gap-sm" style="align-items:center;">
             <label class="muted" style="font-size:12px;">Issued <input type="date" style="${inp}" value="${d.issued_date}" onchange="App.invField('issued_date',this.value)"></label>
-            <label class="muted" style="font-size:12px;">Due <input type="date" style="${inp}" value="${d.due_date || ''}" onchange="App.invField('due_date',this.value)"></label>
+            <label class="muted" style="font-size:12px;">${d.doc_type === 'quote' ? 'Valid until' : 'Due'} <input type="date" style="${inp}" value="${d.due_date || ''}" onchange="App.invField('due_date',this.value)"></label>
           </div>
         </div>
         <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:12px;">
@@ -5238,30 +5245,46 @@ const App = {
         </div>
       </div></div>`;
 
-    const statusPill = s => s === 'paid' ? 'pill-balance_paid' : (s === 'sent' ? 'pill-balance_due' : 'pill-inquiry');
-    const list = (this.state.invoices || []).map(inv => `
+    const statusPill = s => (s === 'paid' || s === 'accepted') ? 'pill-balance_paid' : (s === 'sent' ? 'pill-balance_due' : 'pill-inquiry');
+    const list = (this.state.invoices || []).map(inv => {
+      const isQuote = inv.doc_type === 'quote';
+      const settled = isQuote ? inv.status === 'accepted' : inv.status === 'paid';
+      const dateLabel = isQuote ? 'valid until' : 'due';
+      return `
       <div class="card mb-2"><div class="card-body">
         <div class="row" style="justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;">
           <div>
+            <span class="pill ${isQuote ? 'pill-quoted' : 'pill-planning'}" style="margin-right:6px;">${isQuote ? 'Quote' : 'Invoice'}</span>
             <strong style="font-size:15px;">${this.esc(inv.number || '(draft)')}</strong>
             <span class="pill ${statusPill(inv.status)}" style="margin-left:8px;">${this.esc(inv.status)}</span>
-            <div class="muted" style="font-size:12.5px; margin-top:2px;">Issued ${this.fmtDateShort(inv.issued_date)}${inv.due_date ? ' · due ' + this.fmtDateShort(inv.due_date) : ''}${inv.paid_date ? ' · paid ' + this.fmtDateShort(inv.paid_date) : ''}</div>
+            <div class="muted" style="font-size:12.5px; margin-top:2px;">Issued ${this.fmtDateShort(inv.issued_date)}${inv.due_date ? ' · ' + dateLabel + ' ' + this.fmtDateShort(inv.due_date) : ''}${inv.paid_date ? ' · paid ' + this.fmtDateShort(inv.paid_date) : ''}${inv.accepted_date ? ' · accepted ' + this.fmtDateShort(inv.accepted_date) : ''}</div>
           </div>
           <strong style="font-size:16px;">${money(inv.subtotal)}</strong>
         </div>
         <div class="row gap-sm" style="margin-top:10px; flex-wrap:wrap;">
           ${inv.status === 'draft' ? `<button class="btn btn-secondary btn-sm" onclick="App.invEdit('${inv.id}','${b.id}')">Edit</button>` : ''}
           <button class="btn btn-gold btn-sm" onclick="App.invSend('${inv.id}','${b.id}')">${inv.status === 'draft' ? 'Send →' : 'Resend →'}</button>
-          ${inv.status !== 'paid' ? `<button class="btn btn-secondary btn-sm" onclick="App.invMarkPaid('${inv.id}','${b.id}')">Mark paid</button>` : ''}
+          ${!settled ? `<button class="btn btn-secondary btn-sm" onclick="App.invMarkPaid('${inv.id}','${b.id}')">${isQuote ? 'Mark accepted' : 'Mark paid'}</button>` : ''}
+          ${isQuote ? `<button class="btn btn-primary btn-sm" onclick="App.invConvertToInvoice('${inv.id}','${b.id}')">Convert to invoice →</button>` : ''}
           <button class="btn btn-secondary btn-sm" onclick="App.invPrint('${inv.id}')">Print / PDF</button>
           <button class="btn btn-ghost btn-sm" onclick="App.invDelete('${inv.id}','${b.id}')">Delete</button>
         </div>
-      </div></div>`).join('');
+      </div></div>`;
+    }).join('');
 
-    host.innerHTML = builder + (list ? `<div style="margin-top:18px;"><div class="card-title" style="margin-bottom:8px;">Invoices for this booking</div>${list}</div>` : '');
+    host.innerHTML = builder + (list ? `<div style="margin-top:18px;"><div class="card-title" style="margin-bottom:8px;">Quotes &amp; invoices for this booking</div>${list}</div>` : '');
   },
 
   invField(field, value) { if (this.state.invoiceDraft) this.state.invoiceDraft[field] = value; },
+
+  // Switch the draft between quote and invoice (resets the validity/due window).
+  invSetType(type) {
+    const d = this.state.invoiceDraft; if (!d) return;
+    d.doc_type = type === 'quote' ? 'quote' : 'invoice';
+    const due = new Date(); due.setDate(due.getDate() + (d.doc_type === 'quote' ? 30 : 14));
+    d.due_date = due.toISOString().slice(0, 10);
+    this.renderInvoicesHost(this.invCurrentBooking());
+  },
 
   invEditLine(i, field, value) {
     const d = this.state.invoiceDraft; if (!d || !d.items[i]) return;
@@ -5315,6 +5338,7 @@ const App = {
     return {
       booking_id: b.id,
       client_email: (b.client.email || '').toLowerCase(),
+      doc_type: d.doc_type || 'invoice',
       issued_date: d.issued_date || this.todayISO(),
       due_date: d.due_date || null,
       items: d.items || [],
@@ -5355,6 +5379,7 @@ const App = {
     const b = this.state.bookings.find(x => x.id === bookingId);
     this.state.invoiceDraft = {
       id: inv.id, number: inv.number, status: inv.status,
+      doc_type: inv.doc_type || 'invoice',
       issued_date: inv.issued_date, due_date: inv.due_date,
       items: JSON.parse(JSON.stringify(inv.items || [])), notes: inv.notes || ''
     };
@@ -5368,24 +5393,61 @@ const App = {
     const inv = this.invById(id);
     if (!inv || !b) return;
     if (!b.client.email) { this.toast('No client email on the booking.', 'error'); return; }
-    if (!confirm(`Email invoice ${inv.number} to ${b.client.email}?`)) return;
-    this.toast('Sending invoice…', 'info');
+    const label = inv.doc_type === 'quote' ? 'quote' : 'invoice';
+    if (!confirm(`Email ${label} ${inv.number} to ${b.client.email}?`)) return;
+    this.toast(`Sending ${label}…`, 'info');
     const html = this.buildInvoiceHtml(inv, b);
     const text = this.buildInvoiceText(inv, b);
+    const subject = inv.doc_type === 'quote'
+      ? `Your Flint Hall quote — ${inv.number}`
+      : `Invoice ${inv.number} — Flint Hall Events`;
     const { data, error } = await sb.functions.invoke('send-client-email', {
-      body: { to: b.client.email, subject: `Invoice ${inv.number} — Flint Hall Events`, body: text, html }
+      body: { to: b.client.email, subject, body: text, html }
     });
     if (error || (data && data.ok === false)) { this.toast('Could not send: ' + (error?.message || data?.error || 'error'), 'error'); return; }
-    await sb.from('invoices').update({ status: inv.status === 'paid' ? 'paid' : 'sent', sent_date: this.todayISO() }).eq('id', id);
-    this.toast('Invoice sent to ' + b.client.email, 'success');
+    const keep = ['paid', 'accepted'].includes(inv.status) ? inv.status : 'sent';
+    await sb.from('invoices').update({ status: keep, sent_date: this.todayISO() }).eq('id', id);
+    this.toast(`${label[0].toUpperCase() + label.slice(1)} sent to ${b.client.email}`, 'success');
     await this.bindInvoices(b);
   },
 
+  // Quotes get 'accepted', invoices get 'paid'.
   async invMarkPaid(id, bookingId) {
     const sb = window.fhSupabase;
     const b = this.state.bookings.find(x => x.id === bookingId);
-    await sb.from('invoices').update({ status: 'paid', paid_date: this.todayISO() }).eq('id', id);
-    this.toast('Invoice marked paid', 'success');
+    const inv = this.invById(id); if (!inv) return;
+    const isQuote = inv.doc_type === 'quote';
+    const patch = isQuote
+      ? { status: 'accepted', accepted_date: this.todayISO() }
+      : { status: 'paid', paid_date: this.todayISO() };
+    const { error } = await sb.from('invoices').update(patch).eq('id', id);
+    if (error) { this.toast('Could not update: ' + error.message, 'error'); return; }
+    this.toast(isQuote ? 'Quote marked accepted' : 'Invoice marked paid', 'success');
+    await this.bindInvoices(b);
+  },
+
+  // Copy an accepted quote's lines into a new draft invoice (the quote is kept).
+  async invConvertToInvoice(id, bookingId) {
+    const sb = window.fhSupabase;
+    const b = this.state.bookings.find(x => x.id === bookingId);
+    const q = this.invById(id); if (!q || !b) return;
+    if (!confirm(`Create an invoice from quote ${q.number}?`)) return;
+    const due = new Date(); due.setDate(due.getDate() + 14);
+    const { data, error } = await sb.from('invoices').insert({
+      booking_id: b.id,
+      client_email: (b.client.email || '').toLowerCase(),
+      doc_type: 'invoice',
+      issued_date: this.todayISO(),
+      due_date: due.toISOString().slice(0, 10),
+      items: q.items || [],
+      notes: q.notes || null,
+      converted_from: q.id
+    }).select().single();
+    if (error) { this.toast('Could not convert: ' + error.message, 'error'); return; }
+    if (q.status !== 'accepted') {
+      await sb.from('invoices').update({ status: 'accepted', accepted_date: this.todayISO() }).eq('id', q.id);
+    }
+    this.toast(`Invoice ${data.number} created from ${q.number}`, 'success');
     await this.bindInvoices(b);
   },
 
@@ -5408,14 +5470,17 @@ const App = {
 
   buildInvoiceText(inv, b) {
     const money = n => `£${this.fmtMoney(n)}`;
+    const isQuote = inv.doc_type === 'quote';
     const lines = (inv.items || []).map(it => `  ${it.description} — ${it.qty} x ${money(it.unit_price)} = ${money(it.amount)}`).join('\n');
     const bacs = this.state.settings.bacsDetails || '';
-    return [`Invoice ${inv.number} — Flint Hall Events`, '',
-      `Billed to: ${b.client.firstName || ''} ${b.client.lastName || ''} <${b.client.email || ''}>`,
-      `Issued: ${this.fmtDateShort(inv.issued_date)}${inv.due_date ? '   Due: ' + this.fmtDateShort(inv.due_date) : ''}`, '',
+    return [`${isQuote ? 'Quote' : 'Invoice'} ${inv.number} — Flint Hall Events`, '',
+      `${isQuote ? 'Prepared for' : 'Billed to'}: ${b.client.firstName || ''} ${b.client.lastName || ''} <${b.client.email || ''}>`,
+      `Issued: ${this.fmtDateShort(inv.issued_date)}${inv.due_date ? (isQuote ? '   Valid until: ' : '   Due: ') + this.fmtDateShort(inv.due_date) : ''}`, '',
       lines, '', `TOTAL: ${money(inv.subtotal)}`, '',
       inv.notes ? `Notes: ${inv.notes}\n` : '',
-      bacs ? `Pay by bank transfer:\n${bacs}\nReference: ${inv.number}` : ''].join('\n');
+      isQuote
+        ? 'This is a quote, not a request for payment — just reply to accept and we\'ll send the invoice.'
+        : (bacs ? `Pay by bank transfer:\n${bacs}\nReference: ${inv.number}` : '')].join('\n');
   },
 
   buildInvoiceHtml(inv, b) {
@@ -5428,23 +5493,25 @@ const App = {
         <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${money(it.amount)}</td>
       </tr>`).join('');
     const bacs = (this.state.settings.bacsDetails || '').toString();
+    const isQuote = inv.doc_type === 'quote';
     const clientName = `${b.client.firstName || ''} ${b.client.lastName || ''}`.trim() + (b.partnerName ? ' & ' + b.partnerName : '');
-    const paidBadge = inv.status === 'paid'
-      ? ` <span style="display:inline-block; background:#dfe9d8; color:#4a6a3a; padding:3px 11px; border-radius:20px; font-size:11px; letter-spacing:1px; text-transform:uppercase;">Paid</span>` : '';
+    const settled = isQuote ? inv.status === 'accepted' : inv.status === 'paid';
+    const paidBadge = settled
+      ? ` <span style="display:inline-block; background:#dfe9d8; color:#4a6a3a; padding:3px 11px; border-radius:20px; font-size:11px; letter-spacing:1px; text-transform:uppercase;">${isQuote ? 'Accepted' : 'Paid'}</span>` : '';
     return `<div style="font-family:Georgia,serif; max-width:600px; margin:0 auto; color:#3a2818; background:#faf3e2; padding:32px;">
       <div style="text-align:center; margin-bottom:6px;"><img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="150" style="max-width:150px; height:auto; border:0;"></div>
-      <div style="text-align:center; font-family:'Cinzel',Georgia,serif; letter-spacing:3px; text-transform:uppercase; color:#4a2f23; font-size:20px; margin-bottom:22px;">Invoice</div>
+      <div style="text-align:center; font-family:'Cinzel',Georgia,serif; letter-spacing:3px; text-transform:uppercase; color:#4a2f23; font-size:20px; margin-bottom:22px;">${isQuote ? 'Quote' : 'Invoice'}</div>
       <table style="width:100%; font-size:13px; margin-bottom:18px;">
         <tr>
           <td style="vertical-align:top;">
-            <div style="color:#806555; font-size:11px; text-transform:uppercase; letter-spacing:1px;">Billed to</div>
+            <div style="color:#806555; font-size:11px; text-transform:uppercase; letter-spacing:1px;">${isQuote ? 'Prepared for' : 'Billed to'}</div>
             <div style="font-size:14px;">${this.esc(clientName || b.client.email || '')}</div>
             <div style="color:#806555; font-size:12px;">${this.esc(b.client.email || '')}</div>
           </td>
           <td style="vertical-align:top; text-align:right;">
             <div><strong>${this.esc(inv.number || '')}</strong>${paidBadge}</div>
             <div style="color:#806555; font-size:12px;">Issued ${this.fmtDateShort(inv.issued_date)}</div>
-            ${inv.due_date ? `<div style="color:#806555; font-size:12px;">Due ${this.fmtDateShort(inv.due_date)}</div>` : ''}
+            ${inv.due_date ? `<div style="color:#806555; font-size:12px;">${isQuote ? 'Valid until' : 'Due'} ${this.fmtDateShort(inv.due_date)}</div>` : ''}
           </td>
         </tr>
       </table>
@@ -5456,7 +5523,9 @@ const App = {
         <tfoot><tr style="font-weight:bold; font-size:15px;"><td colspan="3" style="padding:12px 0 0; text-align:right;">Total</td><td style="padding:12px 0 0; text-align:right;">${money(inv.subtotal)}</td></tr></tfoot>
       </table>
       ${inv.notes ? `<div style="margin-top:16px; font-size:13px; color:#5c4530; white-space:pre-line;">${this.esc(inv.notes)}</div>` : ''}
-      ${bacs ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px; white-space:pre-line;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">Pay by bank transfer</strong>${this.esc(bacs)}\nReference: ${this.esc(inv.number || '')}</div>` : ''}
+      ${isQuote
+        ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">This is a quote, not a bill</strong>Nothing to pay yet. Just reply to accept and we&rsquo;ll send the invoice and hold your date.</div>`
+        : (bacs ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px; white-space:pre-line;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">Pay by bank transfer</strong>${this.esc(bacs)}\nReference: ${this.esc(inv.number || '')}</div>` : '')}
       <div style="margin-top:24px; padding-top:12px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555; text-align:center;">Flint Hall Events &middot; Creeting St Peter &middot; Suffolk &middot; hello@flinthall.uk</div>
     </div>`;
   },
