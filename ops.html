@@ -1209,6 +1209,8 @@ a:hover { text-decoration: underline; }
 .cal-event.s-event_week { background: #f7e2ad; color: #8a5a14; }
 .cal-event.s-completed { background: var(--linen-dark); color: var(--brown-600); opacity: 0.85; }
 .cal-event.s-cancelled { background: #e9e3e1; color: var(--brown-500); text-decoration: line-through; opacity: 0.7; }
+/* Site viewings — visually distinct from bookings */
+.cal-event.cal-visit { background: #e0eaf3; color: #4a6a85; border-left-style: dashed; }
 .cal-event.is-event-day {
   font-weight: 700;
   box-shadow: inset 0 0 0 1.5px var(--gold);
@@ -2376,6 +2378,10 @@ const App = {
         signedDate: r.contract_signed_date || null,
         version: r.contract_version ?? 0
       },
+      visit: {
+        date: r.visit_date || null,
+        time: r.visit_time || ''
+      },
       functionSheet: r.function_sheet || { days: [], catering: '', notes: '' },
       communications: r.communications || [],
       internalNotes: r.internal_notes || '',
@@ -2438,6 +2444,8 @@ const App = {
       contract_sent_date:          ct.sentDate || null,
       contract_signed_date:        ct.signedDate || null,
       contract_version:            ct.version ?? null,
+      visit_date:                  (b.visit && b.visit.date) || null,
+      visit_time:                  (b.visit && b.visit.time) || null,
       function_sheet:              b.functionSheet || null,
       communications:              b.communications || [],
       internal_notes:              b.internalNotes || null,
@@ -3222,7 +3230,13 @@ const App = {
         const isEventDay = b.event.date && new Date(b.event.date).setHours(0,0,0,0) === cellDate.getTime();
         return { ...b, _isFirst: isFirst, _isLast: isLast, _isEventDay: isEventDay, _isMulti: start.getTime() !== end.getTime() };
       }).sort((a, b) => (a.event.startTime || '').localeCompare(b.event.startTime || ''));
-      cells.push({ date: cellDate, isCurrentMonth, isToday, isWeekend, events });
+      // Site viewings booked for this day (shown alongside events)
+      const visits = this.state.bookings.filter(b => {
+        if (!b.visit || !b.visit.date || b.status === 'cancelled') return false;
+        const vd = new Date(b.visit.date); vd.setHours(0, 0, 0, 0);
+        return vd.getTime() === cellDate.getTime();
+      }).sort((a, b) => (a.visit.time || '').localeCompare(b.visit.time || ''));
+      cells.push({ date: cellDate, isCurrentMonth, isToday, isWeekend, events, visits });
     }
 
     // Month-level summary
@@ -3315,6 +3329,12 @@ const App = {
       <div class="${classes.join(' ')}">
         <div class="cal-day-num">${day}</div>
         <div class="cal-events">
+          ${(cell.visits || []).map(b => {
+            const vname = `${b.client.firstName || ''}${b.partnerName ? ' & ' + b.partnerName : ''}`.trim() || b.client.lastName || 'Viewing';
+            const vtime = b.visit.time ? `<span class="cal-event-time">${this.esc(b.visit.time)}</span>` : '';
+            const vtip = `Viewing — ${vname}${b.visit.time ? ' at ' + b.visit.time : ''}${b.event.type ? ' · ' + b.event.type : ''}`;
+            return `<div class="cal-event cal-visit" onclick="App.navigate('booking','${b.id}')" title="${this.esc(vtip)}">👁 ${vtime}${this.esc(vname)}</div>`;
+          }).join('')}
           ${visible.map(b => {
             const name = `${b.client.firstName || ''}${b.partnerName ? ' & ' + b.partnerName : ''}`.trim() || b.client.lastName || 'Booking';
             const time = (b._isEventDay && b.event.startTime) ? `<span class="cal-event-time">${b.event.startTime}</span>` : '';
@@ -3664,6 +3684,7 @@ const App = {
               <th>Client</th>
               <th>Event</th>
               <th>Date</th>
+              <th>Viewing</th>
               <th>Guests</th>
               <th>Status</th>
               <th>Balance</th>
@@ -3678,6 +3699,9 @@ const App = {
                 </td>
                 <td>${this.esc(b.event.type || '—')}</td>
                 <td><span class="cell-date">${this.fmtDateShort(b.event.date)}</span></td>
+                <td>${b.visit?.date
+                  ? `<span class="cell-date">${this.fmtDateShort(b.visit.date)}</span>${b.visit.time ? ` <span class="muted">${this.esc(b.visit.time)}</span>` : ''}`
+                  : '<span class="muted">—</span>'}</td>
                 <td>${b.event.expectedGuests || '—'}</td>
                 <td><span class="pill pill-${b.status}">${this.statusLabel(b.status)}</span></td>
                 <td>${b.financial.balancePaidDate ? '<span class="muted">Paid</span>' : '£' + this.fmtMoney(b.financial.balanceAmount)}</td>
@@ -3846,6 +3870,8 @@ const App = {
               <div class="field"><label>End Time</label><input type="time" name="event.endTime" value="${b.event.endTime || ''}"></div>
               <div class="field"><label>Check-in Date</label><input type="date" name="event.checkInDate" value="${b.event.checkInDate || ''}"></div>
               <div class="field"><label>Check-out Date</label><input type="date" name="event.checkOutDate" value="${b.event.checkOutDate || ''}"></div>
+              <div class="field"><label>Viewing Date</label><input type="date" name="visit.date" value="${b.visit?.date || ''}"></div>
+              <div class="field"><label>Viewing Time</label><input type="time" name="visit.time" value="${this.esc(b.visit?.time || '')}"></div>
               <div class="field"><label>Expected Guests</label><input type="number" name="event.expectedGuests" value="${b.event.expectedGuests || ''}"></div>
               <div class="field"><label>Ceremony Guests</label><input type="number" name="event.ceremonyGuests" value="${b.event.ceremonyGuests || ''}"></div>
               <div class="field"><label>Evening Guests</label><input type="number" name="event.eveningGuests" value="${b.event.eveningGuests || ''}"></div>
@@ -3983,9 +4009,10 @@ const App = {
     if (b.financial.cateringCost && b.financial.cateringDepositAmount && !b.financial.cateringBalanceAmount) {
       b.financial.cateringBalanceAmount = b.financial.cateringCost - b.financial.cateringDepositAmount;
     }
-    // ensure leadSource and clientLogin are objects even if not in form
+    // ensure leadSource, clientLogin and visit are objects even if not in form
     b.leadSource = b.leadSource || { type: '', notes: '' };
     b.clientLogin = b.clientLogin || { username: '', password: '', sentDate: null };
+    b.visit = b.visit || { date: null, time: '' };
     b.updatedAt = new Date().toISOString();
     this.recomputeStatus(b);
     this.save();
@@ -4551,7 +4578,9 @@ const App = {
       catering_balance: this.fmtMoney(cateringBalance),
       outstanding_total: this.fmtMoney(outstandingTotal),
       days_until_event: dToEvent,
-      visit_datetime: '',
+      visit_datetime: b.visit?.date
+        ? this.fmtDateLong(b.visit.date) + (b.visit.time ? ' at ' + b.visit.time : '')
+        : '',
       venue_name: this.state.settings.venueName || 'Flint Hall',
       venue_phone: this.state.settings.venuePhone || '',
       venue_email: this.state.settings.venueEmail || '',
