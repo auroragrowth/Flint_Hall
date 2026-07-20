@@ -1919,6 +1919,30 @@ Flint Hall Events
 {contract_full}`
   },
   {
+    id: 'tmpl_contract_chase',
+    name: 'Booking — Contract Reminder',
+    trigger: 'Contract sent but not yet signed & returned',
+    subject: 'Your Flint Hall contract — just a gentle reminder',
+    body: `Hello {first_name},
+
+Just circling back on the contract I sent over for your {event_type} on {event_date_long} — it hasn't found its way back to me yet, and I didn't want it to get lost in a busy inbox.
+
+There's nothing to worry about, and no catch. To hold the date firmly we just need two things:
+  1. The signed contract returned to me
+  2. The £{deposit_amount} deposit and £250 damage deposit by BACS:
+       {bacs_details}
+       Reference: "{client_surname} {event_date_short}"
+
+Until both are with me the date stays only pencilled in, so if you're still keen it's worth getting these across when you have a spare moment — I'd hate for the day to slip while it's sitting in drafts.
+
+If anything in the contract gave you pause, or you'd like to talk any of it through, just reply or give me a call — happy to help.
+
+Many thanks,
+{your_name}
+Flint Hall Events
+{venue_phone}  ·  flinthall.uk`
+  },
+  {
     id: 'tmpl_deposit_received',
     name: 'Booking — Deposit Received',
     trigger: 'When deposit lands in Tide',
@@ -2970,6 +2994,13 @@ const App = {
     }
     if (b.contract.sentDate && !b.contract.signedDate) {
       actions.push({ kind:'mark', label:'Awaiting signed contract', icon:'§', tone:'warn' });
+      // Chase the signed contract if it's been out 7+ days, once per week.
+      const chased = lastSent('tmpl_contract_chase');
+      const daysOut = this.daysBetween(b.contract.sentDate, today);
+      const daysSinceChase = chased ? this.daysBetween(chased, today) : null;
+      if (daysOut !== null && daysOut >= 7 && !queued('tmpl_contract_chase') && (daysSinceChase === null || daysSinceChase >= 7)) {
+        actions.push({ kind:'send', tplId:'tmpl_contract_chase', label:`Chase contract — sent ${daysOut} days ago`, icon:'✉', tone:'gold' });
+      }
     }
     if (b.contract.signedDate && !b.financial.depositPaidDate) {
       actions.push({ kind:'payment', label:`Awaiting deposit £${b.financial.depositAmount}`, icon:'£', tone:'warn' });
