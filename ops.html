@@ -1943,6 +1943,28 @@ Flint Hall Events
 {venue_phone}  ·  flinthall.uk`
   },
   {
+    id: 'tmpl_deposit_reminder',
+    name: 'Booking — Deposit Reminder',
+    trigger: 'Contract signed but deposit not yet received',
+    subject: 'Holding your date at Flint Hall — a quick reminder',
+    body: `Hello {first_name},
+
+Thank you for getting your contract back to me — that's the paperwork sorted, which is lovely.
+
+The very last piece is the deposit, and once it lands your {event_type} on {event_date_long} is properly, firmly yours. Until then I can only pencil the date in, and as we do get asked about popular dates I'd hate for someone else to snap it up while yours is nearly-but-not-quite held.
+
+To secure it, the £{deposit_amount} deposit (and the £250 refundable damage deposit) by BACS:
+       {bacs_details}
+       Reference: "{client_surname} {event_date_short}"
+
+As soon as it's through I'll confirm straight away and we can start on the fun bits. No rush beyond that — just didn't want the date to slip while it was so close to done.
+
+Many thanks,
+{your_name}
+Flint Hall Events
+{venue_phone}  ·  flinthall.uk`
+  },
+  {
     id: 'tmpl_deposit_received',
     name: 'Booking — Deposit Received',
     trigger: 'When deposit lands in Tide',
@@ -3011,6 +3033,13 @@ const App = {
     }
     if (b.contract.signedDate && !b.financial.depositPaidDate) {
       actions.push({ kind:'payment', label:`Awaiting deposit £${b.financial.depositAmount}`, icon:'£', tone:'warn' });
+      // Nudge the deposit if it's been 5+ days since the contract was signed, once per week.
+      const depChased = lastSent('tmpl_deposit_reminder');
+      const daysSigned = this.daysBetween(b.contract.signedDate, today);
+      const daysSinceDepChase = depChased ? this.daysBetween(depChased, today) : null;
+      if (daysSigned !== null && daysSigned >= 5 && !queued('tmpl_deposit_reminder') && (daysSinceDepChase === null || daysSinceDepChase >= 7)) {
+        actions.push({ kind:'send', tplId:'tmpl_deposit_reminder', label:'Send deposit reminder', icon:'✉', tone:'gold' });
+      }
     }
     if (b.financial.depositPaidDate && !lastSent('tmpl_deposit_received') && !queued('tmpl_deposit_received')) {
       actions.push({ kind:'send', tplId:'tmpl_deposit_received', label:'Send deposit receipt', icon:'✉', tone:'gold' });
