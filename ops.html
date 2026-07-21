@@ -2507,6 +2507,13 @@ const App = {
         category: t.category, active: t.active
       }));
     }
+    // Order templates by the client journey (DEFAULT_TEMPLATES order); any
+    // custom templates not in that list fall to the end, alphabetically.
+    const tplOrder = DEFAULT_TEMPLATES.reduce((m, t, i) => { m[t.id] = i; return m; }, {});
+    this.state.templates.sort((a, b) => {
+      const ia = tplOrder[a.id] ?? 999, ib = tplOrder[b.id] ?? 999;
+      return ia !== ib ? ia - ib : (a.name || '').localeCompare(b.name || '');
+    });
 
     // App settings — contract template + DEFAULT_SETTINGS overrides
     const { data: settingRows, error: setErr } = await sb
