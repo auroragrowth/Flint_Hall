@@ -1563,6 +1563,14 @@ a:hover { text-decoration: underline; }
         <span>🍽</span> Catering Orders <span class="count" id="count-catering">0</span>
       </div>
 
+      <div class="nav-section">Staff</div>
+      <div class="nav-item" data-route="my-invoices">
+        <span>🧾</span> My Invoices
+      </div>
+      <div class="nav-item" data-route="staff-invoices" data-catering-only hidden>
+        <span>💷</span> Staff Invoices
+      </div>
+
       <div class="nav-section">Insights</div>
       <div class="nav-item" data-route="leadsources">
         <span>◈</span> Lead Sources
@@ -2302,6 +2310,21 @@ const CATERING_MENU = [
   { name: 'The Tuk Tuk Bar',    price: 100.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall' }
 ];
 
+// Staff timesheet line types. `event: true` means an event can be linked from
+// the dropdown; `flat: true` means a fixed £ expense (no hours).
+const STAFF_LINE_TYPES = [
+  { key: 'event',       label: 'Event work',                 event: true },
+  { key: 'onsite',      label: 'On-site at event',           event: true },
+  { key: 'previsit',    label: 'Pre-event visit',            event: true },
+  { key: 'email',       label: 'Email correspondence' },
+  { key: 'whatsapp',    label: 'WhatsApp correspondence' },
+  { key: 'phone',       label: 'Phone calls' },
+  { key: 'meeting',     label: 'Meeting' },
+  { key: 'admin',       label: 'Admin / computer / vendors' },
+  { key: 'expense',     label: 'Expense (flat £)',           flat: true },
+];
+const STAFF_RATE = 15;
+
 // ─────────────────────── APPLICATION ───────────────────────
 const App = {
   state: {
@@ -2331,6 +2354,14 @@ const App = {
       return;
     }
     this.hideBootLoader();
+
+    // Who's signed in (for staff-invoice scoping + catering-only areas)
+    this.state.userEmail = (window.fhCurrentUser?.email || '').toLowerCase();
+    this.state.userName = window.fhCurrentUser?.user_metadata?.name
+      || (this.state.userEmail.split('@')[0] || '').replace(/(^|[.\-_])(\w)/g, (m, s, c) => (s ? ' ' : '') + c.toUpperCase());
+    this.state.isCatering = this.state.userEmail === 'catering@flinthall.uk';
+    // Reveal catering-only nav items
+    document.querySelectorAll('[data-catering-only]').forEach(el => { el.hidden = !this.state.isCatering; });
 
     const now = new Date();
     this.state.calendarMonth = { year: now.getFullYear(), month: now.getMonth() };
@@ -2822,6 +2853,19 @@ const App = {
         title.textContent = 'Lead Sources';
         subtitle.textContent = 'Where your bookings come from';
         content.innerHTML = this.viewLeadSources();
+        break;
+      case 'my-invoices':
+        title.textContent = 'My Invoices';
+        subtitle.textContent = 'Your timesheet invoices to Flint Hall';
+        content.innerHTML = this.viewMyInvoices();
+        this.bindMyInvoices();
+        break;
+      case 'staff-invoices':
+        if (!this.state.isCatering) { this.navigate('dashboard'); return; }
+        title.textContent = 'Staff Invoices';
+        subtitle.textContent = 'Timesheets submitted by the team — review & pay';
+        content.innerHTML = this.viewStaffInvoices();
+        this.bindStaffInvoices();
         break;
       case 'pipeline':
         title.textContent = 'Pipeline';
@@ -5624,6 +5668,297 @@ const App = {
         : (bacs ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px; white-space:pre-line;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">Pay by bank transfer</strong>${this.esc(bacs)}\nReference: ${this.esc(inv.number || '')}</div>` : '')}
       <div style="margin-top:24px; padding-top:12px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555; text-align:center;">Flint Hall Events &middot; Creeting St Peter &middot; Suffolk &middot; hello@flinthall.uk</div>
     </div>`;
+  },
+
+  // ─────────── STAFF TIMESHEET INVOICES ───────────
+  gbp(n) { return '£' + Number(n || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+  staffTotal(items) { return (items || []).reduce((s, it) => s + Number(it.amount || 0), 0); },
+
+  newStaffDraft(prefill) {
+    const now = new Date();
+    const period = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    this.state.staffDraft = {
+      id: null, status: 'draft', period_label: period, items: [], notes: '',
+      bank_sort_code: (prefill && prefill.bank_sort_code) || '',
+      bank_account: (prefill && prefill.bank_account) || ''
+    };
+  },
+
+  msEventOptions(selId) {
+    const opts = this.state.bookings.slice()
+      .sort((a, b) => (b.event.date || '').localeCompare(a.event.date || ''))
+      .map(bk => {
+        const nm = `${bk.client.firstName || ''} ${bk.client.lastName || ''}`.trim() + (bk.partnerName ? ' & ' + bk.partnerName : '');
+        const label = (nm || bk.client.email || 'event') + (bk.event.date ? ' · ' + this.fmtDateShort(bk.event.date) : '');
+        return `<option value="${bk.id}" ${bk.id === selId ? 'selected' : ''}>${this.esc(label)}</option>`;
+      }).join('');
+    return `<option value="">— pick event —</option>${opts}`;
+  },
+
+  async bindMyInvoices() {
+    const sb = window.fhSupabase;
+    const { data, error } = await sb.from('staff_invoices').select('*')
+      .ilike('staff_email', this.state.userEmail).order('created_at', { ascending: false });
+    if (error) { const h = document.getElementById('myinv-host'); if (h) h.innerHTML = `<div class="card"><div class="empty-state"><h3>Couldn’t load</h3><p>${this.esc(error.message)}</p><p class="muted" style="font-size:12px;">If this says the table is missing, the staff-invoices SQL still needs running.</p></div></div>`; return; }
+    this.state.myInvoices = data || [];
+    if (!this.state.staffDraft) this.newStaffDraft(this.state.myInvoices[0]);
+    this.renderMyInvoicesHost();
+  },
+
+  viewMyInvoices() {
+    return `<div id="myinv-host"><div class="muted italic" style="padding:12px;">Loading…</div></div>`;
+  },
+
+  renderMyInvoicesHost() {
+    const host = document.getElementById('myinv-host'); if (!host) return;
+    const d = this.state.staffDraft;
+    const inp = 'padding:6px 8px; border:1px solid var(--linen-dark); border-radius:4px; font-family:var(--font-body); font-size:13px; background:#fff;';
+
+    const rows = (d.items || []).map((it, i) => {
+      const t = STAFF_LINE_TYPES.find(x => x.key === it.type) || STAFF_LINE_TYPES[0];
+      return `<tr>
+        <td style="padding:2px 6px 2px 0;"><select style="${inp}" onchange="App.msEditLine(${i},'type',this.value)">
+          ${STAFF_LINE_TYPES.map(x => `<option value="${x.key}" ${x.key === it.type ? 'selected' : ''}>${x.label}</option>`).join('')}
+        </select></td>
+        <td style="padding:2px 6px;">${t.event
+          ? `<select style="${inp} max-width:200px;" onchange="App.msEditLine(${i},'event',this.value)">${this.msEventOptions(it.event_id)}</select>`
+          : '<span class="muted">—</span>'}</td>
+        <td style="padding:2px 6px;"><input style="${inp} width:100%; min-width:120px;" value="${this.esc(it.description || '')}" placeholder="notes (optional)" onchange="App.msEditLine(${i},'description',this.value)"></td>
+        <td style="padding:2px 6px;">${t.flat
+          ? '<span class="muted">—</span>'
+          : `<input type="number" step="0.25" style="${inp} width:70px; text-align:right;" value="${this.esc(it.hours ?? '')}" onchange="App.msEditLine(${i},'hours',this.value)">`}</td>
+        <td style="padding:2px 6px; text-align:right; white-space:nowrap;">${t.flat
+          ? `<input type="number" step="0.01" style="${inp} width:90px; text-align:right;" value="${this.esc(it.amount ?? 0)}" onchange="App.msEditLine(${i},'amount',this.value)">`
+          : `<span style="font-variant-numeric:tabular-nums;">${this.gbp(it.amount)}</span>`}</td>
+        <td style="padding:2px 0; text-align:center;"><button class="btn btn-ghost btn-sm" onclick="App.msRemoveLine(${i})">✕</button></td>
+      </tr>`;
+    }).join('');
+
+    const editable = !d.id || d.status === 'draft';
+    const builder = `
+      <div class="card mb-2"><div class="card-body">
+        <div class="row" style="justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;">
+          <div class="card-title">${d.id ? 'Edit invoice' : 'New invoice'} · <input style="${inp}" value="${this.esc(d.period_label || '')}" onchange="App.msField('period_label',this.value)" placeholder="e.g. June 2026"></div>
+          <div class="muted" style="font-size:12px;">Rate £${STAFF_RATE}/hr</div>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:12px;">
+          <thead><tr style="text-align:left; color:var(--brown-600); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">
+            <th style="padding:4px 0;">Type</th><th>Event</th><th>Notes</th><th style="text-align:right;">Hours</th><th style="text-align:right;">Amount</th><th></th>
+          </tr></thead>
+          <tbody>${rows || `<tr><td colspan="6" class="muted italic" style="padding:8px 0;">No lines yet — add one below.</td></tr>`}</tbody>
+        </table>
+        <div class="row gap-sm" style="margin-top:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-secondary btn-sm" onclick="App.msAddLine()">+ Add line</button>
+          <span class="spacer" style="flex:1;"></span>
+          <strong style="font-size:16px;">Total: ${this.gbp(this.staffTotal(d.items))}</strong>
+        </div>
+        <div class="row gap-sm" style="margin-top:12px; flex-wrap:wrap; align-items:center;">
+          <label class="muted" style="font-size:12px;">Sort code <input style="${inp} width:100px;" value="${this.esc(d.bank_sort_code || '')}" onchange="App.msField('bank_sort_code',this.value)" placeholder="11-04-05"></label>
+          <label class="muted" style="font-size:12px;">Account no <input style="${inp} width:120px;" value="${this.esc(d.bank_account || '')}" onchange="App.msField('bank_account',this.value)" placeholder="01362197"></label>
+        </div>
+        <textarea placeholder="Notes (optional)…" style="${inp} width:100%; min-height:40px; margin-top:12px; resize:vertical;" onchange="App.msField('notes',this.value)">${this.esc(d.notes || '')}</textarea>
+        <div class="row gap-sm" style="margin-top:12px;">
+          <button class="btn btn-primary btn-sm" onclick="App.msSaveDraft('${d.id || ''}')">Save draft</button>
+          <button class="btn btn-gold btn-sm" onclick="App.msSubmit()">Submit to Flint Hall →</button>
+          ${d.id ? `<button class="btn btn-ghost btn-sm" onclick="App.msNewDraft()">Start new</button>` : ''}
+        </div>
+      </div></div>`;
+
+    const statusPill = s => s === 'paid' ? 'pill-balance_paid' : (s === 'submitted' ? 'pill-balance_due' : 'pill-inquiry');
+    const list = (this.state.myInvoices || []).map(inv => `
+      <div class="card mb-2"><div class="card-body">
+        <div class="row" style="justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;">
+          <div>
+            <strong style="font-size:15px;">${this.esc(inv.period_label || '')}</strong>
+            <span class="pill ${statusPill(inv.status)}" style="margin-left:8px;">${this.esc(inv.status)}</span>
+            <div class="muted" style="font-size:12.5px; margin-top:2px;">${(inv.items || []).length} line${(inv.items || []).length === 1 ? '' : 's'}${inv.paid_date ? ' · paid ' + this.fmtDateShort(inv.paid_date) : (inv.submitted_date ? ' · submitted ' + this.fmtDateShort(inv.submitted_date) : '')}</div>
+          </div>
+          <strong style="font-size:16px;">${this.gbp(inv.subtotal)}</strong>
+        </div>
+        <div class="row gap-sm" style="margin-top:10px; flex-wrap:wrap;">
+          ${inv.status === 'draft' ? `<button class="btn btn-secondary btn-sm" onclick="App.msEdit('${inv.id}')">Edit</button>` : ''}
+          <button class="btn btn-secondary btn-sm" onclick="App.msPrint('${inv.id}')">Print / PDF</button>
+          ${inv.status !== 'paid' ? `<button class="btn btn-ghost btn-sm" onclick="App.msDelete('${inv.id}')">Delete</button>` : ''}
+        </div>
+      </div></div>`).join('');
+
+    host.innerHTML = builder + (list ? `<div style="margin-top:18px;"><div class="card-title" style="margin-bottom:8px;">Your invoices</div>${list}</div>` : '');
+  },
+
+  msField(f, v) { if (this.state.staffDraft) this.state.staffDraft[f] = v; },
+  msCurrentInv(id) { return (this.state.myInvoices || []).find(x => x.id === id); },
+
+  msAddLine() {
+    const d = this.state.staffDraft; if (!d) return;
+    d.items.push({ type: 'event', event_id: null, event_label: null, description: '', hours: null, amount: 0 });
+    this.renderMyInvoicesHost();
+  },
+  msRemoveLine(i) { const d = this.state.staffDraft; if (!d) return; d.items.splice(i, 1); this.renderMyInvoicesHost(); },
+
+  msEditLine(i, field, value) {
+    const d = this.state.staffDraft; const it = d && d.items[i]; if (!it) return;
+    if (field === 'type') {
+      it.type = value;
+      const t = STAFF_LINE_TYPES.find(x => x.key === value) || {};
+      if (!t.event) { it.event_id = null; it.event_label = null; }
+      if (t.flat) { it.hours = null; } else { it.amount = (Number(it.hours) || 0) * STAFF_RATE; }
+    } else if (field === 'event') {
+      const bk = this.state.bookings.find(x => x.id === value);
+      it.event_id = value || null;
+      it.event_label = bk ? (`${bk.client.firstName || ''} ${bk.client.lastName || ''}`.trim() + (bk.partnerName ? ' & ' + bk.partnerName : '') || bk.client.email) : null;
+    } else if (field === 'hours') {
+      it.hours = value === '' ? null : Number(value);
+      it.amount = (Number(it.hours) || 0) * STAFF_RATE;
+    } else if (field === 'amount') {
+      it.amount = Number(value) || 0;
+    } else {
+      it.description = value;
+    }
+    this.renderMyInvoicesHost();
+  },
+
+  msDraftRow() {
+    const d = this.state.staffDraft;
+    return {
+      staff_email: this.state.userEmail,
+      staff_name: this.state.userName || null,
+      period_label: d.period_label || null,
+      rate: STAFF_RATE,
+      items: d.items || [],
+      notes: d.notes || null,
+      bank_sort_code: d.bank_sort_code || null,
+      bank_account: d.bank_account || null,
+    };
+  },
+
+  async msSaveDraft(id, opts) {
+    const sb = window.fhSupabase;
+    const d = this.state.staffDraft;
+    if (!d.items.length) { this.toast('Add at least one line first.', 'error'); return null; }
+    const row = this.msDraftRow();
+    let saved;
+    if (d.id || id) {
+      const { data, error } = await sb.from('staff_invoices').update(row).eq('id', d.id || id).select().single();
+      if (error) { this.toast('Save failed: ' + error.message, 'error'); return null; }
+      saved = data;
+    } else {
+      const { data, error } = await sb.from('staff_invoices').insert(row).select().single();
+      if (error) { this.toast('Save failed: ' + error.message, 'error'); return null; }
+      saved = data;
+    }
+    if (!opts || !opts.silent) this.toast('Draft saved', 'success');
+    this.newStaffDraft(saved);
+    await this.bindMyInvoices();
+    return saved;
+  },
+
+  async msSubmit() {
+    const saved = await this.msSaveDraft(this.state.staffDraft.id, { silent: true });
+    if (!saved) return;
+    const sb = window.fhSupabase;
+    const { error } = await sb.from('staff_invoices').update({ status: 'submitted', submitted_date: this.todayISO() }).eq('id', saved.id);
+    if (error) { this.toast('Could not submit: ' + error.message, 'error'); return; }
+    this.toast('Invoice submitted to Flint Hall', 'success');
+    await this.bindMyInvoices();
+  },
+
+  msNewDraft() { this.newStaffDraft(this.state.myInvoices && this.state.myInvoices[0]); this.renderMyInvoicesHost(); },
+
+  msEdit(id) {
+    const inv = this.msCurrentInv(id); if (!inv) return;
+    this.state.staffDraft = {
+      id: inv.id, status: inv.status, period_label: inv.period_label,
+      items: JSON.parse(JSON.stringify(inv.items || [])), notes: inv.notes || '',
+      bank_sort_code: inv.bank_sort_code || '', bank_account: inv.bank_account || ''
+    };
+    this.renderMyInvoicesHost();
+    const h = document.getElementById('myinv-host'); if (h) h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
+  async msDelete(id) {
+    if (!confirm('Delete this invoice?')) return;
+    const sb = window.fhSupabase;
+    const { error } = await sb.from('staff_invoices').delete().eq('id', id);
+    if (error) { this.toast('Could not delete: ' + error.message, 'error'); return; }
+    this.toast('Deleted', 'success');
+    await this.bindMyInvoices();
+  },
+
+  msPrint(id) {
+    const inv = this.msCurrentInv(id) || (this.state.allStaffInvoices || []).find(x => x.id === id);
+    if (!inv) return;
+    document.getElementById('printable-fs').innerHTML = this.buildStaffInvoiceHtml(inv);
+    setTimeout(() => window.print(), 100);
+  },
+
+  buildStaffInvoiceHtml(inv) {
+    const typeLabel = k => (STAFF_LINE_TYPES.find(x => x.key === k) || {}).label || k;
+    const rows = (inv.items || []).map(it => `
+      <tr>
+        <td style="padding:7px 0; border-bottom:1px solid #ece2cd;">${this.esc(typeLabel(it.type))}${it.event_label ? ` — ${this.esc(it.event_label)}` : ''}${it.description ? `<div style="color:#806555; font-size:11px;">${this.esc(it.description)}</div>` : ''}</td>
+        <td style="padding:7px 0; border-bottom:1px solid #ece2cd; text-align:right;">${it.hours != null ? this.esc(it.hours) : ''}</td>
+        <td style="padding:7px 0; border-bottom:1px solid #ece2cd; text-align:right;">${it.hours != null ? this.gbp(STAFF_RATE) : ''}</td>
+        <td style="padding:7px 0; border-bottom:1px solid #ece2cd; text-align:right;">${this.gbp(it.amount)}</td>
+      </tr>`).join('');
+    return `<div style="font-family:Georgia,serif; max-width:600px; margin:0 auto; color:#3a2818; background:#faf3e2; padding:32px;">
+      <div style="text-align:center; margin-bottom:6px;"><img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="140" style="max-width:140px; height:auto; border:0;"></div>
+      <div style="text-align:center; font-family:'Cinzel',Georgia,serif; letter-spacing:3px; text-transform:uppercase; color:#4a2f23; font-size:20px; margin-bottom:6px;">Invoice</div>
+      <div style="text-align:center; font-size:13px; color:#5c4530; margin-bottom:20px;">${this.esc(inv.staff_name || inv.staff_email || '')} · ${this.esc(inv.period_label || '')}</div>
+      ${(inv.bank_sort_code || inv.bank_account) ? `<div style="font-size:12px; color:#5c4530; margin-bottom:16px;">Pay to: ${this.esc(inv.staff_name || '')}${inv.bank_sort_code ? ` · Sort ${this.esc(inv.bank_sort_code)}` : ''}${inv.bank_account ? ` · Acct ${this.esc(inv.bank_account)}` : ''}</div>` : ''}
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead><tr style="color:#806555; font-size:11px; text-transform:uppercase; letter-spacing:1px; text-align:left; border-bottom:2px solid #4a2f23;">
+          <th style="padding:6px 0;">Description</th><th style="text-align:right;">Hours</th><th style="text-align:right;">Rate</th><th style="text-align:right;">Amount</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr style="font-weight:bold; font-size:15px;"><td colspan="3" style="padding:12px 0 0; text-align:right;">Total</td><td style="padding:12px 0 0; text-align:right;">${this.gbp(inv.subtotal)}</td></tr></tfoot>
+      </table>
+      ${inv.notes ? `<div style="margin-top:16px; font-size:13px; color:#5c4530; white-space:pre-line;">${this.esc(inv.notes)}</div>` : ''}
+    </div>`;
+  },
+
+  // Catering-only: all staff timesheets, review & pay
+  viewStaffInvoices() {
+    return `<div id="staffinv-host"><div class="muted italic" style="padding:12px;">Loading…</div></div>`;
+  },
+
+  async bindStaffInvoices() {
+    const sb = window.fhSupabase;
+    const { data, error } = await sb.from('staff_invoices').select('*').order('created_at', { ascending: false });
+    const host = document.getElementById('staffinv-host'); if (!host) return;
+    if (error) { host.innerHTML = `<div class="card"><div class="empty-state"><h3>Couldn’t load</h3><p>${this.esc(error.message)}</p></div></div>`; return; }
+    this.state.allStaffInvoices = data || [];
+    const submitted = this.state.allStaffInvoices.filter(x => x.status === 'submitted');
+    const outstanding = submitted.reduce((s, x) => s + Number(x.subtotal || 0), 0);
+    const statusPill = s => s === 'paid' ? 'pill-balance_paid' : (s === 'submitted' ? 'pill-balance_due' : 'pill-inquiry');
+    const cards = (this.state.allStaffInvoices).map(inv => `
+      <div class="card mb-2"><div class="card-body">
+        <div class="row" style="justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;">
+          <div>
+            <strong style="font-size:15px;">${this.esc(inv.staff_name || inv.staff_email)}</strong>
+            <span class="muted"> · ${this.esc(inv.period_label || '')}</span>
+            <span class="pill ${statusPill(inv.status)}" style="margin-left:8px;">${this.esc(inv.status)}</span>
+            <div class="muted" style="font-size:12.5px; margin-top:2px;">${(inv.items || []).length} lines${inv.submitted_date ? ' · submitted ' + this.fmtDateShort(inv.submitted_date) : ''}${inv.paid_date ? ' · paid ' + this.fmtDateShort(inv.paid_date) : ''}${inv.bank_sort_code ? ' · ' + this.esc(inv.bank_sort_code) + ' / ' + this.esc(inv.bank_account || '') : ''}</div>
+          </div>
+          <strong style="font-size:16px;">${this.gbp(inv.subtotal)}</strong>
+        </div>
+        <div class="row gap-sm" style="margin-top:10px; flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="App.msPrint('${inv.id}')">Print / PDF</button>
+          ${inv.status === 'submitted' ? `<button class="btn btn-gold btn-sm" onclick="App.msMarkPaid('${inv.id}')">Mark paid</button>` : ''}
+        </div>
+      </div></div>`).join('');
+    host.innerHTML = `
+      <div class="kpi-grid" style="margin-bottom:18px;">
+        <div class="kpi"><div class="kpi-accent"></div><div class="kpi-label">Awaiting payment</div><div class="kpi-value">${this.gbp(outstanding)}</div><div class="kpi-sub">${submitted.length} submitted</div></div>
+      </div>
+      ${cards || `<div class="card"><div class="empty-state"><div class="icon">🧾</div><h3>No staff invoices yet</h3></div></div>`}`;
+  },
+
+  async msMarkPaid(id) {
+    const sb = window.fhSupabase;
+    const { error } = await sb.from('staff_invoices').update({ status: 'paid', paid_date: this.todayISO() }).eq('id', id);
+    if (error) { this.toast('Could not update: ' + error.message, 'error'); return; }
+    this.toast('Marked paid', 'success');
+    await this.bindStaffInvoices();
   },
 
   // ─────────── TEMPLATES VIEW ───────────
