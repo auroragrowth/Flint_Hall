@@ -1570,6 +1570,9 @@ a:hover { text-decoration: underline; }
       <div class="nav-item" data-route="staff-invoices" data-catering-only hidden>
         <span>💷</span> Staff Invoices
       </div>
+      <div class="nav-item" data-route="login-activity" data-catering-only hidden>
+        <span>🕒</span> Login Activity
+      </div>
 
       <div class="nav-section">Insights</div>
       <div class="nav-item" data-route="leadsources">
@@ -2362,6 +2365,7 @@ const App = {
     this.state.isCatering = this.state.userEmail === 'catering@flinthall.uk';
     // Reveal catering-only nav items
     document.querySelectorAll('[data-catering-only]').forEach(el => { el.hidden = !this.state.isCatering; });
+    this.recordSession();
 
     const now = new Date();
     this.state.calendarMonth = { year: now.getFullYear(), month: now.getMonth() };
@@ -2866,6 +2870,13 @@ const App = {
         subtitle.textContent = 'Timesheets submitted by the team — review & pay';
         content.innerHTML = this.viewStaffInvoices();
         this.bindStaffInvoices();
+        break;
+      case 'login-activity':
+        if (!this.state.isCatering) { this.navigate('dashboard'); return; }
+        title.textContent = 'Login Activity';
+        subtitle.textContent = 'Who’s signed in, when, and for how long';
+        content.innerHTML = `<div id="login-host"><div class="muted italic" style="padding:12px;">Loading…</div></div>`;
+        this.bindLoginActivity();
         break;
       case 'pipeline':
         title.textContent = 'Pipeline';
@@ -5959,6 +5970,94 @@ const App = {
     if (error) { this.toast('Could not update: ' + error.message, 'error'); return; }
     this.toast('Marked paid', 'success');
     await this.bindStaffInvoices();
+  },
+
+  // ─────────── LOGIN ACTIVITY (catering-only) ───────────
+  // Records this sign-in and keeps a heartbeat so "time on system" is captured
+  // even without a clean sign-out. Silently no-ops if the table isn't there yet.
+  async recordSession() {
+    const sb = window.fhSupabase;
+    if (!sb || !this.state.userEmail || this._sessionId) return;
+    try {
+      const { data, error } = await sb.from('login_sessions')
+        .insert({ user_email: this.state.userEmail, user_name: this.state.userName || null })
+        .select('id').single();
+      if (error) return; // table not created yet, or blocked — fine
+      this._sessionId = data?.id || null;
+    } catch { return; }
+    if (!this._sessionId) return;
+    const touch = (extra) => {
+      try { sb.from('login_sessions').update({ last_seen_at: new Date().toISOString(), ...(extra || {}) }).eq('id', this._sessionId); } catch { /* ignore */ }
+    };
+    this._heartbeat = setInterval(() => { if (document.visibilityState === 'visible') touch(); }, 60000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') touch(); });
+    window.addEventListener('beforeunload', () => touch({ logout_at: new Date().toISOString() }));
+  },
+
+  fmtDuration(mins) {
+    mins = Math.max(0, Math.round(mins));
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return h ? `${h}h ${m}m` : `${m}m`;
+  },
+
+  async bindLoginActivity() {
+    const sb = window.fhSupabase;
+    const host = document.getElementById('login-host'); if (!host) return;
+    const { data, error } = await sb.from('login_sessions').select('*').order('login_at', { ascending: false }).limit(1000);
+    if (error) {
+      host.innerHTML = `<div class="card"><div class="empty-state"><h3>Couldn’t load</h3><p>${this.esc(error.message)}</p><p class="muted" style="font-size:12px;">If this says the table is missing, run the login-tracking SQL.</p></div></div>`;
+      return;
+    }
+    const sessions = data || [];
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const weekStart = new Date(now); weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7)); // Monday
+
+    const durMin = s => {
+      const start = new Date(s.login_at).getTime();
+      const end = new Date(s.logout_at || s.last_seen_at || s.login_at).getTime();
+      return Math.max(0, (end - start) / 60000);
+    };
+    const summarise = (since) => {
+      const map = {};
+      sessions.filter(s => new Date(s.login_at) >= since).forEach(s => {
+        const k = s.user_name || s.user_email;
+        map[k] = map[k] || { mins: 0, count: 0 };
+        map[k].mins += durMin(s); map[k].count++;
+      });
+      return Object.entries(map).sort((a, b) => b[1].mins - a[1].mins);
+    };
+    const summaryTable = (title, rows) => `
+      <div class="card" style="flex:1; min-width:240px;"><div class="card-body">
+        <div class="card-title" style="margin-bottom:8px;">${title}</div>
+        ${rows.length ? `<table style="width:100%; font-size:13px; border-collapse:collapse;">
+          <thead><tr style="text-align:left; color:var(--brown-600); font-size:11px; text-transform:uppercase;"><th style="padding:3px 0;">Person</th><th style="text-align:right;">Sessions</th><th style="text-align:right;">Time</th></tr></thead>
+          <tbody>${rows.map(([name, v]) => `<tr><td style="padding:3px 0;">${this.esc(name)}</td><td style="text-align:right;">${v.count}</td><td style="text-align:right; font-variant-numeric:tabular-nums;">${this.fmtDuration(v.mins)}</td></tr>`).join('')}</tbody>
+        </table>` : `<div class="muted italic">No sign-ins yet.</div>`}
+      </div></div>`;
+
+    const recent = sessions.slice(0, 60).map(s => {
+      const live = !s.logout_at && (Date.now() - new Date(s.last_seen_at || s.login_at).getTime() < 3 * 60000);
+      return `<tr>
+        <td style="padding:5px 10px 5px 0;">${this.esc(s.user_name || s.user_email)}</td>
+        <td style="padding:5px 10px 5px 0;"><span class="cell-date">${this.fmtDateShort(s.login_at)}</span> <span class="muted">${new Date(s.login_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span></td>
+        <td style="padding:5px 10px 5px 0; text-align:right; font-variant-numeric:tabular-nums;">${this.fmtDuration(durMin(s))}</td>
+        <td style="padding:5px 0;">${live ? '<span class="pill pill-balance_paid">online now</span>' : ''}</td>
+      </tr>`;
+    }).join('');
+
+    host.innerHTML = `
+      <div class="row gap-sm" style="flex-wrap:wrap; margin-bottom:18px; align-items:stretch;">
+        ${summaryTable('This week', summarise(weekStart))}
+        ${summaryTable('This month', summarise(monthStart))}
+      </div>
+      <div class="card"><div class="card-body">
+        <div class="card-title" style="margin-bottom:8px;">Recent sign-ins</div>
+        ${sessions.length ? `<div style="overflow-x:auto;"><table style="width:100%; font-size:13px; border-collapse:collapse;">
+          <thead><tr style="text-align:left; color:var(--brown-600); font-size:11px; text-transform:uppercase;"><th style="padding:4px 10px 6px 0;">Person</th><th style="padding:4px 10px 6px 0;">Signed in</th><th style="padding:4px 10px 6px 0; text-align:right;">Duration</th><th></th></tr></thead>
+          <tbody>${recent}</tbody></table></div>` : `<div class="muted italic">No sign-ins recorded yet.</div>`}
+      </div></div>`;
   },
 
   // ─────────── TEMPLATES VIEW ───────────
