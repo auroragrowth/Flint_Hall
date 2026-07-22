@@ -2319,12 +2319,12 @@ const STAFF_LINE_TYPES = [
   { key: 'event',       label: 'Event work',                 event: true },
   { key: 'onsite',      label: 'On-site at event',           event: true },
   { key: 'previsit',    label: 'Pre-event visit',            event: true },
-  { key: 'email',       label: 'Email correspondence' },
-  { key: 'whatsapp',    label: 'WhatsApp correspondence' },
-  { key: 'phone',       label: 'Phone calls' },
-  { key: 'meeting',     label: 'Meeting' },
-  { key: 'admin',       label: 'Admin / computer / vendors' },
-  { key: 'expense',     label: 'Expense (flat £)',           flat: true },
+  { key: 'email',       label: 'Email correspondence',       event: true },
+  { key: 'whatsapp',    label: 'WhatsApp correspondence',    event: true },
+  { key: 'phone',       label: 'Phone calls',                event: true },
+  { key: 'meeting',     label: 'Meeting',                    event: true },
+  { key: 'admin',       label: 'Admin / computer / vendors', event: true },
+  { key: 'expense',     label: 'Expense / phone top-up (flat £)', flat: true },
 ];
 const STAFF_RATE = 15;
 
@@ -5864,6 +5864,12 @@ const App = {
   },
 
   async msSubmit() {
+    // Every line except a flat expense must be linked to an event so it's trackable.
+    const missing = (this.state.staffDraft.items || []).some(it => {
+      const t = STAFF_LINE_TYPES.find(x => x.key === it.type) || {};
+      return !t.flat && !it.event_id;
+    });
+    if (missing) { this.toast('Link every line to an event first (only expenses can be left unlinked).', 'error'); return; }
     const saved = await this.msSaveDraft(this.state.staffDraft.id, { silent: true });
     if (!saved) return;
     const sb = window.fhSupabase;
