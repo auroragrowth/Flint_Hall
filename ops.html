@@ -5685,13 +5685,14 @@ const App = {
   gbp(n) { return '£' + Number(n || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
   staffTotal(items) { return (items || []).reduce((s, it) => s + Number(it.amount || 0), 0); },
 
-  newStaffDraft(prefill) {
+  newStaffDraft() {
+    const p = this.state.staffProfile || {};
     const now = new Date();
     const period = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
     this.state.staffDraft = {
       id: null, status: 'draft', period_label: period, items: [], notes: '',
-      bank_sort_code: (prefill && prefill.bank_sort_code) || '',
-      bank_account: (prefill && prefill.bank_account) || ''
+      bank_sort_code: p.bank_sort_code || '', bank_account: p.bank_account || '',
+      staff_address: p.address || '', ni_number: p.ni_number || ''
     };
   },
 
@@ -5708,12 +5709,17 @@ const App = {
 
   async bindMyInvoices() {
     const sb = window.fhSupabase;
-    const { data, error } = await sb.from('staff_invoices').select('*')
-      .ilike('staff_email', this.state.userEmail).order('created_at', { ascending: false });
+    const [{ data: prof }, { data, error }] = await Promise.all([
+      sb.from('staff_profiles').select('*').ilike('email', this.state.userEmail).maybeSingle(),
+      sb.from('staff_invoices').select('*').ilike('staff_email', this.state.userEmail).order('created_at', { ascending: false })
+    ]);
+    this.state.staffProfile = prof || null;
     if (error) { const h = document.getElementById('myinv-host'); if (h) h.innerHTML = `<div class="card"><div class="empty-state"><h3>Couldn’t load</h3><p>${this.esc(error.message)}</p><p class="muted" style="font-size:12px;">If this says the table is missing, the staff-invoices SQL still needs running.</p></div></div>`; return; }
     this.state.myInvoices = data || [];
-    if (!this.state.staffDraft) this.newStaffDraft(this.state.myInvoices[0]);
+    if (!this.state.staffDraft) this.newStaffDraft();
     this.renderMyInvoicesHost();
+    // First time (or missing details) — pop up the address/NI form.
+    if (!prof || !prof.address || !prof.ni_number) this.openStaffDetails(true);
   },
 
   viewMyInvoices() {
@@ -5750,8 +5756,13 @@ const App = {
       <div class="card mb-2"><div class="card-body">
         <div class="row" style="justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;">
           <div class="card-title">${d.id ? 'Edit invoice' : 'New invoice'} · <input style="${inp}" value="${this.esc(d.period_label || '')}" onchange="App.msField('period_label',this.value)" placeholder="e.g. June 2026"></div>
-          <div class="muted" style="font-size:12px;">Rate £${STAFF_RATE}/hr</div>
+          <div class="row gap-sm" style="align-items:center;">
+            <span class="muted" style="font-size:12px;">Rate £${STAFF_RATE}/hr</span>
+            <button class="btn btn-secondary btn-sm" onclick="App.openStaffDetails()">My details</button>
+          </div>
         </div>
+        ${(!this.state.staffProfile || !this.state.staffProfile.address || !this.state.staffProfile.ni_number)
+          ? `<div class="notice" style="margin-top:8px; padding:8px 12px; background:var(--amber-light); color:var(--amber); border-radius:4px; font-size:12.5px;">Add your address &amp; National Insurance number under <strong>My details</strong> so they appear on your invoice.</div>` : ''}
         <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:12px;">
           <thead><tr style="text-align:left; color:var(--brown-600); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">
             <th style="padding:4px 0;">Type</th><th>Event</th><th>Notes</th><th style="text-align:right;">Hours</th><th style="text-align:right;">Amount</th><th></th>
@@ -5830,15 +5841,18 @@ const App = {
 
   msDraftRow() {
     const d = this.state.staffDraft;
+    const p = this.state.staffProfile || {};
     return {
       staff_email: this.state.userEmail,
-      staff_name: this.state.userName || null,
+      staff_name: p.full_name || this.state.userName || null,
       period_label: d.period_label || null,
       rate: STAFF_RATE,
       items: d.items || [],
       notes: d.notes || null,
-      bank_sort_code: d.bank_sort_code || null,
-      bank_account: d.bank_account || null,
+      bank_sort_code: d.bank_sort_code || p.bank_sort_code || null,
+      bank_account: d.bank_account || p.bank_account || null,
+      staff_address: d.staff_address || p.address || null,
+      ni_number: d.ni_number || p.ni_number || null,
     };
   },
 
@@ -5858,7 +5872,7 @@ const App = {
       saved = data;
     }
     if (!opts || !opts.silent) this.toast('Draft saved', 'success');
-    this.newStaffDraft(saved);
+    this.newStaffDraft();
     await this.bindMyInvoices();
     return saved;
   },
@@ -5879,7 +5893,49 @@ const App = {
     await this.bindMyInvoices();
   },
 
-  msNewDraft() { this.newStaffDraft(this.state.myInvoices && this.state.myInvoices[0]); this.renderMyInvoicesHost(); },
+  msNewDraft() { this.newStaffDraft(); this.renderMyInvoicesHost(); },
+
+  // Pop-up for the invoicer's own details (address, NI, bank) — used to
+  // populate their invoice. `firstTime` softens the copy on the initial prompt.
+  openStaffDetails(firstTime) {
+    const p = this.state.staffProfile || {};
+    document.getElementById('modal-title').textContent = 'Your invoice details';
+    document.getElementById('modal-body').innerHTML = `
+      ${firstTime ? `<p class="muted" style="margin:0 0 14px;">Before you invoice, pop in your details — they'll appear on every invoice you send to Flint Hall. You only need to do this once.</p>` : ''}
+      <div class="field"><label>Full name</label><input id="sp-name" type="text" value="${this.esc(p.full_name || this.state.userName || '')}" placeholder="e.g. Isabel R Lamble"></div>
+      <div class="field mt-2"><label>Home address</label><textarea id="sp-address" style="min-height:70px;" placeholder="Street, town, postcode">${this.esc(p.address || '')}</textarea></div>
+      <div class="field mt-2"><label>National Insurance number</label><input id="sp-ni" type="text" value="${this.esc(p.ni_number || '')}" placeholder="e.g. QQ 12 34 56 C"></div>
+      <div class="row gap-sm mt-2">
+        <div class="field" style="flex:1;"><label>Bank sort code</label><input id="sp-sort" type="text" value="${this.esc(p.bank_sort_code || '')}" placeholder="11-04-05"></div>
+        <div class="field" style="flex:1;"><label>Account number</label><input id="sp-acct" type="text" value="${this.esc(p.bank_account || '')}" placeholder="01362197"></div>
+      </div>`;
+    document.getElementById('modal-foot').innerHTML = `
+      <button class="btn btn-ghost" onclick="App.closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="App.saveStaffDetails()">Save details</button>`;
+    document.getElementById('modal').classList.add('open');
+  },
+
+  async saveStaffDetails() {
+    const sb = window.fhSupabase;
+    const row = {
+      email: this.state.userEmail,
+      full_name: document.getElementById('sp-name').value.trim() || null,
+      address: document.getElementById('sp-address').value.trim() || null,
+      ni_number: document.getElementById('sp-ni').value.trim() || null,
+      bank_sort_code: document.getElementById('sp-sort').value.trim() || null,
+      bank_account: document.getElementById('sp-acct').value.trim() || null,
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await sb.from('staff_profiles').upsert(row, { onConflict: 'email' });
+    if (error) { this.toast('Could not save: ' + error.message, 'error'); return; }
+    this.state.staffProfile = row;
+    // reflect into the working draft
+    const d = this.state.staffDraft;
+    if (d) { d.staff_address = row.address || ''; d.ni_number = row.ni_number || ''; d.bank_sort_code = row.bank_sort_code || ''; d.bank_account = row.bank_account || ''; }
+    this.closeModal();
+    this.toast('Details saved', 'success');
+    this.renderMyInvoicesHost();
+  },
 
   msEdit(id) {
     const inv = this.msCurrentInv(id); if (!inv) return;
@@ -5908,28 +5964,39 @@ const App = {
     setTimeout(() => window.print(), 100);
   },
 
+  // Plain, UNBRANDED personal invoice — this is the individual's own invoice
+  // billed TO Flint Hall, so it deliberately carries no Flint Hall branding.
   buildStaffInvoiceHtml(inv) {
     const typeLabel = k => (STAFF_LINE_TYPES.find(x => x.key === k) || {}).label || k;
     const rows = (inv.items || []).map(it => `
       <tr>
-        <td style="padding:7px 0; border-bottom:1px solid #ece2cd;">${this.esc(typeLabel(it.type))}${it.event_label ? ` — ${this.esc(it.event_label)}` : ''}${it.description ? `<div style="color:#806555; font-size:11px;">${this.esc(it.description)}</div>` : ''}</td>
-        <td style="padding:7px 0; border-bottom:1px solid #ece2cd; text-align:right;">${it.hours != null ? this.esc(it.hours) : ''}</td>
-        <td style="padding:7px 0; border-bottom:1px solid #ece2cd; text-align:right;">${it.hours != null ? this.gbp(STAFF_RATE) : ''}</td>
-        <td style="padding:7px 0; border-bottom:1px solid #ece2cd; text-align:right;">${this.gbp(it.amount)}</td>
+        <td style="padding:7px 0; border-bottom:1px solid #ddd;">${this.esc(typeLabel(it.type))}${it.event_label ? ` — ${this.esc(it.event_label)}` : ''}${it.description ? `<div style="color:#666; font-size:11px;">${this.esc(it.description)}</div>` : ''}</td>
+        <td style="padding:7px 0; border-bottom:1px solid #ddd; text-align:right;">${it.hours != null ? this.esc(it.hours) : ''}</td>
+        <td style="padding:7px 0; border-bottom:1px solid #ddd; text-align:right;">${it.hours != null ? this.gbp(STAFF_RATE) : ''}</td>
+        <td style="padding:7px 0; border-bottom:1px solid #ddd; text-align:right;">${this.gbp(it.amount)}</td>
       </tr>`).join('');
-    return `<div style="font-family:Georgia,serif; max-width:600px; margin:0 auto; color:#3a2818; background:#faf3e2; padding:32px;">
-      <div style="text-align:center; margin-bottom:6px;"><img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="140" style="max-width:140px; height:auto; border:0;"></div>
-      <div style="text-align:center; font-family:'Cinzel',Georgia,serif; letter-spacing:3px; text-transform:uppercase; color:#4a2f23; font-size:20px; margin-bottom:6px;">Invoice</div>
-      <div style="text-align:center; font-size:13px; color:#5c4530; margin-bottom:20px;">${this.esc(inv.staff_name || inv.staff_email || '')} · ${this.esc(inv.period_label || '')}</div>
-      ${(inv.bank_sort_code || inv.bank_account) ? `<div style="font-size:12px; color:#5c4530; margin-bottom:16px;">Pay to: ${this.esc(inv.staff_name || '')}${inv.bank_sort_code ? ` · Sort ${this.esc(inv.bank_sort_code)}` : ''}${inv.bank_account ? ` · Acct ${this.esc(inv.bank_account)}` : ''}</div>` : ''}
+    return `<div style="font-family:Georgia,'Times New Roman',serif; max-width:620px; margin:0 auto; color:#1a1a1a; background:#fff; padding:36px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #222; padding-bottom:16px; margin-bottom:22px;">
+        <div>
+          <div style="font-size:28px; font-weight:600; letter-spacing:1px;">INVOICE</div>
+          <div style="font-size:13px; color:#555; margin-top:4px;">${this.esc(inv.period_label || '')}</div>
+        </div>
+        <div style="text-align:right; font-size:12.5px; color:#222; line-height:1.5;">
+          <div style="font-weight:700; font-size:14px;">${this.esc(inv.staff_name || inv.staff_email || '')}</div>
+          ${inv.staff_address ? `<div style="white-space:pre-line;">${this.esc(inv.staff_address)}</div>` : ''}
+          ${inv.ni_number ? `<div>NI: ${this.esc(inv.ni_number)}</div>` : ''}
+        </div>
+      </div>
+      <div style="font-size:12.5px; color:#222; margin-bottom:18px;"><strong>Invoice to:</strong> Flint Hall Glamping and Events Ltd</div>
       <table style="width:100%; border-collapse:collapse; font-size:13px;">
-        <thead><tr style="color:#806555; font-size:11px; text-transform:uppercase; letter-spacing:1px; text-align:left; border-bottom:2px solid #4a2f23;">
+        <thead><tr style="color:#555; font-size:11px; text-transform:uppercase; letter-spacing:1px; text-align:left; border-bottom:2px solid #222;">
           <th style="padding:6px 0;">Description</th><th style="text-align:right;">Hours</th><th style="text-align:right;">Rate</th><th style="text-align:right;">Amount</th>
         </tr></thead>
         <tbody>${rows}</tbody>
         <tfoot><tr style="font-weight:bold; font-size:15px;"><td colspan="3" style="padding:12px 0 0; text-align:right;">Total</td><td style="padding:12px 0 0; text-align:right;">${this.gbp(inv.subtotal)}</td></tr></tfoot>
       </table>
-      ${inv.notes ? `<div style="margin-top:16px; font-size:13px; color:#5c4530; white-space:pre-line;">${this.esc(inv.notes)}</div>` : ''}
+      ${(inv.bank_sort_code || inv.bank_account) ? `<div style="margin-top:20px; font-size:12.5px; color:#222;"><strong>Payment by bank transfer</strong><br>${this.esc(inv.staff_name || '')}${inv.bank_sort_code ? `<br>Sort code: ${this.esc(inv.bank_sort_code)}` : ''}${inv.bank_account ? `<br>Account number: ${this.esc(inv.bank_account)}` : ''}</div>` : ''}
+      ${inv.notes ? `<div style="margin-top:16px; font-size:12.5px; color:#444; white-space:pre-line;">${this.esc(inv.notes)}</div>` : ''}
     </div>`;
   },
 
