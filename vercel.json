@@ -1,6 +1,10 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/padel", "destination": "https://flint-hall-padel-production.up.railway.app/padel" },
+    { "source": "/padel/:path*", "destination": "https://flint-hall-padel-production.up.railway.app/padel/:path*" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
