@@ -1211,6 +1211,8 @@ a:hover { text-decoration: underline; }
 .cal-event.s-cancelled { background: #e9e3e1; color: var(--brown-500); text-decoration: line-through; opacity: 0.7; }
 /* Site viewings — visually distinct from bookings */
 .cal-event.cal-visit { background: #e0eaf3; color: #4a6a85; border-left-style: dashed; }
+/* Padel court bookings (from the separate padel app) */
+.cal-event.cal-padel { background: #e6efe0; color: #55684a; border-left-style: dashed; }
 .cal-event.is-event-day {
   font-weight: 700;
   box-shadow: inset 0 0 0 1.5px var(--gold);
@@ -1643,6 +1645,13 @@ const SUPABASE_KEY = 'sb_publishable_C5jAgpcN560Eg1zRqFU62g_Es8zRT_t';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 window.fhSupabase = supabase;
+
+// Read-only client for the separate Padel booking app, so padel court
+// bookings show on the calendar (we call a function that returns occupancy
+// only — no padel member details).
+const PADEL_URL = 'https://lcqdxqhiejonoewoerez.supabase.co';
+const PADEL_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjcWR4cWhpZWpvbm9ld29lcmV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2ODUzOTQsImV4cCI6MjEwMDI2MTM5NH0.7Af5VE9Fo93S-TfO_o1_FO7OP1IDJzhBYKg-kTw82EQ';
+window.fhPadel = createClient(PADEL_URL, PADEL_KEY);
 
 const $ = id => document.getElementById(id);
 function showAuthState(state) {
@@ -2545,6 +2554,18 @@ const App = {
     if (bErr) throw bErr;
     this.state.bookings = (bookingRows || []).map(r => this.dbToBooking(r));
 
+    // Padel court bookings (separate app) — best-effort, never blocks ops.
+    try {
+      const iso = d => d.toISOString().slice(0, 10);
+      const from = new Date(); from.setMonth(from.getMonth() - 1); from.setDate(1);
+      const to = new Date(); to.setMonth(to.getMonth() + 4);
+      const { data: padel } = await window.fhPadel.rpc('padel_court_schedule', { d_from: iso(from), d_to: iso(to) });
+      this.state.padelBookings = padel || [];
+    } catch (e) {
+      console.warn('Padel schedule load failed:', e.message);
+      this.state.padelBookings = [];
+    }
+
     // Email templates — seed defaults on first run if table is empty.
     const { data: tplRows, error: tErr } = await sb
       .from('email_templates').select('*');
@@ -3358,7 +3379,11 @@ const App = {
         const vd = new Date(b.visit.date); vd.setHours(0, 0, 0, 0);
         return vd.getTime() === cellDate.getTime();
       }).sort((a, b) => (a.visit.time || '').localeCompare(b.visit.time || ''));
-      cells.push({ date: cellDate, isCurrentMonth, isToday, isWeekend, events, visits });
+      const padel = (this.state.padelBookings || []).filter(pb => {
+        const pd = new Date(pb.the_date + 'T00:00:00'); pd.setHours(0, 0, 0, 0);
+        return pd.getTime() === cellDate.getTime();
+      }).sort((a, b) => String(a.start_time || '').localeCompare(String(b.start_time || '')));
+      cells.push({ date: cellDate, isCurrentMonth, isToday, isWeekend, events, visits, padel });
     }
 
     // Month-level summary
@@ -3456,6 +3481,12 @@ const App = {
             const vtime = b.visit.time ? `<span class="cal-event-time">${this.esc(b.visit.time)}</span>` : '';
             const vtip = `Viewing — ${vname}${b.visit.time ? ' at ' + b.visit.time : ''}${b.event.type ? ' · ' + b.event.type : ''}`;
             return `<div class="cal-event cal-visit" onclick="App.navigate('booking','${b.id}')" title="${this.esc(vtip)}">👁 ${vtime}${this.esc(vname)}</div>`;
+          }).join('')}
+          ${(cell.padel || []).map(pb => {
+            const t = String(pb.start_time || '').slice(0, 5);
+            const fmt = pb.format === 'singles' ? 'Singles' : 'Doubles';
+            const tip = `Padel court — ${t} · ${fmt}${pb.ref ? ' · ' + pb.ref : ''}`;
+            return `<div class="cal-event cal-padel" title="${this.esc(tip)}">🎾 <span class="cal-event-time">${t}</span>Padel</div>`;
           }).join('')}
           ${visible.map(b => {
             const name = `${b.client.firstName || ''}${b.partnerName ? ' & ' + b.partnerName : ''}`.trim() || b.client.lastName || 'Booking';
