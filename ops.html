@@ -2554,15 +2554,17 @@ const App = {
     if (bErr) throw bErr;
     this.state.bookings = (bookingRows || []).map(r => this.dbToBooking(r));
 
-    // Padel court bookings (separate app) — best-effort, never blocks ops.
+    // Padel court bookings (separate app) — full details via the staff-only
+    // padel-details edge function (uses our signed-in session). Best-effort;
+    // never blocks ops.
     try {
       const iso = d => d.toISOString().slice(0, 10);
       const from = new Date(); from.setMonth(from.getMonth() - 1); from.setDate(1);
       const to = new Date(); to.setMonth(to.getMonth() + 4);
-      const { data: padel } = await window.fhPadel.rpc('padel_court_schedule', { d_from: iso(from), d_to: iso(to) });
-      this.state.padelBookings = padel || [];
+      const { data: padelRes } = await sb.functions.invoke('padel-details', { body: { from: iso(from), to: iso(to) } });
+      this.state.padelBookings = (padelRes && padelRes.bookings) || [];
     } catch (e) {
-      console.warn('Padel schedule load failed:', e.message);
+      console.warn('Padel details load failed:', e.message);
       this.state.padelBookings = [];
     }
 
@@ -3485,8 +3487,12 @@ const App = {
           ${(cell.padel || []).map(pb => {
             const t = String(pb.start_time || '').slice(0, 5);
             const fmt = pb.format === 'singles' ? 'Singles' : 'Doubles';
-            const tip = `Padel court — ${t} · ${fmt}${pb.ref ? ' · ' + pb.ref : ''}`;
-            return `<div class="cal-event cal-padel" title="${this.esc(tip)}">🎾 <span class="cal-event-time">${t}</span>Padel</div>`;
+            const dur = pb.duration_min ? pb.duration_min + ' min' : '';
+            const players = pb.players || [];
+            const booker = (players[0] && players[0].name) || 'Padel';
+            const who = players.map(p => `• ${p.name}${p.phone ? ' · ' + p.phone : ''}${p.email ? ' · ' + p.email : ''}`).join('\n');
+            const tip = `Padel court — ${t} · ${fmt}${dur ? ' · ' + dur : ''}${pb.ref ? ' · ' + pb.ref : ''}${who ? '\n' + who : ''}`;
+            return `<div class="cal-event cal-padel" title="${this.esc(tip)}">🎾 <span class="cal-event-time">${t}</span>${this.esc(booker)}</div>`;
           }).join('')}
           ${visible.map(b => {
             const name = `${b.client.firstName || ''}${b.partnerName ? ' & ' + b.partnerName : ''}`.trim() || b.client.lastName || 'Booking';
