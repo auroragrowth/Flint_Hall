@@ -469,6 +469,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
       <a href="#stays">Stays</a>
       <a href="#moments">The vibe</a>
       <a href="/gallery">Gallery</a>
+      <a href="#checklist">Checklist</a>
       <a href="#inquire">Inquire</a>
       <button class="nav-signin" onclick="openLogin()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M 15 3 H 19 V 21 H 15"/><path d="M 10 17 L 15 12 L 10 7"/><path d="M 15 12 H 3"/></svg>
@@ -1001,6 +1002,138 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
   </div>
 </section>
 
+<!-- FREE PLANNING CHECKLIST (lead magnet) -->
+<style>
+  #checklist .lm-inside{ list-style:none; padding:0; margin:22px 0 0; }
+  #checklist .lm-inside li{ display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  #checklist .lm-inside svg{ flex:0 0 auto; width:20px; height:20px; margin-top:2px; color:var(--rust); }
+  #checklist .lm-error{ background:#f6e2d8; border:1px solid #d8a58c; color:#8a3a28;
+    padding:10px 13px; border-radius:3px; font-family:var(--body); font-size:13.5px; margin-bottom:16px; }
+  #checklist .lm-optional{ text-transform:none; letter-spacing:0; color:var(--ink-faded); font-style:italic; }
+  #lm-done{ text-align:center; }
+  #lm-done .lm-tick{ width:52px; height:52px; margin:0 auto 14px; border-radius:50%;
+    background:var(--moss); display:flex; align-items:center; justify-content:center; }
+  #lm-done .lm-tick svg{ width:26px; height:26px; color:#fff; }
+  #lm-done h3{ font-family:var(--display); color:var(--brown-dk); font-size:1.5rem; margin:0 0 10px; }
+  #lm-done p{ font-family:var(--body); color:var(--ink-soft); margin:0 auto; max-width:34ch; }
+  #lm-done .lm-mail{ color:var(--rust); font-weight:600; }
+</style>
+<section class="inquire paper-bg" id="checklist">
+  <div class="container">
+    <div class="inquire-grid">
+      <div class="inquire-info">
+        <span class="eyebrow">Free download</span>
+        <h2 class="h-section">The wedding planning checklist</h2>
+        <div class="divider">
+          <span class="line"></span>
+          <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+          <span class="line"></span>
+        </div>
+        <p>Every task, in the order it needs doing &mdash; from the moment you say &ldquo;yes&rdquo; to the morning of your wedding. Our free <strong>Planning Checklist &amp; Countdown Timeline</strong> keeps it all straight, so nothing slips through the cracks.</p>
+        <ul class="lm-inside">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M 12 7 L 12 12 L 16 14"/></svg>
+            <div>A full 12-month countdown &mdash; month by month, right down to the day itself.</div>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M 5 12 L 10 17 L 19 7"/></svg>
+            <div>The five decisions to make first &mdash; the ones that shape everything else.</div>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M 6 2 L 18 2 L 18 22 L 6 22 Z"/><path d="M 9 7 L 15 7 M 9 11 L 15 11 M 9 15 L 13 15"/></svg>
+            <div>Beautifully designed to print and tick off, or keep on your phone.</div>
+          </li>
+        </ul>
+      </div>
+
+      <form class="inquire-form" id="lm-form" novalidate>
+        <div class="row">
+          <label for="lm-name">Your name</label>
+          <input type="text" id="lm-name" autocomplete="name" required>
+        </div>
+        <div class="row split">
+          <div>
+            <label for="lm-email">Email</label>
+            <input type="email" id="lm-email" autocomplete="email" required>
+          </div>
+          <div>
+            <label for="lm-phone">Phone <span class="lm-optional">(optional)</span></label>
+            <input type="tel" id="lm-phone" autocomplete="tel">
+          </div>
+        </div>
+        <div id="lm-error" class="lm-error" hidden></div>
+        <button type="submit" class="btn btn-leather" id="lm-submit">Email me the checklist</button>
+        <p class="form-note">We&rsquo;ll email your checklist straight away. No mailing list, no spam &mdash; just the guide.</p>
+      </form>
+
+      <div class="inquire-form" id="lm-done" hidden>
+        <div class="lm-tick">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M 5 12 L 10 17 L 19 7"/></svg>
+        </div>
+        <h3>It&rsquo;s on its way</h3>
+        <p>We&rsquo;ve sent your planning checklist to <span class="lm-mail" id="lm-done-email">your inbox</span>. It should land in a minute or two &mdash; if it doesn&rsquo;t, have a quick look in your spam folder.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+  const SUPABASE_URL = 'https://dgrbazpcytwusnsvoaou.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_C5jAgpcN560Eg1zRqFU62g_Es8zRT_t';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const form   = document.getElementById('lm-form');
+  const done   = document.getElementById('lm-done');
+  const errEl  = document.getElementById('lm-error');
+  const btn    = document.getElementById('lm-submit');
+  const BTN_LABEL = 'Email me the checklist';
+
+  const showError = (msg) => { errEl.innerHTML = msg; errEl.hidden = false; };
+  const clearError = () => { errEl.hidden = true; errEl.textContent = ''; };
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+    const name  = document.getElementById('lm-name').value.trim();
+    const email = document.getElementById('lm-email').value.trim().toLowerCase();
+    const phone = document.getElementById('lm-phone').value.trim();
+
+    if (!name)  { showError('Please pop your name in.'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showError('That email doesn&rsquo;t look quite right.'); return; }
+
+    btn.disabled = true; btn.textContent = 'Sending…';
+
+    const { error } = await supabase.rpc('submit_lead_magnet', {
+      p_name: name, p_email: email, p_phone: phone || null,
+      p_magnet: 'wedding-checklist', p_source: 'index-checklist'
+    });
+
+    if (error) {
+      btn.disabled = false; btn.textContent = BTN_LABEL;
+      let msg = 'Something went wrong at our end. Please try again, or email <a href="mailto:hello@flinthall.uk" style="color:#8a3a28;text-decoration:underline;">hello@flinthall.uk</a>.';
+      if (/invalid_email/.test(error.message)) msg = 'That email doesn&rsquo;t look quite right.';
+      else if (/invalid_name/.test(error.message)) msg = 'Please pop your name in.';
+      else if (/too_many/.test(error.message)) msg = 'We&rsquo;ve already sent this over &mdash; check your inbox (and your spam folder).';
+      showError(msg);
+      return;
+    }
+
+    // The lead is captured. Fire the delivery email; don't block success on it
+    // (staff can still see and follow up the lead in /ops if delivery hiccups).
+    try {
+      await supabase.functions.invoke('send-lead-magnet', { body: { name, email } });
+    } catch (err) {
+      console.warn('checklist email invoke failed', err);
+    }
+
+    document.getElementById('lm-done-email').textContent = email;
+    form.hidden = true;
+    done.hidden = false;
+    done.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+</script>
+
 <!-- INQUIRE -->
 <section class="inquire paper-bg" id="inquire">
   <div class="container">
@@ -1137,6 +1270,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
           <li><a href="#stays">Stays</a></li>
           <li><a href="#moments">The vibe</a></li>
           <li><a href="/gallery">Gallery</a></li>
+          <li><a href="#checklist">Free planning checklist</a></li>
           <li><a href="#inquire">Inquire</a></li>
         </ul>
       </div>

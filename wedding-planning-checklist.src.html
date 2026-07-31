@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Flint Hall Wedding Planning Checklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Libre+Baskerville:ital@0;1&family=Lora:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rust:#8C4A2F; --brown-dk:#4A2F23; --linen:#E6D2B3;
+    --paper:#f3e3c1; --paper-light:#f8edd0; --paper-warm:#ead7af; --paper-edge:#d4ba8c;
+    --ink:#3a2818; --ink-soft:#5c4530; --ink-faded:#806555;
+    --gold:#c89c5a; --gold-soft:#d8b87c; --moss:#5e6a4a;
+    --leather:#3d2817; --wood-dark:#2c1a0e; --wood-mid:#4a2f1a; --ash-cream:#F1E6CF;
+    --display:'Cinzel', Georgia, serif;
+    --serif:'Libre Baskerville', Georgia, serif;
+    --body:'Lora', Georgia, serif;
+    --ui:'Montserrat', system-ui, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:var(--body); color:var(--ink); background:#fff;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    font-size:10.5pt; line-height:1.5;
+  }
+  @page{ size:A4; margin:0; }
+
+  .page{
+    position:relative; width:210mm; min-height:297mm;
+    padding:20mm 18mm; page-break-after:always; overflow:hidden;
+  }
+  .page:last-child{ page-break-after:auto; }
+
+  /* ---- shared type ---- */
+  .eyebrow{
+    font-family:var(--ui); text-transform:uppercase; letter-spacing:0.32em;
+    font-size:8pt; font-weight:600; color:var(--rust);
+  }
+  h1,h2,h3{ font-family:var(--display); font-weight:500; margin:0; }
+  .rule{ height:1px; background:var(--paper-edge); border:0; margin:0; }
+  .sprig{ color:var(--gold); font-size:13pt; letter-spacing:0.3em; }
+
+  /* ============ COVER ============ */
+  .cover{
+    background:linear-gradient(160deg, #3a2417 0%, #2c1a0e 55%, #241207 100%);
+    color:var(--ash-cream); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    padding:26mm 22mm;
+  }
+  .cover-frame{
+    border:1px solid rgba(200,156,90,0.45); padding:22mm 14mm;
+    width:100%; height:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; position:relative;
+  }
+  .cover-frame::before, .cover-frame::after{
+    content:""; position:absolute; width:14px; height:14px;
+    border:1px solid var(--gold-soft);
+  }
+  .cover-frame::before{ top:5mm; left:5mm; border-right:0; border-bottom:0; }
+  .cover-frame::after{ bottom:5mm; right:5mm; border-left:0; border-top:0; }
+  .cover .eyebrow{ color:var(--gold-soft); letter-spacing:0.42em; margin-bottom:20px; }
+  .cover h1{
+    font-size:33pt; line-height:1.12; color:#fff; letter-spacing:0.02em;
+    font-weight:600; margin:0 0 6px;
+  }
+  .cover h1 .sub{ display:block; font-size:15pt; color:var(--gold-soft); letter-spacing:0.16em; font-weight:400; margin-top:14px; }
+  .cover .lead{
+    font-family:var(--serif); font-style:italic; font-size:12pt;
+    color:var(--linen); opacity:0.9; max-width:118mm; margin:26px auto 0; line-height:1.7;
+  }
+  .cover .divider{ margin:30px 0; color:var(--gold); font-size:15pt; letter-spacing:0.4em; }
+  .cover .brand{
+    font-family:var(--display); text-transform:uppercase; letter-spacing:0.42em;
+    font-size:11pt; color:#fff; margin-top:6px;
+  }
+  .cover .place{ font-family:var(--ui); letter-spacing:0.3em; text-transform:uppercase; font-size:7.5pt; color:var(--gold-soft); margin-top:8px; }
+
+  /* ============ INTERIOR ============ */
+  .paper{ background:var(--paper-light); }
+  .page-head{ margin-bottom:8mm; }
+  .page-head h2{ font-size:21pt; color:var(--brown-dk); margin:6px 0 0; letter-spacing:0.02em; }
+  .page-head .lead{ font-family:var(--serif); font-style:italic; color:var(--ink-soft); font-size:10.5pt; margin:10px 0 0; }
+  .page-head .divider{ margin-top:12px; }
+
+  /* intro "five decisions" cards */
+  .decisions{ display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; margin-top:4mm; }
+  .decision{
+    background:#fff; border:1px solid var(--paper-edge); border-left:3px solid var(--rust);
+    padding:11px 13px;
+  }
+  .decision .n{ font-family:var(--display); color:var(--gold); font-size:11pt; }
+  .decision .t{ font-family:var(--ui); font-weight:600; font-size:9.5pt; letter-spacing:0.04em; color:var(--brown-dk); text-transform:uppercase; margin:2px 0 3px; }
+  .decision .d{ font-size:9.5pt; color:var(--ink-soft); line-height:1.45; }
+
+  /* phase block */
+  .phase{ margin-top:6mm; page-break-inside:avoid; }
+  .phase-head{ display:flex; align-items:baseline; gap:12px; border-bottom:1px solid var(--paper-edge); padding-bottom:5px; margin-bottom:9px; }
+  .phase-when{
+    font-family:var(--display); font-weight:600; font-size:12.5pt; color:var(--rust);
+    white-space:nowrap;
+  }
+  .phase-note{ font-family:var(--serif); font-style:italic; font-size:9pt; color:var(--ink-faded); }
+  .tasks{ display:grid; grid-template-columns:1fr 1fr; gap:5px 22px; }
+  .task{ display:flex; align-items:flex-start; gap:9px; font-size:10pt; color:var(--ink); line-height:1.35; }
+  .box{
+    flex:0 0 auto; width:12px; height:12px; margin-top:2px;
+    border:1.5px solid var(--rust); border-radius:2px; background:#fff;
+  }
+
+  /* closing */
+  .closing{ background:linear-gradient(160deg,#3a2417,#2c1a0e); color:var(--ash-cream); display:flex; flex-direction:column; justify-content:center; }
+  .closing .inner{ border:1px solid rgba(200,156,90,0.4); padding:24mm 16mm; display:flex; flex-direction:column; justify-content:center; text-align:center; }
+  .closing .eyebrow{ color:var(--gold-soft); letter-spacing:0.4em; }
+  .closing h2{ color:#fff; font-size:24pt; margin:14px 0 0; }
+  .closing .lead{ font-family:var(--serif); font-style:italic; color:var(--linen); font-size:12pt; line-height:1.75; max-width:130mm; margin:20px auto 0; opacity:0.92; }
+  .closing .cta{
+    display:inline-block; margin-top:30px; font-family:var(--ui); text-transform:uppercase;
+    letter-spacing:0.24em; font-size:9pt; font-weight:600; color:var(--wood-dark);
+    background:linear-gradient(180deg,var(--gold-soft),var(--gold)); padding:13px 26px; border-radius:3px;
+  }
+  .closing .contact{ font-family:var(--ui); letter-spacing:0.12em; font-size:9pt; color:var(--gold-soft); margin-top:26px; }
+  .closing .contact a{ color:var(--gold-soft); text-decoration:none; }
+  .closing .divider{ margin:24px 0 0; color:var(--gold); font-size:14pt; letter-spacing:0.4em; }
+
+  .foot{
+    position:absolute; bottom:10mm; left:18mm; right:18mm;
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--ui); font-size:7pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-faded);
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<section class="page cover">
+  <div class="cover-frame">
+    <div class="eyebrow">Flint Hall &middot; Suffolk</div>
+    <h1>The Wedding<br>Planning Checklist
+      <span class="sub">&amp; Countdown Timeline</span>
+    </h1>
+    <div class="divider">&#10086;</div>
+    <p class="lead">Every task, in the order it needs doing — from the moment you say &ldquo;yes&rdquo; to the morning of your wedding. Print it, tick it off, and let the rest take care of itself.</p>
+    <div class="divider">&#10086;</div>
+    <div class="brand">Flint Hall</div>
+    <div class="place">A Suffolk Wedding &amp; Events Barn</div>
+  </div>
+</section>
+
+<!-- ============ PAGE 1 — start + first year ============ -->
+<section class="page paper">
+  <div class="page-head">
+    <div class="eyebrow">Where to begin</div>
+    <h2>Five decisions that shape everything else</h2>
+    <p class="lead">Settle these first — every other choice becomes easier once they&rsquo;re made.</p>
+    <div class="divider sprig">&#10086;</div>
+  </div>
+
+  <div class="decisions">
+    <div class="decision"><span class="n">1</span><div class="t">Your budget</div><div class="d">Agree a total and who&rsquo;s contributing. It quietly decides guest numbers, venue and everything after.</div></div>
+    <div class="decision"><span class="n">2</span><div class="t">A rough guest count</div><div class="d">Even a range — 60, 100, 150 — shapes which venues and dates work for you.</div></div>
+    <div class="decision"><span class="n">3</span><div class="t">The feeling</div><div class="d">Intimate and candlelit, or a big barn party? Pick a mood before you pick details.</div></div>
+    <div class="decision"><span class="n">4</span><div class="t">Season &amp; flexibility</div><div class="d">Knowing your season — and whether a weekday works — opens up dates and value.</div></div>
+    <div class="decision"><span class="n">5</span><div class="t">The venue</div><div class="d">Book it first. Your date isn&rsquo;t real until the venue is, and the best dates go early.</div></div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">12+ months</span><span class="phase-note">the foundations</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Set your overall budget &amp; who&rsquo;s paying</div>
+      <div class="task"><span class="box"></span>Draft your guest list</div>
+      <div class="task"><span class="box"></span>Choose &amp; book your venue</div>
+      <div class="task"><span class="box"></span>Set the date (with the venue confirmed)</div>
+      <div class="task"><span class="box"></span>Take out wedding insurance</div>
+      <div class="task"><span class="box"></span>Start a mood board / vision</div>
+      <div class="task"><span class="box"></span>Open a dedicated wedding savings pot</div>
+      <div class="task"><span class="box"></span>Decide on your wedding party</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">10 – 12 months</span><span class="phase-note">the big suppliers</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Book your photographer</div>
+      <div class="task"><span class="box"></span>Book your videographer</div>
+      <div class="task"><span class="box"></span>Confirm catering &amp; drinks</div>
+      <div class="task"><span class="box"></span>Book the band or DJ</div>
+      <div class="task"><span class="box"></span>Start shopping for the dress</div>
+      <div class="task"><span class="box"></span>Research celebrant / registrar</div>
+      <div class="task"><span class="box"></span>Book any overnight accommodation</div>
+      <div class="task"><span class="box"></span>Send save-the-dates</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">8 – 9 months</span><span class="phase-note">the details take shape</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Book your florist</div>
+      <div class="task"><span class="box"></span>Order the cake</div>
+      <div class="task"><span class="box"></span>Confirm ceremony &amp; officiant</div>
+      <div class="task"><span class="box"></span>Book hair &amp; make-up (with trials)</div>
+      <div class="task"><span class="box"></span>Plan &amp; book the honeymoon</div>
+      <div class="task"><span class="box"></span>Choose bridesmaids&rsquo; outfits</div>
+      <div class="task"><span class="box"></span>Arrange transport</div>
+      <div class="task"><span class="box"></span>Sort passports / visas if needed</div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Flint Hall &middot; Suffolk</span><span>The Wedding Planning Checklist</span></div>
+</section>
+
+<!-- ============ PAGE 2 — mid to final ============ -->
+<section class="page paper">
+  <div class="page-head">
+    <div class="eyebrow">The countdown</div>
+    <h2>From half a year to the big day</h2>
+    <p class="lead">The middle stretch is where it all comes together. Keep ticking.</p>
+    <div class="divider sprig">&#10086;</div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">6 – 7 months</span><span class="phase-note">lock it in</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Order suits / groom&rsquo;s outfit</div>
+      <div class="task"><span class="box"></span>Book a menu tasting</div>
+      <div class="task"><span class="box"></span>Choose &amp; order the rings</div>
+      <div class="task"><span class="box"></span>Register at your ceremony office</div>
+      <div class="task"><span class="box"></span>Finalise readings &amp; music</div>
+      <div class="task"><span class="box"></span>Book guest transport / shuttles</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">4 – 5 months</span><span class="phase-note">paper &amp; plans</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Order the invitations</div>
+      <div class="task"><span class="box"></span>Finalise your gift list / registry</div>
+      <div class="task"><span class="box"></span>Confirm all supplier bookings</div>
+      <div class="task"><span class="box"></span>Buy wedding-party gifts</div>
+      <div class="task"><span class="box"></span>Book the first dress fitting</div>
+      <div class="task"><span class="box"></span>Plan the hen &amp; stag</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">3 months</span><span class="phase-note">send &amp; confirm</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Send the invitations</div>
+      <div class="task"><span class="box"></span>Finalise the menu &amp; drinks</div>
+      <div class="task"><span class="box"></span>Order favours &amp; on-the-day stationery</div>
+      <div class="task"><span class="box"></span>Confirm registrar / celebrant</div>
+      <div class="task"><span class="box"></span>Buy wedding shoes &amp; accessories</div>
+      <div class="task"><span class="box"></span>Draft the order of the day</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">2 months</span><span class="phase-note">the fine detail</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Chase outstanding RSVPs</div>
+      <div class="task"><span class="box"></span>Draw up the seating plan</div>
+      <div class="task"><span class="box"></span>Final dress fitting</div>
+      <div class="task"><span class="box"></span>Write vows &amp; speeches</div>
+      <div class="task"><span class="box"></span>Have your hair &amp; make-up trial</div>
+      <div class="task"><span class="box"></span>Give notice / collect the licence</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">1 month</span><span class="phase-note">nearly there</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Confirm final numbers to venue &amp; caterer</div>
+      <div class="task"><span class="box"></span>Make final payments to suppliers</div>
+      <div class="task"><span class="box"></span>Collect outfits &amp; rings</div>
+      <div class="task"><span class="box"></span>Share the day-of timeline with everyone</div>
+      <div class="task"><span class="box"></span>Confirm timings with each supplier</div>
+      <div class="task"><span class="box"></span>Break in your shoes</div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Flint Hall &middot; Suffolk</span><span>The Wedding Planning Checklist</span></div>
+</section>
+
+<!-- ============ PAGE 3 — the last fortnight ============ -->
+<section class="page paper">
+  <div class="page-head">
+    <div class="eyebrow">The final fortnight</div>
+    <h2>The last two weeks &amp; the day itself</h2>
+    <p class="lead">The hard work&rsquo;s done. These are the little things that let you relax into it.</p>
+    <div class="divider sprig">&#10086;</div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">2 weeks</span><span class="phase-note">hand it over</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Re-confirm timings with all suppliers</div>
+      <div class="task"><span class="box"></span>Delegate day-of roles to your party</div>
+      <div class="task"><span class="box"></span>Finish speeches &amp; vows</div>
+      <div class="task"><span class="box"></span>Pack for the honeymoon</div>
+      <div class="task"><span class="box"></span>Prepare supplier tips &amp; final cash</div>
+      <div class="task"><span class="box"></span>Pre-book a post-wedding dress clean</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">1 week</span><span class="phase-note">breathe</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Give the final headcount to the venue</div>
+      <div class="task"><span class="box"></span>Deliver decor, favours &amp; stationery</div>
+      <div class="task"><span class="box"></span>Rehearse the ceremony</div>
+      <div class="task"><span class="box"></span>Confirm transport pick-up times</div>
+      <div class="task"><span class="box"></span>Assemble an emergency kit</div>
+      <div class="task"><span class="box"></span>Rest, hydrate &amp; eat well</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">The day before</span><span class="phase-note">everything ready</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Drop off anything the venue needs</div>
+      <div class="task"><span class="box"></span>Lay out outfits, rings &amp; documents</div>
+      <div class="task"><span class="box"></span>Charge phones &amp; cameras</div>
+      <div class="task"><span class="box"></span>Hand rings to the best man</div>
+      <div class="task"><span class="box"></span>Have an early, easy night</div>
+      <div class="task"><span class="box"></span>Set out the emergency kit</div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="phase-when">On the day</span><span class="phase-note">enjoy every minute</span></div>
+    <div class="tasks">
+      <div class="task"><span class="box"></span>Eat a proper breakfast</div>
+      <div class="task"><span class="box"></span>Give the rings &amp; documents to your point person</div>
+      <div class="task"><span class="box"></span>Get ready with time to spare</div>
+      <div class="task"><span class="box"></span>Take a quiet moment together</div>
+      <div class="task"><span class="box"></span>Trust your suppliers — let them work</div>
+      <div class="task"><span class="box"></span>Soak it all in. You&rsquo;re married.</div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Flint Hall &middot; Suffolk</span><span>The Wedding Planning Checklist</span></div>
+</section>
+
+<!-- ============ CLOSING ============ -->
+<section class="page closing">
+  <div class="inner">
+    <div class="eyebrow">When you&rsquo;re ready</div>
+    <h2>Come and see Flint Hall</h2>
+    <p class="lead">A checklist can take you a long way — but the moment a barn feels right, you just know. If a Suffolk barn wedding is the picture in your head, we&rsquo;d love to show you ours: exposed timber, big skies, and room for everyone you love.</p>
+    <div>
+      <span class="cta">Book a viewing &middot; flinthall.uk</span>
+    </div>
+    <div class="contact">hello@flinthall.uk &nbsp;&middot;&nbsp; flinthall.uk</div>
+    <div class="divider">&#10086;</div>
+  </div>
+</section>
+
+</body>
+</html>
