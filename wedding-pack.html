@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Flint Hall — Wedding Booking Pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1f1a17; --soft:#5c4d40; --faint:#8a7a66; --gold:#b8924a; --brown:#4a2f23; --line:#c9b78f; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:#e9e2d2; color:#1f1a17; font-family:'Lora', Georgia, serif; font-size:12.5px; line-height:1.55; }
+  a { color:#8c4a2f; }
+
+  /* Screen-only toolbar */
+  .toolbar { position:sticky; top:0; z-index:10; background:#4a2f23; color:#f1e6cf; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; font-family:'Lora',serif; }
+  .toolbar .btn { background:#b8924a; color:#2a1c14; border:none; padding:9px 18px; border-radius:4px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; font-size:12px; cursor:pointer; }
+  .toolbar small { opacity:0.85; }
+
+  /* A4 pages */
+  .sheet {
+    width:210mm; min-height:297mm; margin:14px auto; padding:18mm 17mm; background:#fff;
+    box-shadow:0 2px 16px rgba(0,0,0,0.18); position:relative;
+  }
+  .sheet + .sheet { }
+
+  h1,h2,h3 { font-family:'Cinzel', Georgia, serif; color:var(--brown); font-weight:600; letter-spacing:0.03em; margin:0; }
+  h1 { font-size:26px; text-transform:uppercase; letter-spacing:0.12em; }
+  h2 { font-size:17px; text-transform:uppercase; letter-spacing:0.09em; border-bottom:2px solid var(--brown); padding-bottom:6px; margin:0 0 14px; }
+  h3 { font-size:13.5px; letter-spacing:0.06em; color:var(--brown); margin:16px 0 6px; }
+  p { margin:0 0 10px; }
+  .eyebrow { font-family:'Cinzel',serif; letter-spacing:0.34em; text-transform:uppercase; font-size:10px; color:var(--gold); }
+  .muted { color:var(--soft); }
+  .small { font-size:11px; }
+  .center { text-align:center; }
+  .rule { height:1px; background:var(--line); border:0; margin:16px 0; }
+  .ornament { text-align:center; color:var(--gold); letter-spacing:0.3em; margin:10px 0; }
+  ul { margin:4px 0 10px; padding-left:18px; }
+  li { margin:2px 0; }
+
+  /* Fill-in helpers */
+  .u { border-bottom:1px solid #555; display:inline-block; min-width:60px; }
+  .frow { display:flex; gap:14px; margin:0 0 12px; flex-wrap:wrap; }
+  .field { flex:1; min-width:180px; }
+  .field label { display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.09em; color:var(--soft); margin-bottom:3px; }
+  .field .box { border-bottom:1px solid #555; height:20px; }
+  .field.big .box { height:20px; }
+  .writebox { border:1px solid #999; border-radius:3px; min-height:60px; padding:6px 8px; }
+
+  .box-tick { display:inline-block; width:13px; height:13px; border:1.4px solid #555; border-radius:2px; vertical-align:-2px; margin-right:6px; }
+
+  table { width:100%; border-collapse:collapse; }
+  .pkg td { padding:7px 4px; border-bottom:1px solid #ddd; }
+  .pkg td:last-child { text-align:right; white-space:nowrap; font-weight:600; }
+
+  /* Catering items */
+  .cat { border:1px solid #e2d6bd; border-radius:5px; padding:11px 13px; margin:0 0 11px; break-inside:avoid; }
+  .cat .top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .cat .nm { font-family:'Cinzel',serif; color:var(--brown); font-size:13px; }
+  .cat .pr { font-weight:600; white-space:nowrap; }
+  .cat .de { color:var(--soft); font-size:11.5px; margin:4px 0 0; }
+  .cat .pick { margin-top:7px; font-size:11.5px; }
+  .cat .pick .opt { display:inline-block; margin:2px 14px 2px 0; }
+  .cat .covers { margin-top:8px; font-size:11.5px; }
+  .cat .covers .cbox { display:inline-block; border:1px solid #777; border-radius:3px; width:70px; height:19px; vertical-align:-5px; margin-left:6px; }
+  .cat .special { margin-top:7px; }
+  .cat .special .writebox { min-height:32px; }
+
+  /* Running order grid */
+  .ro { width:100%; border-collapse:collapse; margin-top:8px; }
+  .ro th { background:#f3ecdd; text-align:left; font-family:'Cinzel',serif; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--brown); padding:6px 8px; border:1px solid #e0d3b6; }
+  .ro td { border:1px solid #e0d3b6; height:30px; padding:2px 8px; }
+  .ro td.t { width:80px; }
+
+  .sig { display:flex; gap:40px; margin-top:26px; }
+  .sig > div { flex:1; }
+  .sigline { border-bottom:1px solid #555; height:34px; }
+
+  .contract { font-size:11px; line-height:1.5; white-space:pre-wrap; font-family:'Lora',serif; }
+
+  .footer { position:absolute; bottom:10mm; left:17mm; right:17mm; text-align:center; font-size:9.5px; color:#9a8a76; font-family:'Cinzel',serif; letter-spacing:0.14em; text-transform:uppercase; }
+
+  @media print {
+    html, body { background:#fff; font-size:11.5px; }
+    .toolbar { display:none; }
+    .sheet { width:auto; min-height:auto; margin:0; padding:0; box-shadow:none; page-break-after:always; }
+    .sheet:last-child { page-break-after:auto; }
+    @page { size:A4; margin:15mm 14mm 16mm; }
+    .cat, .sig, .field, tr, .ro { break-inside:avoid; }
+    h2, h3 { break-after:avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div><strong>Flint Hall — Wedding Booking Pack</strong> <small>&nbsp;·&nbsp; a printable copy for booking your day</small></div>
+  <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+</div>
+
+<!-- ══════════ COVER ══════════ -->
+<section class="sheet center">
+  <div style="margin-top:26mm;">
+    <img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" style="width:230px; height:auto;">
+  </div>
+  <div class="ornament">✦ ✦ ✦</div>
+  <div class="eyebrow" style="margin-top:20mm;">A hidden treasure in the heart of Suffolk</div>
+  <h1 style="margin:14px 0;">Wedding<br>Booking Pack</h1>
+  <p class="muted" style="max-width:130mm; margin:14px auto 0; font-style:italic;">
+    Everything you need to book your day with us — on paper. Fill it in at your own pace,
+    sign the agreement at the back, and post or bring it in. We'll take care of the rest.
+  </p>
+  <div style="margin-top:34mm;" class="small muted">
+    Flint Hall Events &middot; Creeting St Peter &middot; Suffolk<br>
+    hello@flinthall.uk &middot; flinthall.uk
+  </div>
+  <div class="footer">Flint Hall Events</div>
+</section>
+
+<!-- ══════════ HOW TO BOOK ══════════ -->
+<section class="sheet">
+  <div class="eyebrow">Welcome</div>
+  <h1 style="font-size:20px; margin:6px 0 16px;">How to book your day</h1>
+  <p>We're so glad you're thinking of Flint Hall for your wedding. Booking is simple, and you don't need a computer for any of it.</p>
+  <h3>1 &nbsp;·&nbsp; Fill in your details</h3>
+  <p class="muted">Complete <strong>Your Details</strong> (next page) so we know who you are and when you're dreaming of.</p>
+  <h3>2 &nbsp;·&nbsp; Choose your package &amp; catering</h3>
+  <p class="muted">Pick the package that suits, and tick your feasting choices on the catering sheet. Nothing is final — we can adjust it together.</p>
+  <h3>3 &nbsp;·&nbsp; Read &amp; sign the agreement</h3>
+  <p class="muted">Read the venue-hire agreement at the back and sign it. There's nothing unusual in it, but it's important you know what's included.</p>
+  <h3>4 &nbsp;·&nbsp; Pay your deposit</h3>
+  <p class="muted">Pay the 50% deposit and the £250 refundable damage deposit by bank transfer (details near the back). Your date is only held once both the signed agreement and deposit are with us.</p>
+  <h3>5 &nbsp;·&nbsp; Return this pack</h3>
+  <p class="muted">Post it to us or hand it in on a visit — see the last page for where to send it.</p>
+  <hr class="rule">
+  <p class="small muted">Questions at any point? Call or email us — we'd far rather talk it through than have you wondering. <strong>hello@flinthall.uk</strong></p>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+<!-- ══════════ YOUR DETAILS ══════════ -->
+<section class="sheet">
+  <h2>Your details</h2>
+  <div class="frow">
+    <div class="field"><label>Your name</label><div class="box"></div></div>
+    <div class="field"><label>Partner's name</label><div class="box"></div></div>
+  </div>
+  <div class="frow">
+    <div class="field"><label>Home address</label><div class="box"></div></div>
+  </div>
+  <div class="frow"><div class="field"><div class="box"></div></div></div>
+  <div class="frow">
+    <div class="field"><label>Postcode</label><div class="box"></div></div>
+    <div class="field"><label>Telephone</label><div class="box"></div></div>
+    <div class="field"><label>Email (if you have one)</label><div class="box"></div></div>
+  </div>
+  <hr class="rule">
+  <div class="frow">
+    <div class="field"><label>Preferred wedding date</label><div class="box"></div></div>
+    <div class="field"><label>Second choice date</label><div class="box"></div></div>
+  </div>
+  <div class="frow">
+    <div class="field"><label>Approx. day guests</label><div class="box"></div></div>
+    <div class="field"><label>Approx. evening guests</label><div class="box"></div></div>
+    <div class="field"><label>Staying on site? (how many)</label><div class="box"></div></div>
+  </div>
+  <div class="frow">
+    <div class="field"><label>How did you hear about us?</label><div class="box"></div></div>
+  </div>
+  <h3>Anything you'd love us to know</h3>
+  <div class="writebox"></div>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+<!-- ══════════ PACKAGES ══════════ -->
+<section class="sheet">
+  <h2>Packages &amp; pricing</h2>
+  <p class="muted">Our full-day wedding packages give you the whole place — the Ranch, the Barn, the meadow, the padel court and the accommodation field — with the low-key hospitality that makes a long day feel short.</p>
+  <table class="pkg">
+    <tr><td>Full day, no accommodation <span class="muted">(Tiny House to get ready)</span></td><td>£6,000</td></tr>
+    <tr><td>+ 1 night's accommodation <span class="muted">· 2-day access</span></td><td>£8,000</td></tr>
+    <tr><td>+ 2 nights' accommodation <span class="muted">· 3-day access</span></td><td>£10,000</td></tr>
+    <tr><td>+ 3 nights' accommodation <span class="muted">· 4-day access</span></td><td>£12,000</td></tr>
+  </table>
+  <p class="small muted" style="margin-top:6px;">Catering is priced separately — see the next page.</p>
+
+  <h3>Which package would you like?</h3>
+  <p class="small"><span class="box-tick"></span> Full day &nbsp;&nbsp; <span class="box-tick"></span> + 1 night &nbsp;&nbsp; <span class="box-tick"></span> + 2 nights &nbsp;&nbsp; <span class="box-tick"></span> + 3 nights</p>
+
+  <hr class="rule">
+  <h2 style="margin-top:20px;">How payment works</h2>
+  <ul>
+    <li><strong>Deposit — 50%</strong>, non-refundable, due on booking. This secures your date and contract; nothing is held without it.</li>
+    <li><strong>Balance — 50%</strong>, due no later than <strong>30 days before</strong> your wedding.</li>
+    <li><strong>Damage deposit — £250</strong>, refundable, due 30 days before. Returned within 10 days after the day, subject to the usual inspection.</li>
+    <li>Payments are by <strong>bank transfer</strong> only (details near the back). Late payments incur £10/day until settled.</li>
+  </ul>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+<!-- ══════════ CATERING ══════════ -->
+<section class="sheet">
+  <h2>Catering — choose your feasting</h2>
+  <p class="muted small">Prices are <strong>per head</strong>. Write the number of covers for anything you'd like. Menu items may vary slightly with seasonal and supplier availability — by ordering you're happy for us to make the occasional like-for-like substitution of equivalent quality.</p>
+
+  <div class="cat">
+    <div class="top"><span class="nm">The Hog Roast</span><span class="pr">£20.00 pp &middot; min 50</span></div>
+    <div class="de">Slow-roasted, with soft bread rolls, homemade apple sauce, smoky bacon jam and sage &amp; onion stuffing.</div>
+    <div class="covers">Covers: <span class="cbox"></span></div>
+  </div>
+
+  <div class="cat">
+    <div class="top"><span class="nm">Meat BBQ Feast</span><span class="pr">£20.00 pp &middot; min 40</span></div>
+    <div class="de">Choose any three meats, served with salads, rolls and sauces.</div>
+    <div class="pick"><strong>Choose 3:</strong>
+      <span class="opt"><span class="box-tick"></span> Butcher's sausages</span>
+      <span class="opt"><span class="box-tick"></span> 4oz beef burgers</span>
+      <span class="opt"><span class="box-tick"></span> Peri-peri chicken thighs</span>
+      <span class="opt"><span class="box-tick"></span> Chicken &amp; chorizo skewers</span>
+    </div>
+    <div class="pick"><strong>Optional add-on:</strong>
+      <span class="opt"><span class="box-tick"></span> Slow-smoked on-site baby back ribs <span class="muted">(+£2.00 pp)</span></span>
+    </div>
+    <div class="covers">Covers: <span class="cbox"></span></div>
+    <div class="special"><label class="small muted">Special requirements (priced separately):</label><div class="writebox"></div></div>
+  </div>
+
+  <div class="cat">
+    <div class="top"><span class="nm">Vegan BBQ Feast</span><span class="pr">£18.00 pp</span></div>
+    <div class="de">Vegetarian Burger, Quorn vegan strips and spiced vegetable couscous, with salads, rolls and vegan sauces.</div>
+    <div class="covers">Covers: <span class="cbox"></span></div>
+    <div class="special"><label class="small muted">Special requirements (priced separately):</label><div class="writebox"></div></div>
+  </div>
+
+  <div class="cat">
+    <div class="top"><span class="nm">Classic Pizza</span><span class="pr">£18.50 pp &middot; min 40</span></div>
+    <div class="de">Stone-baked — Margherita, Pepperoni, Vegetarian and a Flint Hall special (sometimes BBQ chicken, sometimes hot honey — whatever's on at the moment).</div>
+    <div class="covers">Covers: <span class="cbox"></span></div>
+    <div class="special"><label class="small muted">Special requirements (priced separately):</label><div class="writebox"></div></div>
+  </div>
+
+  <div class="cat">
+    <div class="top"><span class="nm">Gourmet Pizza</span><span class="pr">£20.00 pp &middot; min 40</span></div>
+    <div class="de">Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto &amp; Rocket.</div>
+    <div class="covers">Covers: <span class="cbox"></span></div>
+    <div class="special"><label class="small muted">Special requirements (priced separately):</label><div class="writebox"></div></div>
+  </div>
+
+  <div class="cat">
+    <div class="top"><span class="nm">Jacket Potato Bar</span><span class="pr">£9.00 pp</span></div>
+    <div class="de">Fluffy baked potatoes with a spread of toppings — cheese, beans, chilli con carne, tuna mayo, pulled pork, curry and more.</div>
+    <div class="covers">Covers: <span class="cbox"></span></div>
+  </div>
+
+  <div class="cat">
+    <div class="top"><span class="nm">The Ice Cream Bike</span><span class="pr">£3.80 pp &middot; min 50</span></div>
+    <div class="de">Scoops for the children and the young at heart — and it doubles as a drinks cart for the evening.</div>
+    <div class="covers">Covers: <span class="cbox"></span></div>
+  </div>
+
+  <div class="cat">
+    <div class="top"><span class="nm">The Tuk Tuk Bar</span><span class="pr">£50 hire</span></div>
+    <div class="de">Our little three-wheeled bar, parked up wherever the party needs it. Requires 80+ guests; beer is bought from Flint Hall.</div>
+    <div class="covers"><span class="box-tick"></span> Yes please, add the Tuk Tuk Bar</div>
+  </div>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+<!-- ══════════ RUNNING ORDER ══════════ -->
+<section class="sheet">
+  <h2>Running order of the day</h2>
+  <p class="muted small">Sketch out the shape of your day — there's no wrong answer, and we'll shape it together. Add a time and what's happening.</p>
+  <table class="ro">
+    <tr><th class="t">Time</th><th>What's happening</th></tr>
+    <!-- 16 blank rows -->
+    <tr><td class="t"></td><td></td></tr><tr><td class="t"></td><td></td></tr>
+    <tr><td class="t"></td><td></td></tr><tr><td class="t"></td><td></td></tr>
+    <tr><td class="t"></td><td></td></tr><tr><td class="t"></td><td></td></tr>
+    <tr><td class="t"></td><td></td></tr><tr><td class="t"></td><td></td></tr>
+    <tr><td class="t"></td><td></td></tr><tr><td class="t"></td><td></td></tr>
+    <tr><td class="t"></td><td></td></tr><tr><td class="t"></td><td></td></tr>
+    <tr><td class="t"></td><td></td></tr><tr><td class="t"></td><td></td></tr>
+    <tr><td class="t"></td><td></td></tr><tr><td class="t"></td><td></td></tr>
+  </table>
+  <p class="small muted" style="margin-top:8px;">A reminder from the agreement: live &amp; amplified music in the Ranch must face west (toward the toilet block) and <strong>stop by 22:45</strong>, with a 90 dB limit across the site.</p>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+<!-- ══════════ SUPPLIERS ══════════ -->
+<section class="sheet">
+  <h2>External suppliers</h2>
+  <p class="muted small">Bringing in any outside suppliers — caterers, bars, entertainers, stylists? Please list each one. We're required to hold valid <strong>Public Liability Insurance</strong>, <strong>PAT testing</strong>, <strong>Food Hygiene</strong> and <strong>risk assessments</strong> for everyone working on site before your event. Please ask them to send certificates to hello@flinthall.uk.</p>
+
+  <!-- three supplier blocks -->
+  <script>document.write(new Array(3).fill(`
+    <div style="border:1px solid #e2d6bd; border-radius:5px; padding:11px 13px; margin:0 0 12px; break-inside:avoid;">
+      <div class="frow" style="margin-bottom:8px;">
+        <div class="field"><label>Company</label><div class="box"></div></div>
+        <div class="field"><label>What they're doing</label><div class="box"></div></div>
+      </div>
+      <div class="frow" style="margin-bottom:8px;">
+        <div class="field"><label>Contact name</label><div class="box"></div></div>
+        <div class="field"><label>Phone</label><div class="box"></div></div>
+        <div class="field"><label>Email</label><div class="box"></div></div>
+      </div>
+      <div class="small">Certificates to follow: <span class="box-tick"></span> Public Liability &nbsp; <span class="box-tick"></span> PAT &nbsp; <span class="box-tick"></span> Food Hygiene &nbsp; <span class="box-tick"></span> Risk assessment</div>
+    </div>`).join(''));</script>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+<!-- ══════════ PAYMENT DETAILS ══════════ -->
+<section class="sheet">
+  <h2>Paying your deposit &amp; balance</h2>
+  <p class="muted">All payments are by bank transfer. Please use the reference below so we can match your payment to your booking.</p>
+
+  <div style="border:2px solid var(--brown); border-radius:6px; padding:16px 18px; margin:12px 0;">
+    <div class="eyebrow" style="color:var(--brown);">Pay by bank transfer</div>
+    <table style="margin-top:8px; font-size:13px;">
+      <tr><td class="muted" style="width:130px; padding:3px 0;">Account name</td><td><strong>FLINT HALL GLAMPING AND EVENTS LTD</strong></td></tr>
+      <tr><td class="muted" style="padding:3px 0;">Sort code</td><td><strong>04-06-05</strong></td></tr>
+      <tr><td class="muted" style="padding:3px 0;">Account number</td><td><strong>23973049</strong></td></tr>
+      <tr><td class="muted" style="padding:3px 0;">Reference</td><td>Your surname + wedding date &nbsp; <span class="muted">(e.g. SMITH 140826)</span></td></tr>
+    </table>
+  </div>
+
+  <h3>Your payment schedule</h3>
+  <table class="pkg">
+    <tr><td>Deposit (50%) &amp; £250 damage deposit — on booking</td><td>£ <span class="u" style="min-width:80px;">&nbsp;</span></td></tr>
+    <tr><td>Balance (50%) — no later than 30 days before</td><td>£ <span class="u" style="min-width:80px;">&nbsp;</span></td></tr>
+  </table>
+  <p class="small muted">We'll confirm the exact figures with you before anything is due, and send a receipt for every payment.</p>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+<!-- ══════════ CONTRACT ══════════ -->
+<section class="sheet">
+  <h2>Contract of venue hire</h2>
+  <p class="small muted">Flint Hall Events — Venue Hire Agreement. This agreement is made between Flint Hall Events ("The Venue") and the Client named below for use of Flint Hall as the venue for the Client's event.</p>
+  <div class="contract">
+1. EVENT DETAILS
+   Client name:  __________________________    Phone:  __________________
+   Email:  ________________________________    Event date:  ______________
+   Event type:  Wedding                         Start:  ______   End:  ______
+   Expected guests:  ______
+
+2. VENUE &amp; ACCOMMODATION ACCESS
+   • Any deviation from agreed times must be discussed and agreed in writing with FH.
+   • Venue access depends on the package booked. Times will be tailored.
+   • Prohibited areas — the outbuildings and main house are strictly off limits.
+   • Music — all live / amplified music in the Ranch MUST face towards the toilet block (west) and must STOP by 22:45 sharp. This is a hard curfew and is non-negotiable.
+   • Noise limit — a strict 90 dB sound limit applies across the entire site, enforced by Environmental Health and the local council. A dB limiter is installed in the Ranch; if 90 dB is exceeded the power to the music system cuts out.
+   • Live bands &amp; DJs — it is YOUR responsibility to make them aware of the 90 dB limit and the 22:45 curfew. Any act that cannot perform within these limits is not suitable for this venue.
+
+3. PAYMENT TERMS — VENUE HIRE
+   Total venue cost:  £__________   Deposit (50%): £__________ (non-refundable, on booking)   Balance (50%): £__________
+
+4. PAYMENT GENERAL
+   • Damage deposit £250 (refundable, due 30 days prior).
+   • Payments by BACS only. Late payments incur £10/day until settled. The venue deposit is non-refundable.
+
+5. CANCELLATION POLICY
+   • The 50% venue deposit is non-refundable on cancellation by the Client.
+   • Cancellations within 30 days of the event make the Client liable for the full rental fee.
+   • If the Venue cancels, the Client is entitled to a full refund of monies paid.
+
+6. DAMAGE DEPOSIT &amp; RESPONSIBILITIES
+   • £250 refundable deposit due no later than 30 days prior; refunds within 10 days post-event, subject to inspection.
+   • Deductions for damage or excessive cleaning discussed before any charges applied.
+   • Items left billed at £50/day storage; uncollected after 7 days will be disposed.
+   • The Client is responsible for damage caused by their guests, vendors or external caterers.
+   • Glassware permitted only inside the Barn; plastic or alternatives elsewhere.
+
+7. DECORATIONS &amp; ENTERTAINMENT
+   • Candles in designated areas only. • Fireworks strictly prohibited without prior written permission.
+   • Biodegradable confetti only. • Notify the Venue if anything needs fixing to a building structure.
+
+8. INSURANCE &amp; VENDOR REQUIREMENTS
+   The Client is advised to obtain wedding/event insurance. Vendors must provide valid public liability certificates.
+
+9. EXTREME WEATHER
+   Flint Hall is primarily an outdoor venue. The Venue cannot be held responsible for extreme weather. A contingency plan is recommended.
+
+10. LIABILITY WAIVER
+    The Venue is not responsible for injuries, theft or loss of property. The Client agrees to release Flint Hall from any claims arising from use of the Venue.
+
+11. GENERAL TERMS
+    This agreement is the entire understanding. Amendments must be in writing. The Venue reserves the right to refuse entry to guests or vendors who violate the terms.
+
+12. PRE-EVENT MEETINGS
+    Site visits and planning meetings can be scheduled to finalise details.
+
+13. INCLUDED &amp; EXCLUDED SERVICES
+    INCLUDED: basic on-site support — emptying bins, restocking restroom supplies, addressing facility emergencies.
+    NOT INCLUDED: event coordination — set-up &amp; decorating, vendor management, timeline oversight (available at additional cost).
+
+14. INCLUDED VENUE FACILITIES
+    • Car park in the adjacent field • Use of the Ranch and fridges • Padel court • Kitchen and kitchen fridge
+    • Showers and toilets • The Barn and Barn Garden • 25 picnic benches, 100 wooden fold-up chairs
+    • 3x fire pits • Sweet cart and card box • Permission for additional tents and camper vans in the field
+  </div>
+
+  <h3>15. Signatures</h3>
+  <div class="sig">
+    <div>
+      <div class="sigline"></div>
+      <div class="small muted" style="margin-top:4px;">Client signature &amp; date</div>
+    </div>
+    <div>
+      <div class="sigline"></div>
+      <div class="small muted" style="margin-top:4px;">For Flint Hall Events &amp; date</div>
+    </div>
+  </div>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+<!-- ══════════ RETURN ══════════ -->
+<section class="sheet center">
+  <div style="margin-top:24mm;"><img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" style="width:170px; height:auto;"></div>
+  <div class="ornament">✦</div>
+  <h1 style="font-size:19px; margin:8px 0 14px;">Almost there</h1>
+  <p class="muted" style="max-width:120mm; margin:0 auto;">Please return your completed pack, with the signed agreement, to us — and pay your deposit by bank transfer. As soon as both are with us, your date is properly held and we can start on the lovely part.</p>
+  <div style="margin-top:16mm; display:inline-block; text-align:left; border:1px solid var(--line); border-radius:6px; padding:16px 22px;">
+    <div class="eyebrow" style="color:var(--brown);">Return to</div>
+    <p style="margin:8px 0 0;"><strong>Flint Hall Events</strong><br>Creeting St Peter<br>Suffolk<br><br>hello@flinthall.uk &middot; flinthall.uk</p>
+  </div>
+  <p class="muted" style="margin-top:20mm; font-style:italic;">We can't wait to host you.<br>Many thanks, Justin and Gemma</p>
+  <div class="footer">Flint Hall Events &middot; Wedding Booking Pack</div>
+</section>
+
+</body>
+</html>
