@@ -1115,7 +1115,7 @@ const CATERING_MENU = [
       { name: '4oz beef burgers' },
       { name: 'Peri-peri chicken thighs' },
       { name: 'Chicken & chorizo skewers' },
-      { name: 'Slow-smoked on-site baby back ribs', extra: 2 }
+      { name: 'Slow-smoked on-site baby back ribs', extra: 2, addon: true }
     ],
     desc: 'Pick any three of the meats below — served with salads, rolls and sauces.' },
   { name: 'Vegan BBQ Feast', price: 18.00, min: 0,  special: true, desc: 'Vegetarian Burger, Quorn vegan strips and spiced vegetable couscous, with salads, rolls and vegan sauces.' },
@@ -1274,12 +1274,17 @@ function renderCateringOrder(b, activeOrder) {
     let chooser = '';
     if (m.choose && Array.isArray(m.options)) {
       const chosen = existingOpts[m.name] || [];
-      chooser = `<div class="ci-choose" style="margin-top:9px; padding-top:9px; border-top:1px dashed var(--paper-edge); display:flex; flex-wrap:wrap; gap:7px 16px;">
-        <span data-choose-help="${i}" style="width:100%; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faded);">Choose ${m.choose} (${chosen.length} selected)</span>
-        ${m.options.map((o, oi) => `<label style="font-size:12.5px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
-          <input type="checkbox" data-opt-idx="${i}" data-opt="${oi}" ${chosen.includes(o.name) ? 'checked' : ''}>
+      const optLabel = (o, oi) => `<label style="font-size:12.5px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="checkbox" data-opt-idx="${i}" data-opt="${oi}"${o.addon ? ' data-addon="1"' : ''} ${chosen.includes(o.name) ? 'checked' : ''}>
           <span>${escapeHtml(o.name)}${o.extra ? ` <span style="color:var(--rust);">+${money(o.extra)}pp</span>` : ''}</span>
-        </label>`).join('')}
+        </label>`;
+      const mains  = m.options.map((o, oi) => ({ o, oi })).filter(x => !x.o.addon);
+      const addons = m.options.map((o, oi) => ({ o, oi })).filter(x => x.o.addon);
+      const mainCount = mains.filter(x => chosen.includes(x.o.name)).length;
+      chooser = `<div class="ci-choose" style="margin-top:9px; padding-top:9px; border-top:1px dashed var(--paper-edge); display:flex; flex-wrap:wrap; gap:7px 16px;">
+        <span data-choose-help="${i}" style="width:100%; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faded);">Choose ${m.choose} (${mainCount} selected)</span>
+        ${mains.map(x => optLabel(x.o, x.oi)).join('')}
+        ${addons.length ? `<span style="width:100%; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faded); margin-top:4px;">Optional add-on</span>${addons.map(x => optLabel(x.o, x.oi)).join('')}` : ''}
       </div>`;
     }
     return `<div class="cat-item">
@@ -1315,9 +1320,9 @@ function renderCateringOrder(b, activeOrder) {
   // Cap selections at the item's "choose" number
   const enforceChoose = (i) => {
     const m = CATERING_MENU[i];
-    const boxes = [...wrap.querySelectorAll(`input[data-opt-idx="${i}"]`)];
-    const n = boxes.filter(b => b.checked).length;
-    boxes.forEach(b => { if (!b.checked) b.disabled = n >= m.choose; });
+    const mains = [...wrap.querySelectorAll(`input[data-opt-idx="${i}"]:not([data-addon])`)];
+    const n = mains.filter(b => b.checked).length;
+    mains.forEach(b => { if (!b.checked) b.disabled = n >= m.choose; }); // add-ons never capped
     const help = wrap.querySelector(`[data-choose-help="${i}"]`);
     if (help) help.textContent = `Choose ${m.choose} (${n} selected)`;
   };
@@ -1378,8 +1383,10 @@ async function submitCateringOrder(b, activeOrder) {
     if (m.min && qty < m.min) belowMin.push(`${m.name} (min ${m.min})`);
     let unit = m.price, options;
     if (m.choose) {
-      const picked = [...wrap.querySelectorAll(`input[data-opt-idx="${i}"]:checked`)].map(cb => m.options[Number(cb.dataset.opt)]);
-      if (picked.length !== m.choose) needChoose.push(`${m.name} (pick ${m.choose})`);
+      const pickedBoxes = [...wrap.querySelectorAll(`input[data-opt-idx="${i}"]:checked`)];
+      const mainsPicked = pickedBoxes.filter(cb => !cb.dataset.addon).length;
+      if (mainsPicked !== m.choose) needChoose.push(`${m.name} (pick ${m.choose})`);
+      const picked = pickedBoxes.map(cb => m.options[Number(cb.dataset.opt)]);
       unit += picked.reduce((s, o) => s + Number(o.extra || 0), 0);
       options = picked.map(o => o.name);
     }
