@@ -1910,7 +1910,7 @@ async function onSession(session) {
   if (status?.isTeamMember && !status?.approved) {
     // Staff signed in here without a client booking — point them at ops.
     show('pending');
-    $('pending-title').textContent = 'You&rsquo;re on the team';
+    $('pending-title').textContent = 'You’re on the team';
     $('pending-lead').textContent  = 'This portal is for clients. Head to the operations system instead.';
     $('pending-pending-msg').innerHTML = '<strong>Operations</strong>Open <a href="/ops">the ops tool</a> to manage bookings.';
     $('pending-no-request').hidden = true;
@@ -1924,7 +1924,7 @@ async function onSession(session) {
       console.warn('get_my_booking error', bErr);
       show('pending');
       $('pending-title').textContent = 'Almost there';
-      $('pending-lead').textContent  = 'We couldn&rsquo;t load your booking. Try again or email info@flinthall.uk.';
+      $('pending-lead').textContent  = 'We couldn’t load your booking. Try again or email info@flinthall.uk.';
       return;
     }
 
@@ -1943,13 +1943,13 @@ async function onSession(session) {
   show('pending');
   if (status?.pendingRequest) {
     $('pending-title').textContent = 'Hold tight';
-    $('pending-lead').textContent  = 'Your account isn&rsquo;t active yet.';
+    $('pending-lead').textContent  = 'Your account isn’t active yet.';
     $('pending-pending-msg').hidden = false;
     $('pending-no-request').hidden = true;
     $('pending-request-btn').hidden = true;
   } else {
     $('pending-title').textContent = 'Not on the list yet';
-    $('pending-lead').textContent  = 'We don&rsquo;t see a portal account for this email.';
+    $('pending-lead').textContent  = 'We don’t see a portal account for this email.';
     $('pending-pending-msg').hidden = true;
     $('pending-no-request').hidden = false;
     $('pending-request-btn').hidden = false;
