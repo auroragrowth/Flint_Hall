@@ -1108,13 +1108,21 @@ function renderDashboard(b) {
 // ─────────────────── CATERING ORDERING + INVOICES ───────────────────
 const CATERING_MENU = [
   { name: 'The Hog Roast',   price: 20.00, min: 50, desc: 'Slow-roasted, with soft bread rolls, homemade apple sauce, smoky bacon jam and sage & onion stuffing.' },
-  { name: 'Meat BBQ Feast',  price: 20.00, min: 40, desc: 'Butcher’s sausages, 4oz beef burgers, peri-peri chicken thighs, smoked baby back ribs and chicken & chorizo skewers, with salads, breads and sauces.' },
-  { name: 'Vegan BBQ Feast', price: 18.00, min: 0,  desc: 'Oyster mushroom, onion & beetroot burgers, Quorn vegan strips and spiced vegetable couscous, with salads, breads and vegan sauces.' },
-  { name: 'Classic Pizza',   price: 18.50, min: 40, desc: 'Stone-baked — Margherita, Pepperoni, BBQ Chicken and Vegetarian — with mixed leaf salad, coleslaw and pesto pasta salad.' },
-  { name: 'Gourmet Pizza',   price: 20.00, min: 40, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket — with Caesar salad, tomato & feta, slaw and potato wedges.' },
+  { name: 'Meat BBQ Feast',  price: 20.00, min: 40, choose: 3, special: true,
+    options: [
+      { name: 'Butcher’s sausages' },
+      { name: '4oz beef burgers' },
+      { name: 'Peri-peri chicken thighs' },
+      { name: 'Chicken & chorizo skewers' },
+      { name: 'Slow-smoked on-site baby back ribs', extra: 2 }
+    ],
+    desc: 'Pick any three of the meats below — served with salads, rolls and sauces.' },
+  { name: 'Vegan BBQ Feast', price: 18.00, min: 0,  special: true, desc: 'Vegetarian Burger, Quorn vegan strips and spiced vegetable couscous, with salads, rolls and vegan sauces.' },
+  { name: 'Classic Pizza',   price: 18.50, min: 40, special: true, desc: 'Stone-baked — Margherita, Pepperoni, Vegetarian and a Flint Hall special (sometimes BBQ chicken, sometimes hot honey — whatever’s on at the moment).' },
+  { name: 'Gourmet Pizza',   price: 20.00, min: 40, special: true, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket.' },
   { name: 'Jacket Potato Bar', price: 9.00, min: 0, desc: 'Fluffy baked potatoes with a spread of toppings — cheese, beans, chilli con carne, tuna mayo, pulled pork, curry and more.' },
   { name: 'The Ice Cream Bike', price: 3.80, min: 50, desc: 'Scoops for the children and the young at heart — and it doubles as a drinks cart for the evening.' },
-  { name: 'The Tuk Tuk Bar', price: 100.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall', desc: 'Our little three-wheeled bar, parked up wherever the party needs it. £100 hire — beer is bought from Flint Hall.' }
+  { name: 'The Tuk Tuk Bar', price: 50.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall', desc: 'Our little three-wheeled bar, parked up wherever the party needs it. £50 hire — beer is bought from Flint Hall.' }
 ];
 
 let paymentInfoCache = null;
@@ -1251,8 +1259,8 @@ function renderUpdates(b) {
 
 function renderCateringOrder(b, activeOrder) {
   const wrap = $('dash-catering-order');
-  const existing = {};
-  (activeOrder?.items || []).forEach(it => { existing[it.name] = it.qty; });
+  const existing = {}, existingOpts = {}, existingSpecial = {};
+  (activeOrder?.items || []).forEach(it => { existing[it.name] = it.qty; existingOpts[it.name] = it.options || []; existingSpecial[it.name] = it.special_note || ''; });
   const rows = CATERING_MENU.map((m, i) => {
     const isFlat = !!m.flat;
     const meta = [];
@@ -1261,10 +1269,24 @@ function renderCateringOrder(b, activeOrder) {
     const control = isFlat
       ? `<label class="ci-qty" style="cursor:pointer;"><input type="checkbox" data-idx="${i}" data-flat="1" ${existing[m.name] ? 'checked' : ''}> <span style="font-size:12px;color:var(--ink-faded);">add</span></label>`
       : `<div class="ci-qty"><input type="number" min="0" step="1" inputmode="numeric" data-idx="${i}" value="${existing[m.name] || ''}" placeholder="0" aria-label="Covers for ${escapeHtml(m.name)}"><span style="font-size:12px;color:var(--ink-faded);">covers</span></div>`;
+    // "Pick N" chooser (e.g. Meat BBQ Feast — pick 3 meats; ribs +£2pp)
+    let chooser = '';
+    if (m.choose && Array.isArray(m.options)) {
+      const chosen = existingOpts[m.name] || [];
+      chooser = `<div class="ci-choose" style="margin-top:9px; padding-top:9px; border-top:1px dashed var(--paper-edge); display:flex; flex-wrap:wrap; gap:7px 16px;">
+        <span data-choose-help="${i}" style="width:100%; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faded);">Choose ${m.choose} (${chosen.length} selected)</span>
+        ${m.options.map((o, oi) => `<label style="font-size:12.5px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="checkbox" data-opt-idx="${i}" data-opt="${oi}" ${chosen.includes(o.name) ? 'checked' : ''}>
+          <span>${escapeHtml(o.name)}${o.extra ? ` <span style="color:var(--rust);">+${money(o.extra)}pp</span>` : ''}</span>
+        </label>`).join('')}
+      </div>`;
+    }
     return `<div class="cat-item">
       <div class="ci-body">
         <div class="ci-name">${escapeHtml(m.name)} &middot; <span class="ci-price">${money(m.price)}${isFlat ? ' hire' : ' pp'}</span>${meta.length ? ` <span style="color:var(--ink-faded); font-size:11.5px; letter-spacing:0.02em;">&middot; ${escapeHtml(meta.join(' · '))}</span>` : ''}</div>
         <div class="ci-desc">${escapeHtml(m.desc)}</div>
+        ${chooser}
+        ${m.special ? `<textarea data-special-idx="${i}" placeholder="Any special requirements? Allergies, swaps or extras — we'll price these out for you separately." style="width:100%; margin-top:9px; min-height:38px; font-family:var(--body); font-size:12.5px; padding:7px 9px; border:1px solid var(--paper-edge); border-radius:4px; resize:vertical; background:var(--paper);">${escapeHtml(existingSpecial[m.name] || '')}</textarea>` : ''}
       </div>
       ${control}
       <div class="ci-line" data-line="${i}">${money(0)}</div>
@@ -1280,21 +1302,41 @@ function renderCateringOrder(b, activeOrder) {
     </div>
     <div class="notice error" id="cat-err" hidden style="margin-top:12px;"></div>`;
 
+  // Per-head surcharge from any selected premium options (e.g. ribs +£2)
+  const optionsExtra = (i) => {
+    let x = 0;
+    wrap.querySelectorAll(`input[data-opt-idx="${i}"]:checked`).forEach(cb => {
+      x += Number(CATERING_MENU[i].options[Number(cb.dataset.opt)].extra || 0);
+    });
+    return x;
+  };
+  // Cap selections at the item's "choose" number
+  const enforceChoose = (i) => {
+    const m = CATERING_MENU[i];
+    const boxes = [...wrap.querySelectorAll(`input[data-opt-idx="${i}"]`)];
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach(b => { if (!b.checked) b.disabled = n >= m.choose; });
+    const help = wrap.querySelector(`[data-choose-help="${i}"]`);
+    if (help) help.textContent = `Choose ${m.choose} (${n} selected)`;
+  };
   const recompute = () => {
     let total = 0;
-    wrap.querySelectorAll('input[data-idx]').forEach(inp => {
-      const i = Number(inp.dataset.idx);
-      const m = CATERING_MENU[i];
-      const line = inp.dataset.flat
-        ? (inp.checked ? m.price : 0)
-        : Math.max(0, parseInt(inp.value || '0', 10) || 0) * m.price;
+    CATERING_MENU.forEach((m, i) => {
+      const inp = wrap.querySelector(`input[data-idx="${i}"]`);
+      if (!inp) return;
+      let line;
+      if (inp.dataset.flat) line = inp.checked ? m.price : 0;
+      else line = Math.max(0, parseInt(inp.value || '0', 10) || 0) * (m.price + (m.choose ? optionsExtra(i) : 0));
       total += line;
-      wrap.querySelector(`[data-line="${i}"]`).textContent = money(line);
+      const el = wrap.querySelector(`[data-line="${i}"]`);
+      if (el) el.textContent = money(line);
     });
     $('cat-total').textContent = money(total);
     return total;
   };
   wrap.querySelectorAll('input[data-idx]').forEach(inp => { inp.addEventListener('input', recompute); inp.addEventListener('change', recompute); });
+  wrap.querySelectorAll('input[data-opt-idx]').forEach(cb => cb.addEventListener('change', () => { enforceChoose(Number(cb.dataset.optIdx)); recompute(); }));
+  CATERING_MENU.forEach((m, i) => { if (m.choose) enforceChoose(i); });
   recompute();
   $('cat-submit').addEventListener('click', () => submitCateringOrder(b, activeOrder));
 }
@@ -1304,24 +1346,40 @@ async function submitCateringOrder(b, activeOrder) {
   const err = $('cat-err');
   clearError(err);
   const items = [];
-  const belowMin = [];
+  const belowMin = [], needChoose = [];
   let subtotal = 0;
-  wrap.querySelectorAll('input[data-idx]').forEach(inp => {
-    const i = Number(inp.dataset.idx);
-    const m = CATERING_MENU[i];
+  CATERING_MENU.forEach((m, i) => {
+    const inp = wrap.querySelector(`input[data-idx="${i}"]`);
+    if (!inp) return;
+    const specialEl = wrap.querySelector(`textarea[data-special-idx="${i}"]`);
+    const specialNote = specialEl ? specialEl.value.trim() : '';
     if (inp.dataset.flat) {
-      if (inp.checked) { subtotal += m.price; items.push({ name: m.name, unit_price: m.price, qty: 1, line_total: m.price }); }
+      if (inp.checked) {
+        const it = { name: m.name, unit_price: m.price, qty: 1, line_total: m.price };
+        if (specialNote) it.special_note = specialNote;
+        subtotal += m.price; items.push(it);
+      }
       return;
     }
     const qty = Math.max(0, parseInt(inp.value || '0', 10) || 0);
-    if (qty > 0) {
-      if (m.min && qty < m.min) belowMin.push(`${m.name} (min ${m.min})`);
-      const line = qty * m.price;
-      subtotal += line;
-      items.push({ name: m.name, unit_price: m.price, qty, line_total: line });
+    if (qty <= 0) return;
+    if (m.min && qty < m.min) belowMin.push(`${m.name} (min ${m.min})`);
+    let unit = m.price, options;
+    if (m.choose) {
+      const picked = [...wrap.querySelectorAll(`input[data-opt-idx="${i}"]:checked`)].map(cb => m.options[Number(cb.dataset.opt)]);
+      if (picked.length !== m.choose) needChoose.push(`${m.name} (pick ${m.choose})`);
+      unit += picked.reduce((s, o) => s + Number(o.extra || 0), 0);
+      options = picked.map(o => o.name);
     }
+    const line = qty * unit;
+    subtotal += line;
+    const it = { name: m.name, unit_price: unit, qty, line_total: line };
+    if (options) it.options = options;
+    if (specialNote) it.special_note = specialNote;
+    items.push(it);
   });
   if (!items.length) { showError(err, 'Add covers to at least one item before submitting.'); return; }
+  if (needChoose.length) { showError(err, 'Please choose your options for: ' + needChoose.join(', ') + '.'); return; }
   if (belowMin.length) { showError(err, 'These items need more covers to meet their minimum: ' + belowMin.join(', ') + '. Adjust the numbers or drop them from your order.'); return; }
 
   const btn = $('cat-submit');
@@ -1407,7 +1465,7 @@ function renderInvoices(b, activeOrder, bacs, formal) {
   if (activeOrder && Number(activeOrder.subtotal || 0) > 0) {
     const cAllPaid = f.cateringDepositPaidDate && f.cateringBalancePaidDate;
     const lines = (activeOrder.items || []).map(it =>
-      `<div class="inv-row"><span>${escapeHtml(it.name)} &times; ${escapeHtml(it.qty)} @ ${money(it.unit_price)}</span><span>${money(it.line_total)}</span></div>`
+      `<div class="inv-row"><span>${escapeHtml(it.name)} &times; ${escapeHtml(it.qty)} @ ${money(it.unit_price)}${it.options && it.options.length ? `<br><span style="color:var(--ink-faded); font-size:11.5px;">${escapeHtml(it.options.join(', '))}</span>` : ''}${it.special_note ? `<br><span style="color:var(--ink-faded); font-size:11.5px; font-style:italic;">Special: ${escapeHtml(it.special_note)} (priced separately)</span>` : ''}</span><span>${money(it.line_total)}</span></div>`
     ).join('');
     cateringHtml = `<div class="invoice">
       <h4>Catering <span class="inv-badge ${cAllPaid ? 'paid' : 'due'}">${cAllPaid ? 'Paid' : 'Payment due'}</span></h4>

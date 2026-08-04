@@ -79,7 +79,7 @@ Deno.serve(async (req: Request) => {
     ? new Date(booking.event_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
     : "(not set)";
 
-  const items: Array<{ name: string; unit_price: number; qty: number; line_total: number }> =
+  const items: Array<{ name: string; unit_price: number; qty: number; line_total: number; options?: string[]; special_note?: string }> =
     Array.isArray(order.items) ? order.items : [];
 
   // BACS details for the client's confirmation.
@@ -92,14 +92,19 @@ Deno.serve(async (req: Request) => {
   }
 
   const rowsHtml = items.map(it =>
-    `<tr><td style="padding:4px 14px 4px 0;">${esc(it.name)}</td><td style="padding:4px 14px 4px 0; text-align:right;">${esc(it.qty)}</td><td style="padding:4px 14px 4px 0; text-align:right;">${money(it.unit_price)}</td><td style="padding:4px 0; text-align:right;">${money(it.line_total)}</td></tr>`
+    `<tr><td style="padding:4px 14px 4px 0;">${esc(it.name)}${it.options && it.options.length ? `<div style="color:#806555; font-size:11px;">${esc(it.options.join(", "))}</div>` : ""}${it.special_note ? `<div style="color:#806555; font-size:11px; font-style:italic;">Special: ${esc(it.special_note)} (price separately)</div>` : ""}</td><td style="padding:4px 14px 4px 0; text-align:right;">${esc(it.qty)}</td><td style="padding:4px 14px 4px 0; text-align:right;">${money(it.unit_price)}</td><td style="padding:4px 0; text-align:right;">${money(it.line_total)}</td></tr>`
   ).join("");
   const itemsTable = `<table style="width:100%; border-collapse:collapse; font-size:14px; margin-top:8px;">
       <tr style="border-bottom:1px solid #e0d4bf; color:#806555; text-align:left;"><th style="padding:4px 14px 6px 0;">Item</th><th style="padding:4px 14px 6px 0; text-align:right;">Covers</th><th style="padding:4px 14px 6px 0; text-align:right;">Per head</th><th style="padding:4px 0 6px; text-align:right;">Line</th></tr>
       ${rowsHtml}
       <tr style="border-top:2px solid #4a2f23; font-weight:bold;"><td colspan="3" style="padding:8px 14px 0 0; text-align:right;">Total</td><td style="padding:8px 0 0; text-align:right;">${money(order.subtotal)}</td></tr>
     </table>`;
-  const itemsText = items.map(it => `  ${it.qty} x ${it.name} @ ${money(it.unit_price)} = ${money(it.line_total)}`).join("\n");
+  const itemsText = items.map(it => {
+    let s = `  ${it.qty} x ${it.name} @ ${money(it.unit_price)} = ${money(it.line_total)}`;
+    if (it.options && it.options.length) s += `\n      ${it.options.join(", ")}`;
+    if (it.special_note) s += `\n      Special: ${it.special_note} (price separately)`;
+    return s;
+  }).join("\n");
 
   // 1) Team notification
   const staffHtml = `<div style="font-family: Georgia, serif; max-width:560px; margin:0 auto; color:#3a2818;">
