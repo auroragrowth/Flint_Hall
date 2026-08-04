@@ -726,6 +726,7 @@ textarea { resize: vertical; min-height: 100px; }
           Order your catering
         </h2>
         <p class="lead" style="font-size:13.5px; text-align:left; margin:0 0 6px;">Choose your feasting for the day &mdash; prices are <strong>per head</strong>. Enter the number of covers for anything you&rsquo;d like; we&rsquo;ll email our catering team and add it to your invoice below. You can update this any time before the event.</p>
+        <p class="lead" style="font-size:12px; text-align:left; margin:0 0 6px; color:var(--ink-faded); font-style:italic;">Menu items may vary slightly with seasonal and supplier availability. By placing your order you&rsquo;re happy for us to make the occasional like-for-like substitution of equivalent quality.</p>
         <div id="dash-catering-order">Loading&hellip;</div>
       </article>
 
@@ -1287,6 +1288,7 @@ function renderCateringOrder(b, activeOrder) {
         <div class="ci-desc">${escapeHtml(m.desc)}</div>
         ${chooser}
         ${m.special ? `<textarea data-special-idx="${i}" placeholder="Any special requirements? Allergies, swaps or extras — we'll price these out for you separately." style="width:100%; margin-top:9px; min-height:38px; font-family:var(--body); font-size:12.5px; padding:7px 9px; border:1px solid var(--paper-edge); border-radius:4px; resize:vertical; background:var(--paper);">${escapeHtml(existingSpecial[m.name] || '')}</textarea>` : ''}
+        <div data-minerr="${i}" hidden style="color:var(--rust); font-size:11.5px; font-weight:600; margin-top:6px;"></div>
       </div>
       ${control}
       <div class="ci-line" data-line="${i}">${money(0)}</div>
@@ -1325,8 +1327,18 @@ function renderCateringOrder(b, activeOrder) {
       const inp = wrap.querySelector(`input[data-idx="${i}"]`);
       if (!inp) return;
       let line;
-      if (inp.dataset.flat) line = inp.checked ? m.price : 0;
-      else line = Math.max(0, parseInt(inp.value || '0', 10) || 0) * (m.price + (m.choose ? optionsExtra(i) : 0));
+      if (inp.dataset.flat) {
+        line = inp.checked ? m.price : 0;
+      } else {
+        const qty = Math.max(0, parseInt(inp.value || '0', 10) || 0);
+        line = qty * (m.price + (m.choose ? optionsExtra(i) : 0));
+        // Live minimum check — red box + message while typing below the minimum
+        const below = m.min && qty > 0 && qty < m.min;
+        inp.style.borderColor = below ? '#b0492f' : '';
+        inp.style.background  = below ? '#fbeae5' : '';
+        const errEl = wrap.querySelector(`[data-minerr="${i}"]`);
+        if (errEl) { errEl.hidden = !below; errEl.textContent = below ? `The minimum for this dish is ${m.min} covers.` : ''; }
+      }
       total += line;
       const el = wrap.querySelector(`[data-line="${i}"]`);
       if (el) el.textContent = money(line);
