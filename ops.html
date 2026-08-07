@@ -3969,6 +3969,7 @@ const App = {
             ${this.state.templates.map(t => `<option value="${this.esc(t.id)}">${this.esc(t.name)}</option>`).join('')}
           </select>
           <button class="btn btn-secondary btn-sm" onclick="App.openComposeModal('${b.id}', null, true)">Blank email</button>
+          <button class="btn btn-secondary btn-sm" onclick="App.sendPortalLogin('${b.id}')" title="Reset the client's portal password and email it to them">🔑 Send new password</button>
           <a class="dqm-manage" href="#templates" title="Edit templates">Manage templates</a>
         </div>
       </div>

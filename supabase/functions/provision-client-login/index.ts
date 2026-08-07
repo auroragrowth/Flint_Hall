@@ -100,10 +100,16 @@ Deno.serve(async (req: Request) => {
   const password = genPassword();
   const existing = await findUserByEmail(email);
   if (existing) {
-    const { error } = await sbAdmin.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
+    const { error } = await sbAdmin.auth.admin.updateUserById(existing.id, {
+      password, email_confirm: true,
+      user_metadata: { ...(existing.user_metadata ?? {}), must_reset: true },
+    });
     if (error) return json(500, { error: "auth_update_failed", detail: error.message });
   } else {
-    const { error } = await sbAdmin.auth.admin.createUser({ email, password, email_confirm: true });
+    const { error } = await sbAdmin.auth.admin.createUser({
+      email, password, email_confirm: true,
+      user_metadata: { must_reset: true },
+    });
     if (error) return json(500, { error: "auth_create_failed", detail: error.message });
   }
 

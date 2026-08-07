@@ -557,6 +557,27 @@ textarea { resize: vertical; min-height: 100px; }
       </div>
     </article>
 
+    <!-- ===== FORCED PASSWORD RESET (temporary password) ===== -->
+    <article class="card" id="state-reset" hidden>
+      <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
+      <span class="eyebrow">One quick step</span>
+      <h1>Set your password</h1>
+      <div class="divider"></div>
+      <p class="lead">You signed in with a temporary password. Please choose your own password to carry on.</p>
+      <form id="form-reset" style="margin-top:24px;">
+        <div class="form-row">
+          <label for="reset-pw">New password</label>
+          <input type="password" id="reset-pw" autocomplete="new-password" placeholder="At least 8 characters">
+        </div>
+        <div class="form-row">
+          <label for="reset-pw2">Confirm password</label>
+          <input type="password" id="reset-pw2" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-leather btn-block" id="reset-submit">Set password &amp; continue</button>
+      </form>
+      <div class="notice error" id="reset-err" hidden></div>
+    </article>
+
     <!-- ===== REQUEST ACCESS ===== -->
     <article class="card" id="state-request" hidden>
       <img class="mark" src="photos/logo-dark.webp" alt="" aria-hidden="true">
@@ -844,7 +865,7 @@ const SUPABASE_KEY = 'sb_publishable_C5jAgpcN560Eg1zRqFU62g_Es8zRT_t';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $  = id => document.getElementById(id);
-const STATES = ['loading','landing','signin','signin-sent','request','request-sent','pending','terms','approved'];
+const STATES = ['loading','landing','signin','signin-sent','request','request-sent','pending','terms','approved','reset'];
 function show(state) {
   STATES.forEach(s => {
     const el = $('state-' + s);
@@ -1973,6 +1994,12 @@ async function onSession(session) {
   $('topbar-user').hidden = false;
   $('topbar-signout').hidden = false;
 
+  // Signed in with a temporary password (staff reset it) → force a new one first.
+  if (session.user?.user_metadata?.must_reset) {
+    show('reset');
+    return;
+  }
+
   // Check whether this user is approved.
   const { data: status, error: statusErr } = await supabase.rpc('my_portal_status');
   if (statusErr) {
@@ -2082,6 +2109,21 @@ $('form-terms-sign').addEventListener('submit', async (e) => {
   }
 
   // Re-fetch session-derived state so the dashboard renders.
+  const { data: { session } } = await supabase.auth.getSession();
+  await onSession(session);
+});
+
+// ─── Forced password reset (after a staff-sent temporary password) ───
+$('form-reset').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = $('reset-err'); clearError(err);
+  const pw = $('reset-pw').value, pw2 = $('reset-pw2').value;
+  if (!pw || pw.length < 8) { showError(err, 'Please use at least 8 characters.'); return; }
+  if (pw !== pw2) { showError(err, 'The two passwords don’t match.'); return; }
+  const btn = $('reset-submit'); btn.disabled = true; btn.textContent = 'Saving…';
+  const { error } = await supabase.auth.updateUser({ password: pw, data: { must_reset: false } });
+  btn.disabled = false; btn.textContent = 'Set password & continue';
+  if (error) { showError(err, 'Could not set password: ' + error.message); return; }
   const { data: { session } } = await supabase.auth.getSession();
   await onSession(session);
 });
