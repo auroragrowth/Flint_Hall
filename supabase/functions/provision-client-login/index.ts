@@ -141,7 +141,13 @@ Deno.serve(async (req: Request) => {
   };
   const subject = fill(tpl?.subject ?? "Your Flint Hall planning login", map);
   const text    = fill(tpl?.body ?? `Sign in at flinthall.uk\nYour email: {client_email}\nPassword: {login_password}`, map);
-  const html = `<div style="font-family: Georgia, serif; max-width:560px; margin:0 auto; color:#3a2818; white-space:pre-line; font-size:15px; line-height:1.6;">${esc(text)}</div>`;
+  const html = `<div style="font-family:Georgia,serif; max-width:560px; margin:0 auto; color:#3a2818; font-size:15px; line-height:1.6;">
+    <div style="text-align:center; padding-bottom:14px; border-bottom:1px solid #d4ba8c; margin-bottom:18px;">
+      <img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="150" style="max-width:150px; height:auto; border:0;">
+    </div>
+    <div style="white-space:pre-line;">${esc(text)}</div>
+    <div style="margin-top:24px; padding-top:14px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555;">Flint Hall Events &middot; Suffolk &middot; info@flinthall.uk</div>
+  </div>`;
 
   let sent = false;
   if (RESEND_API_KEY) {
