@@ -141,13 +141,31 @@ Deno.serve(async (req: Request) => {
   };
   const subject = fill(tpl?.subject ?? "Your Flint Hall planning login", map);
   const text    = fill(tpl?.body ?? `Sign in at flinthall.uk\nYour email: {client_email}\nPassword: {login_password}`, map);
-  const html = `<div style="font-family:Georgia,serif; max-width:560px; margin:0 auto; color:#3a2818; font-size:15px; line-height:1.6;">
-    <div style="text-align:center; padding-bottom:14px; border-bottom:1px solid #d4ba8c; margin-bottom:18px;">
-      <img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="150" style="max-width:150px; height:auto; border:0;">
-    </div>
-    <div style="white-space:pre-line;">${esc(text)}</div>
-    <div style="margin-top:24px; padding-top:14px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555;">Flint Hall Events &middot; Suffolk &middot; info@flinthall.uk</div>
-  </div>`;
+  const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#4a2f23; margin:0; padding:0;">
+    <tr><td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px; max-width:560px; background-color:#faf3e2; border:1px solid #b8924a;">
+        <tr><td style="padding:4px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #d9c48f;">
+            <tr><td style="padding:40px 46px; font-family:Georgia,'Times New Roman',serif;">
+              <div style="text-align:center; margin-bottom:20px;"><img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="165" style="display:block; margin:0 auto; max-width:165px; height:auto; border:0;"></div>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 22px auto;"><tr>
+                <td style="width:64px; border-bottom:1px solid #b8924a; font-size:0; line-height:0;">&nbsp;</td>
+                <td style="padding:0 11px; color:#b8924a; font-size:15px; line-height:15px;">&#10022;</td>
+                <td style="width:64px; border-bottom:1px solid #b8924a; font-size:0; line-height:0;">&nbsp;</td>
+              </tr></table>
+              <div style="font-family:Georgia,serif; font-size:15px; line-height:1.65; color:#4a2f23; white-space:pre-line;">${esc(text)}</div>
+            </td></tr>
+          </table>
+        </td></tr>
+      </table>
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px; max-width:560px;">
+        <tr><td align="center" style="padding:22px 24px 8px; font-family:Georgia,serif;">
+          <div style="font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#d9c48f; margin-bottom:4px;">Flint Hall Events</div>
+          <div style="font-size:12px; line-height:1.6; color:#c9b48f;">Creeting St Peter &middot; Suffolk &middot; hello@flinthall.uk</div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>`;
 
   let sent = false;
   if (RESEND_API_KEY) {
