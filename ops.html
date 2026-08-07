@@ -1491,7 +1491,9 @@ a:hover { text-decoration: underline; }
       <input type="password" id="auth-password" placeholder="Your password" autocomplete="current-password">
       <button type="submit" class="auth-btn" id="auth-signin-btn">Sign in</button>
       <button type="button" class="auth-btn ghost" id="auth-magic-btn">Email me a magic link instead</button>
+      <button type="button" class="auth-btn ghost" id="auth-temp-btn">Email me a temporary password</button>
       <div id="auth-signin-error" class="auth-msg error" hidden></div>
+      <div id="auth-temp-note" class="auth-msg" hidden style="color:#3a6a3a;"></div>
     </form>
 
     <!-- Link sent -->
@@ -1771,6 +1773,21 @@ $('auth-magic-btn').addEventListener('click', async () => {
 
   $('auth-sent-to').textContent = email;
   showAuthState('auth-state-link-sent');
+});
+
+// Email me a temporary password (staff self-service).
+$('auth-temp-btn').addEventListener('click', async () => {
+  const email = $('auth-email').value.trim().toLowerCase();
+  const btn = $('auth-temp-btn');
+  const err = $('auth-signin-error');
+  const note = $('auth-temp-note');
+  err.hidden = true; note.hidden = true;
+  if (!email) { err.textContent = 'Enter your email address first.'; err.hidden = false; return; }
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try { await supabase.functions.invoke('send-temp-password', { body: { email } }); } catch (e) { /* stay generic */ }
+  btn.disabled = false; btn.textContent = 'Email me a temporary password';
+  note.textContent = 'If that email is on our team, a temporary password is on its way. Sign in with it and you’ll be asked to set your own.';
+  note.hidden = false;
 });
 
 // Sign out from unauthorized state
@@ -2378,6 +2395,8 @@ const App = {
     // Reveal catering-only nav items
     document.querySelectorAll('[data-catering-only]').forEach(el => { el.hidden = !this.state.isCatering; });
     this.recordSession();
+    // Signed in with a temporary password → force them to set their own.
+    if (window.fhCurrentUser?.user_metadata?.must_reset) this.forcePasswordReset();
 
     const now = new Date();
     this.state.calendarMonth = { year: now.getFullYear(), month: now.getMonth() };
@@ -7101,6 +7120,34 @@ const App = {
 
   closeModal() {
     document.getElementById('modal').classList.remove('open');
+  },
+
+  // Forced password change after signing in with a temporary password.
+  forcePasswordReset() {
+    document.getElementById('modal-title').textContent = 'Set your password';
+    document.getElementById('modal-body').innerHTML = `
+      <p class="muted" style="margin-top:0;">You signed in with a temporary password. Please choose your own password to carry on.</p>
+      <div class="field"><label>New password</label><input type="password" id="pw-new" autocomplete="new-password" placeholder="At least 8 characters"></div>
+      <div class="field mt-2"><label>Confirm password</label><input type="password" id="pw-confirm" autocomplete="new-password"></div>
+      <div class="auth-msg error" id="pw-err" hidden style="margin-top:10px;"></div>`;
+    document.getElementById('modal-foot').innerHTML = `<button class="btn btn-gold" onclick="App.saveNewPassword()">Set password &amp; continue</button>`;
+    const closeBtn = document.querySelector('#modal .close-btn'); if (closeBtn) closeBtn.style.display = 'none'; // no escape until set
+    document.getElementById('modal').classList.add('open');
+  },
+
+  async saveNewPassword() {
+    const np = document.getElementById('pw-new').value;
+    const cp = document.getElementById('pw-confirm').value;
+    const err = document.getElementById('pw-err');
+    const show = m => { err.textContent = m; err.hidden = false; };
+    if (!np || np.length < 8) return show('Please use at least 8 characters.');
+    if (np !== cp) return show('The two passwords don’t match.');
+    const { error } = await window.fhSupabase.auth.updateUser({ password: np, data: { must_reset: false } });
+    if (error) return show('Could not set password: ' + error.message);
+    if (window.fhCurrentUser) window.fhCurrentUser.user_metadata = { ...(window.fhCurrentUser.user_metadata || {}), must_reset: false };
+    const closeBtn = document.querySelector('#modal .close-btn'); if (closeBtn) closeBtn.style.display = '';
+    this.closeModal();
+    this.toast('Password set — you’re all set.', 'success');
   },
 
   // ─────────── ACTION DISPATCH ───────────
