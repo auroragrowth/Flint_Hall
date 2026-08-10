@@ -327,6 +327,8 @@ a:hover { text-decoration: underline; }
 .jt-list { display:flex; flex-direction:column; gap:9px; padding:4px; }
 .jt-event { display:flex; align-items:center; gap:16px; background:#fff; border:1px solid var(--linen-dark); border-radius:12px; padding:11px 16px; cursor:pointer; transition:border-color .12s; }
 .jt-event:hover { border-color:var(--gold); }
+.jt-event.jt-next { background:var(--moss-light); border-color:var(--moss); }
+.jt-event.jt-next:hover { border-color:var(--moss); }
 .jt-date { flex:0 0 50px; text-align:center; }
 .jt-day { font-size:20px; font-weight:700; color:var(--brown-700); line-height:1; }
 .jt-mon { font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--brown-600); }
@@ -3246,6 +3248,9 @@ const App = {
       .filter(b => { const d = b.event.date ? this.daysBetween(today, b.event.date) : null; return d === null || d >= -90; })
       .sort((a, b) => (a.event.date || '9999').localeCompare(b.event.date || '9999'));
 
+    // The soonest event still to come — highlighted green in the list below.
+    const nextUpcomingId = (journeyEvents.find(b => b.event.date && b.event.date >= today) || {}).id;
+
     // collect all actions across bookings
     const actionRows = [];
     this.state.bookings.forEach(b => {
@@ -3302,7 +3307,7 @@ const App = {
         </div>
         ${journeyEvents.length === 0
           ? `<div class="empty-state"><div class="icon">✓</div><h3>Nothing outstanding</h3><p>No active events need attention right now.</p></div>`
-          : `<div class="jt-list">${journeyEvents.map(b => this.renderJourneyRow(b)).join('')}</div>`}
+          : `<div class="jt-list">${journeyEvents.map(b => this.renderJourneyRow(b, b.id === nextUpcomingId)).join('')}</div>`}
       </div>
     `;
   },
@@ -3341,13 +3346,13 @@ const App = {
     ];
   },
 
-  renderJourneyRow(b) {
+  renderJourneyRow(b, isNext) {
     const steps = this.computeJourney(b);
     const outstanding = steps.filter(s => s.state === 'due' || s.state === 'over').length;
     const word = { done:'done', due:'to do', over:'overdue', todo:'later', na:'n/a' };
     const couple = `${this.esc(b.client.firstName || '')} ${this.esc(b.client.lastName || '')}`.trim()
       + (b.partnerName ? ' & ' + this.esc(b.partnerName) : '');
-    return `<div class="jt-event" onclick="App.navigate('booking','${b.id}')">
+    return `<div class="jt-event${isNext ? ' jt-next' : ''}" onclick="App.navigate('booking','${b.id}')">
       <div class="jt-date"><div class="jt-day">${this.fmtDayNum(b.event.date)}</div><div class="jt-mon">${this.fmtMonthShort(b.event.date)}</div></div>
       <div class="jt-who"><div class="jt-name">${couple || '—'}</div><div class="jt-meta">${this.esc(b.event.type || '')}</div></div>
       <div class="jt-track">${steps.map(s =>
