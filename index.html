@@ -1111,7 +1111,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
 
     if (error) {
       btn.disabled = false; btn.textContent = BTN_LABEL;
-      let msg = 'Something went wrong at our end. Please try again, or email <a href="mailto:hello@flinthall.uk" style="color:#8a3a28;text-decoration:underline;">hello@flinthall.uk</a>.';
+      let msg = 'Something went wrong at our end. Please try again, or email <a href="mailto:info@flinthall.uk" style="color:#8a3a28;text-decoration:underline;">info@flinthall.uk</a>.';
       if (/invalid_email/.test(error.message)) msg = 'That email doesn&rsquo;t look quite right.';
       else if (/invalid_name/.test(error.message)) msg = 'Please pop your name in.';
       else if (/too_many/.test(error.message)) msg = 'We&rsquo;ve already sent this over &mdash; check your inbox (and your spam folder).';
@@ -1322,7 +1322,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
           </button>
         </div>
 
-        <p style="font-family:var(--body); font-size:12.5px; color:var(--ink-faded); font-style:italic;">No login? Just <a href="mailto:hello@flinthall.uk" style="color:var(--rust); border-bottom: 1px solid var(--rust); padding-bottom:1px;">drop us a line</a>.</p>
+        <p style="font-family:var(--body); font-size:12.5px; color:var(--ink-faded); font-style:italic;">No login? Just <a href="mailto:info@flinthall.uk" style="color:var(--rust); border-bottom: 1px solid var(--rust); padding-bottom:1px;">drop us a line</a>.</p>
       </div>
 
       <form class="modal-form" id="login-form-client" onsubmit="return handleClientLogin(event)">
@@ -1345,7 +1345,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
         <button type="submit" class="btn btn-leather">Sign In</button>
         <div class="modal-form-foot">
           <a href="#" onclick="backToRoleSelect(event)">← Back</a>
-          <a href="mailto:hello@flinthall.uk?subject=Lost%20login">Forgotten password?</a>
+          <a href="mailto:info@flinthall.uk?subject=Lost%20login">Forgotten password?</a>
         </div>
         <div class="modal-message info" id="cl-msg">
           <strong>Booking portal — coming soon</strong>
@@ -1373,7 +1373,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
         <button type="submit" class="btn btn-rust">Open Operations</button>
         <div class="modal-form-foot">
           <a href="#" onclick="backToRoleSelect(event)">← Back</a>
-          <a href="mailto:hello@flinthall.uk?subject=Staff%20access">Need access?</a>
+          <a href="mailto:info@flinthall.uk?subject=Staff%20access">Need access?</a>
         </div>
         <div class="modal-message success" id="st-msg">
           <strong>Welcome back</strong>
