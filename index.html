@@ -442,6 +442,20 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
 .modal-message.info { background: rgba(184,146,74,0.10); border-left: 3px solid var(--copper); color: var(--brown-dk); }
 .modal-message strong { display: block; font-family: var(--display); font-size: 13px; letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
 
+/* FAQ */
+.faq-head { text-align: center; max-width: 720px; margin: 0 auto 44px; }
+.faq-list { max-width: 840px; margin: 0 auto; border-top: 1px solid var(--paper-edge); }
+.faq-item { border-bottom: 1px solid var(--paper-edge); }
+.faq-item > summary { list-style: none; cursor: pointer; display: block; position: relative; padding: 22px 52px 22px 6px; font-family: var(--display); font-size: 17px; letter-spacing: 0.01em; color: var(--brown-dk); transition: color 0.2s ease; }
+.faq-item > summary::-webkit-details-marker { display: none; }
+.faq-item > summary::after { content: '+'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-family: var(--serif); font-size: 26px; line-height: 1; color: var(--rust); }
+.faq-item[open] > summary::after { content: '\2013'; }
+.faq-item > summary:hover { color: var(--rust); }
+.faq-a { padding: 0 52px 24px 6px; color: var(--ink-soft); font-family: var(--body); font-size: 16px; line-height: 1.72; }
+.faq-a a { color: var(--rust); }
+.faq-more { text-align: center; margin-top: 40px; font-family: var(--body); color: var(--ink-soft); }
+.faq-more a { color: var(--rust); }
+
 </style>
 </head>
 
@@ -470,6 +484,7 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
       <a href="#stays">Stays</a>
       <a href="#moments">The vibe</a>
       <a href="/gallery">Gallery</a>
+      <a href="#faq">FAQ</a>
       <a href="#checklist">Checklist</a>
       <a href="#inquire">Inquire</a>
       <button class="nav-signin" onclick="openLogin()">
@@ -1069,6 +1084,71 @@ form.inquire-form .form-note { font-size: 12px; font-style: italic; color: var(-
   #lm-done p{ font-family:var(--body); color:var(--ink-soft); margin:0 auto; max-width:34ch; }
   #lm-done .lm-mail{ color:var(--rust); font-weight:600; }
 </style>
+
+<!-- FAQ -->
+<section class="faq paper-bg" id="faq">
+  <div class="container">
+    <div class="faq-head">
+      <span class="eyebrow">Good to know</span>
+      <h2 class="h-section">Questions &amp; answers</h2>
+      <div class="divider">
+        <span class="line"></span>
+        <svg class="ornament" viewBox="0 0 22 22" aria-hidden="true"><use href="#sprig"/></svg>
+        <span class="line"></span>
+      </div>
+    </div>
+
+    <div class="faq-list">
+      <details class="faq-item" open>
+        <summary>Do we get the whole place to ourselves?</summary>
+        <div class="faq-a">Yes &mdash; every booking is whole-site exclusive. Nobody else is booked and nobody else is on site; the estate is yours for the full duration of your hire.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Can we get married at Flint Hall?</summary>
+        <div class="faq-a">Yes. The Barn is licensed for civil ceremonies and approved by Suffolk Registrars, so you can say your vows indoors or out under the sky. You book your registrar separately with Suffolk Registration Service, and we&rsquo;ll help you time everything on the day.</div>
+      </details>
+      <details class="faq-item">
+        <summary>How many guests can you take?</summary>
+        <div class="faq-a">The Barn and grounds comfortably hold a full wedding crowd, while Brian&rsquo;s Bar suits smaller groups of up to 40. Tell us your numbers when you enquire and we&rsquo;ll confirm the best set-up for your day.</div>
+      </details>
+      <details class="faq-item">
+        <summary>What&rsquo;s included in a package?</summary>
+        <div class="faq-a">Exclusive use of the whole estate &mdash; the Barn, the Ranch, the bar, Brian&rsquo;s Bar, the meadow, the padel court, on-site accommodation, all the furniture, fire pits, showers, toilets and parking. Packages run from one to three nights (&pound;6,995&ndash;&pound;10,995). Catering is priced separately.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Is there accommodation on site?</summary>
+        <div class="faq-a">Yes &mdash; the Tiny House (sleeps 4) plus bell tents in the meadow, sleeping up to 12 in total, all with bedding, towels and toiletries. There&rsquo;s also space for tents and campervans on the accommodation field, so no one has far to travel.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Who does the catering &mdash; can we bring our own?</summary>
+        <div class="faq-a">We&rsquo;re known for our wood-fired food &mdash; hog roast, BBQ feasts, stone-baked pizzas and loaded sides. You&rsquo;re welcome to bring your own caterer too, with a few small caveats we&rsquo;re happy to talk through. Menus and final numbers are confirmed 30 days before the day.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Is there a bar?</summary>
+        <div class="faq-a">Yes &mdash; a full bar with ice-cold beer on tap, cocktails and mocktails. There&rsquo;s also Brian&rsquo;s Bar, our relaxed open-air bar for smaller get-togethers, named after our resident tortoise.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Until what time can we have music?</summary>
+        <div class="faq-a">Bands and DJs are very welcome. We run a strict 90&nbsp;dB limit and a firm 10:45pm cut-off for amplified music &mdash; after that the night carries on around the fire pits, beneath the stars.</div>
+      </details>
+      <details class="faq-item">
+        <summary>How do we secure a date, and how does payment work?</summary>
+        <div class="faq-a">A signed agreement and a 50% deposit secure your date. The remaining 50% is due 30 days before the event, and catering is billed on the same terms. A refundable &pound;250 damage deposit also applies, returned after the day subject to the usual inspection.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Is there parking?</summary>
+        <div class="faq-a">Yes &mdash; there&rsquo;s a car park in the adjacent field, and tents and campervans are welcome on the accommodation field.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Can we come and see it first?</summary>
+        <div class="faq-a">Please do &mdash; the best way to get a feel for the place is to walk it. We hold viewings most Saturdays; send us a couple of dates that suit and we&rsquo;ll set a time aside for you.</div>
+      </details>
+    </div>
+
+    <p class="faq-more">Still wondering something? <a href="#inquire">Send us a note</a> or call <a href="tel:+447355364401">07355&nbsp;364401</a>.</p>
+  </div>
+</section>
+
 <section class="inquire paper-bg" id="checklist">
   <div class="container">
     <div class="inquire-grid">
