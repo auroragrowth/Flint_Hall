@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Flint Hall — Brochure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Lora:ital,wght@0,400;0,600;1,400&family=Allura&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#2a211b; --soft:#5c4d40; --cream:#faf3e2; --card:#fff; --gold:#b8924a; --gold-dk:#9a7736; --brown:#4a2f23; --rust:#a6612f; --line:#d9c48f; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:#d9d0bf; color:var(--ink); font-family:'Lora', Georgia, serif; font-size:13px; line-height:1.6; }
+  a { color:var(--rust); }
+  img { display:block; max-width:100%; }
+
+  .toolbar { position:sticky; top:0; z-index:20; background:var(--brown); color:var(--cream); padding:12px 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .toolbar .btn { background:var(--gold); color:#2a1c14; border:none; padding:9px 18px; border-radius:4px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; font-size:12px; cursor:pointer; }
+
+  .sheet { width:210mm; min-height:297mm; margin:14px auto; background:var(--cream); box-shadow:0 3px 22px rgba(0,0,0,0.22); position:relative; overflow:hidden; }
+  .pad { padding:20mm 18mm; }
+
+  h1,h2,h3 { font-family:'Cinzel', Georgia, serif; color:var(--brown); font-weight:600; margin:0; }
+  h2 { font-size:20px; text-transform:uppercase; letter-spacing:0.09em; }
+  h3 { font-size:14px; letter-spacing:0.05em; }
+  .eyebrow { font-family:'Cinzel',serif; letter-spacing:0.34em; text-transform:uppercase; font-size:10.5px; color:var(--gold-dk); }
+  .script { font-family:'Allura', cursive; color:var(--gold-dk); font-size:34px; line-height:1; }
+  .muted { color:var(--soft); }
+  p { margin:0 0 11px; }
+  .lead { font-size:15px; line-height:1.7; }
+  .divider { display:flex; align-items:center; gap:10px; margin:14px 0; }
+  .divider .l { flex:1; height:1px; background:var(--line); }
+  .divider .o { color:var(--gold); letter-spacing:0.3em; }
+  ul { margin:6px 0 12px; padding-left:18px; } li { margin:3px 0; }
+
+  /* Cover */
+  .cover { position:relative; color:#f5ecd8; }
+  .cover img.bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .cover .veil { position:absolute; inset:0; background:linear-gradient(180deg, rgba(28,20,15,0.55) 0%, rgba(28,20,15,0.30) 40%, rgba(28,20,15,0.75) 100%); }
+  .cover .inner { position:relative; z-index:2; min-height:297mm; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24mm 18mm; }
+  .cover .logo { width:250px; filter:drop-shadow(0 2px 10px rgba(0,0,0,0.5)); }
+  .cover h1 { color:#fff; font-size:30px; letter-spacing:0.1em; text-transform:uppercase; margin:20mm 0 6px; text-shadow:0 2px 12px rgba(0,0,0,0.6); }
+  .cover .sub { font-family:'Cinzel',serif; letter-spacing:0.3em; text-transform:uppercase; font-size:12px; color:#f0e2c6; }
+
+  .photo { width:100%; height:62mm; object-fit:cover; border:4px solid #fff; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
+  .photo.tall { height:78mm; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:center; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .space { margin-bottom:16px; break-inside:avoid; }
+
+  .menu-item { display:flex; justify-content:space-between; gap:14px; padding:8px 0; border-bottom:1px solid #e6dcc4; break-inside:avoid; }
+  .menu-item .nm { font-family:'Cinzel',serif; color:var(--brown); font-size:13px; }
+  .menu-item .de { color:var(--soft); font-size:11.5px; margin-top:2px; }
+  .menu-item .pr { font-weight:600; white-space:nowrap; color:var(--rust); }
+
+  .pkg { width:100%; border-collapse:collapse; margin-top:6px; }
+  .pkg td { padding:9px 4px; border-bottom:1px solid #e6dcc4; }
+  .pkg td:last-child { text-align:right; font-weight:600; color:var(--rust); white-space:nowrap; }
+
+  .incl { columns:2; column-gap:26px; font-size:12.5px; }
+  .incl li { break-inside:avoid; }
+
+  .quote { font-family:'Lora',serif; font-style:italic; font-size:17px; color:var(--brown); text-align:center; line-height:1.6; }
+
+  .cta { background:var(--brown); color:var(--cream); }
+  .cta a { color:#e9d6a9; }
+
+  .footer-note { position:absolute; bottom:10mm; left:18mm; right:18mm; text-align:center; font-size:9.5px; color:#a3927c; font-family:'Cinzel',serif; letter-spacing:0.14em; text-transform:uppercase; }
+
+  @media print {
+    html, body { background:#fff; }
+    .toolbar { display:none; }
+    .sheet { width:auto; min-height:auto; margin:0; box-shadow:none; page-break-after:always; }
+    .sheet:last-child { page-break-after:auto; }
+    @page { size:A4; margin:0; }
+    .space, .menu-item, .grid2, .grid3, tr { break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div><strong>Flint Hall — Brochure</strong></div>
+  <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+</div>
+
+<!-- ══════════ COVER ══════════ -->
+<section class="sheet cover">
+  <img class="bg" src="https://flinthall.uk/photos/hero-barn-night.jpg" alt="The Barn at Flint Hall at night">
+  <div class="veil"></div>
+  <div class="inner">
+    <img class="logo" src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events">
+    <h1>A hidden treasure<br>in the heart of Suffolk</h1>
+    <div class="sub">Wedding &amp; Events Venue</div>
+    <div style="flex:1;"></div>
+    <div class="sub" style="opacity:0.85;">Creeting St Peter &middot; Ipswich &middot; IP6 8QL</div>
+  </div>
+</section>
+
+<!-- ══════════ WELCOME ══════════ -->
+<section class="sheet"><div class="pad">
+  <div class="eyebrow">Welcome</div>
+  <div class="script" style="margin:6px 0 2px;">Somewhere that feels like yours</div>
+  <div class="divider"><span class="l"></span><span class="o">&#10022;</span><span class="l"></span></div>
+  <p class="lead">Wood-fired pizzas. Hog roast under canvas. Fires that go past midnight. Bell tents in the meadow and a barn that holds the dancing — Flint Hall is a rustic outdoor venue tucked into acres of Suffolk countryside, built for the moments that matter and run by people who care that they go right.</p>
+  <p class="lead">We host weddings, corporate retreats, proms, team days, birthdays, mini festivals and celebrations of every kind — with the whole place to yourselves: the Ranch, the Barn, the meadow, the padel court and the on-site accommodation.</p>
+
+  <div class="grid2" style="margin-top:16px;">
+    <img class="photo tall" src="https://flinthall.uk/photos/strip-ceremony.jpg" alt="Ceremony set up inside the Barn">
+    <img class="photo tall" src="https://flinthall.uk/photos/vibe-lit-tree.jpg" alt="Tree wrapped in fairy lights at night">
+  </div>
+
+  <div style="margin-top:18px; display:flex; align-items:center; gap:14px; border:1px solid var(--line); border-radius:6px; padding:12px 16px; background:#fff;">
+    <img src="https://flinthall.uk/photos/approved-badge.jpg" alt="Approved venue" style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
+    <div><strong style="font-family:'Cinzel',serif; color:var(--brown); letter-spacing:0.08em; text-transform:uppercase; font-size:12px;">Approved for civil ceremonies</strong><br><span class="muted" style="font-size:12.5px;">Licensed by Suffolk Registrars — say your vows indoors or out.</span></div>
+  </div>
+  <div class="footer-note">Flint Hall Events &middot; A hidden treasure in the heart of Suffolk</div>
+</div></section>
+
+<!-- ══════════ WHAT WE HOST ══════════ -->
+<section class="sheet"><div class="pad">
+  <h2>What we host</h2>
+  <div class="divider"><span class="l"></span><span class="o">&#10022;</span><span class="l"></span></div>
+  <div class="grid2" style="gap:20px 26px; align-items:start;">
+    <div><h3>Weddings</h3><p class="muted">The whole estate for your day — ceremony in the Barn or under the sky, feasting from the fire, dancing until the small hours, and beds in the meadow so no one has to leave.</p></div>
+    <div><h3>Corporate &amp; team days</h3><p class="muted">Networking evenings, seminars and away-days — the Barn as your conference room, the Ranch for wood-fired lunch, and acres to breathe between sessions.</p></div>
+    <div><h3>Proms &amp; parties</h3><p class="muted">Somewhere with a bit of magic — festoon lights, a proper bar, and space to make an entrance.</p></div>
+    <div><h3>Birthdays &amp; celebrations</h3><p class="muted">Big ones and quiet ones alike, with catering and canvas to match the occasion.</p></div>
+    <div><h3>Mini festivals</h3><p class="muted">Bring the bands, the tents and the campervans — the field is yours.</p></div>
+    <div><h3>Stays</h3><p class="muted">On-site accommodation for up to 12, so the celebration carries into breakfast.</p></div>
+  </div>
+  <div class="grid3" style="margin-top:16px;">
+    <img class="photo" src="https://flinthall.uk/photos/event-fireside.jpg" alt="Guests by the fire">
+    <img class="photo" src="https://flinthall.uk/photos/corporate/corp-1.jpg" alt="The Ranch bar and kitchen">
+    <img class="photo" src="https://flinthall.uk/photos/event-feast.jpg" alt="Feasting">
+  </div>
+  <div class="footer-note">Flint Hall Events</div>
+</div></section>
+
+<!-- ══════════ THE SPACES ══════════ -->
+<section class="sheet"><div class="pad">
+  <h2>The spaces</h2>
+  <div class="divider"><span class="l"></span><span class="o">&#10022;</span><span class="l"></span></div>
+
+  <div class="space grid2">
+    <img class="photo" src="https://flinthall.uk/photos/place-barn-entrance.jpg" alt="The Barn">
+    <div><h3>The Barn</h3><p class="muted">A heritage timber-framed barn — recognised as being of historic interest — for ceremonies, dining and dancing. Star-lit, beamed, and yours for the day.</p></div>
+  </div>
+  <div class="space grid2">
+    <div><h3>The Ranch</h3><p class="muted">Our wood-fired bar and kitchen under cover — hog roast, stone-baked pizzas and a proper bar, with fridges and space to gather whatever the weather.</p></div>
+    <img class="photo" src="https://flinthall.uk/photos/corporate/corp-1.jpg" alt="The Ranch">
+  </div>
+  <div class="space grid2">
+    <img class="photo" src="https://flinthall.uk/photos/stay-bell-tent.jpg" alt="Bell tents in the meadow">
+    <div><h3>The Meadow &amp; Stays</h3><p class="muted">Acres of meadow for canvas, campervans and fire pits — plus on-site accommodation for up to 12, with bedding, towels and toiletries, so no one has far to travel.</p></div>
+  </div>
+
+  <ul class="incl" style="margin-top:14px;">
+    <li>The Barn &amp; Barn Garden</li>
+    <li>The Ranch &amp; fridges</li>
+    <li>Kitchen &amp; kitchen fridge</li>
+    <li>Padel court</li>
+    <li>Showers &amp; toilets</li>
+    <li>25 picnic benches &amp; 100 chairs</li>
+    <li>3 fire pits</li>
+    <li>Sweet cart &amp; card box</li>
+    <li>Car park in the adjacent field</li>
+    <li>Tents &amp; campervans welcome</li>
+  </ul>
+  <div class="footer-note">Flint Hall Events</div>
+</div></section>
+
+<!-- ══════════ CATERING ══════════ -->
+<section class="sheet"><div class="pad">
+  <h2>Wood-fired catering</h2>
+  <div class="divider"><span class="l"></span><span class="o">&#10022;</span><span class="l"></span></div>
+  <p class="muted">We're well known for our fire — hog roasts, stone-baked pizzas, BBQ feasts and loaded sides. Prices are per head; or bring your own caterer, with a few small caveats we're happy to talk through.</p>
+
+  <div style="margin-top:8px;">
+    <div class="menu-item"><div><div class="nm">The Hog Roast</div><div class="de">Slow-roasted, with soft rolls, apple sauce, smoky bacon jam and sage &amp; onion stuffing.</div></div><div class="pr">£20 pp</div></div>
+    <div class="menu-item"><div><div class="nm">Meat BBQ Feast</div><div class="de">Choose any three meats — sausages, beef burgers, peri-peri chicken, chorizo skewers — with salads, rolls &amp; sauces. Add slow-smoked baby back ribs +£2pp.</div></div><div class="pr">£20 pp</div></div>
+    <div class="menu-item"><div><div class="nm">Vegan BBQ Feast</div><div class="de">Vegetarian burger, Quorn strips and spiced couscous, with salads, rolls &amp; vegan sauces.</div></div><div class="pr">£18 pp</div></div>
+    <div class="menu-item"><div><div class="nm">Classic Pizza</div><div class="de">Stone-baked — Margherita, Pepperoni, Vegetarian and a rotating Flint Hall special.</div></div><div class="pr">£18.50 pp</div></div>
+    <div class="menu-item"><div><div class="nm">Gourmet Pizza</div><div class="de">Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom, Prosciutto &amp; Rocket.</div></div><div class="pr">£20 pp</div></div>
+    <div class="menu-item"><div><div class="nm">Jacket Potato Bar</div><div class="de">Fluffy baked potatoes with a spread of toppings.</div></div><div class="pr">£9 pp</div></div>
+    <div class="menu-item"><div><div class="nm">The Ice Cream Bike</div><div class="de">Scoops for all ages — and a drinks cart by night.</div></div><div class="pr">£3.80 pp</div></div>
+    <div class="menu-item"><div><div class="nm">The Tuk Tuk Bar</div><div class="de">Our little three-wheeled bar, parked up wherever the party needs it.</div></div><div class="pr">£50 hire</div></div>
+  </div>
+  <p class="muted" style="font-size:11px; margin-top:8px;">Menu items may vary slightly with seasonal and supplier availability. Minimum numbers apply to some dishes.</p>
+  <div class="footer-note">Flint Hall Events</div>
+</div></section>
+
+<!-- ══════════ PACKAGES ══════════ -->
+<section class="sheet"><div class="pad">
+  <h2>Wedding packages</h2>
+  <div class="divider"><span class="l"></span><span class="o">&#10022;</span><span class="l"></span></div>
+  <p class="muted">Our full-day packages give you the whole place, with the low-key hospitality that makes a long day feel short.</p>
+  <table class="pkg">
+    <tr><td>Full day, no accommodation <span class="muted">(Tiny House to get ready)</span></td><td>£6,000</td></tr>
+    <tr><td>+ 1 night's accommodation <span class="muted">· 2-day access</span></td><td>£8,000</td></tr>
+    <tr><td>+ 2 nights' accommodation <span class="muted">· 3-day access</span></td><td>£10,000</td></tr>
+    <tr><td>+ 3 nights' accommodation <span class="muted">· 4-day access</span></td><td>£12,000</td></tr>
+  </table>
+  <p class="muted" style="font-size:12px; margin-top:8px;">A 50% deposit secures your date; the balance is due 30 days before. Catering is priced separately. A £250 refundable damage deposit applies.</p>
+
+  <div style="margin-top:22px; text-align:center;">
+    <img class="photo tall" src="https://flinthall.uk/photos/strip-bell-tent-path.jpg" alt="Bell tent under the stars" style="height:70mm;">
+  </div>
+  <div class="quote" style="margin-top:22px;">"Fires that go past midnight, beds in the meadow,<br>and a barn that holds the dancing."</div>
+  <div class="footer-note">Flint Hall Events</div>
+</div></section>
+
+<!-- ══════════ THE VIBE ══════════ -->
+<section class="sheet"><div class="pad">
+  <h2>A night they won't forget</h2>
+  <div class="divider"><span class="l"></span><span class="o">&#10022;</span><span class="l"></span></div>
+  <div class="grid2" style="gap:12px;">
+    <img class="photo tall" src="https://flinthall.uk/photos/vibe-star-wall.jpg" alt="Illuminated star wall in the Barn">
+    <img class="photo tall" src="https://flinthall.uk/photos/vibe-bench-shelter.jpg" alt="Bench shelter wrapped in lights">
+    <img class="photo tall" src="https://flinthall.uk/photos/strip-courtyard.jpg" alt="Courtyard at night">
+    <img class="photo tall" src="https://flinthall.uk/photos/event-firepit.jpg" alt="Fire pit at dusk">
+  </div>
+  <div class="footer-note">Flint Hall Events</div>
+</div></section>
+
+<!-- ══════════ GET IN TOUCH ══════════ -->
+<section class="sheet cta"><div class="pad" style="min-height:297mm; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+  <img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" style="width:200px; filter:brightness(0) invert(0.92);">
+  <div class="script" style="margin-top:16mm; color:#e9d6a9;">Come and walk it</div>
+  <p class="lead" style="max-width:130mm; margin-top:6px; color:#f0e6d2;">The very best way to get a feel for the place is to come and see it. We hold open viewings most Saturdays — tell us a couple of dates that suit and we'll put a time aside for you.</p>
+  <div style="margin-top:14mm; font-family:'Cinzel',serif; letter-spacing:0.16em; text-transform:uppercase; font-size:13px; color:#f5ecd8; line-height:2.1;">
+    <div><a href="https://flinthall.uk" style="color:#f5ecd8; text-decoration:none;">flinthall.uk</a></div>
+    <div><a href="mailto:hello@flinthall.uk" style="color:#f5ecd8; text-decoration:none;">hello@flinthall.uk</a></div>
+    <div style="opacity:0.85;">Flint Hall, Creeting St Peter, Ipswich, IP6 8QL</div>
+    <div><a href="https://instagram.com/flinthallevents" style="color:#f5ecd8; text-decoration:none;">@flinthallevents</a></div>
+  </div>
+  <div style="flex:1;"></div>
+  <div style="font-family:'Cinzel',serif; letter-spacing:0.2em; text-transform:uppercase; font-size:10px; color:#c9b48f;">Approved by Suffolk Registrars &middot; Licensed for civil ceremonies</div>
+</div></section>
+
+</body>
+</html>
