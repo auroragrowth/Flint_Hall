@@ -10,7 +10,8 @@
 <style>
   :root { --ink:#2a211b; --soft:#5c4d40; --cream:#faf3e2; --card:#fff; --gold:#b8924a; --gold-dk:#9a7736; --brown:#4a2f23; --rust:#a6612f; --line:#d9c48f; }
   * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; background:#d9d0bf; color:var(--ink); font-family:'Lora', Georgia, serif; font-size:13px; line-height:1.6; }
+  html, body { margin:0; padding:0; background:#d9d0bf; color:var(--ink); font-family:'Lora', Georgia, serif; font-size:13px; line-height:1.6;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   a { color:var(--rust); }
   img { display:block; max-width:100%; }
 
@@ -72,7 +73,7 @@
     .toolbar { display:none; }
     .sheet { width:auto; min-height:auto; margin:0; box-shadow:none; page-break-after:always; }
     .sheet:last-child { page-break-after:auto; }
-    @page { size:A4; margin:0; }
+    @page { size: A4 portrait; margin: 0; }
     .space, .menu-item, .grid2, .grid3, tr { break-inside:avoid; }
   }
 </style>
