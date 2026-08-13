@@ -67,6 +67,14 @@
   .incl { columns:2; column-gap:26px; font-size:12.5px; }
   .incl li { break-inside:avoid; }
 
+  .allin { margin:16px 0 6px; padding:16px 18px; background:#fbf3df; border:1px solid var(--gold); border-left:5px solid var(--rust); border-radius:6px; break-inside:avoid; }
+  .allin .k { font-family:'Cinzel',serif; text-transform:uppercase; letter-spacing:0.16em; font-size:12.5px; color:var(--rust); font-weight:600; }
+  .allin p { margin:6px 0 0; color:var(--brown); font-size:13px; line-height:1.6; }
+  .allin strong { color:var(--rust); }
+  .banner { margin:14px 0 2px; padding:12px 16px; text-align:center; background:var(--brown); color:var(--cream); border-radius:6px; break-inside:avoid;
+    font-family:'Cinzel',serif; text-transform:uppercase; letter-spacing:0.14em; font-size:13px; }
+  .banner span { color:var(--gold); }
+
   .quote { font-family:'Lora',serif; font-style:italic; font-size:17px; color:var(--brown); text-align:center; line-height:1.6; }
 
   .cta { background:var(--brown); color:var(--cream); }
@@ -162,7 +170,9 @@
     <div><h3>The Meadow &amp; Stays</h3><p class="muted">Acres of meadow for canvas, campervans and fire pits — plus on-site accommodation for up to 12, with bedding, towels and toiletries, so no one has far to travel.</p></div>
   </div>
 
-  <ul class="incl" style="margin-top:14px;">
+  <div class="banner">The whole estate — <span>all yours, all included</span></div>
+  <p class="muted" style="font-size:12px; margin:8px 0 2px;">Book Flint Hall and you take the <strong>entire</strong> venue — exclusively, with nobody else on site. Every one of these comes with your hire, at no extra cost:</p>
+  <ul class="incl" style="margin-top:10px;">
     <li>The Barn &amp; Barn Garden</li>
     <li>The Ranch &amp; fridges</li>
     <li>Kitchen &amp; kitchen fridge</li>
@@ -202,6 +212,12 @@
   <h2>Wedding packages</h2>
   <div class="divider"><span class="l"></span><span class="o">&#10022;</span><span class="l"></span></div>
   <p class="muted">Our full-day packages give you the whole place, with the low-key hospitality that makes a long day feel short.</p>
+
+  <div class="allin">
+    <div class="k">Everything is included — no hidden extras</div>
+    <p>One price gives you <strong>exclusive use of the entire estate</strong> — the Barn, the Ranch, the meadow, the padel court, on-site accommodation, all the furniture, fire pits, showers, toilets and parking. No corkage, no room hire, no per-item charges. The only things priced separately are your <strong>catering</strong> and the refundable <strong>£250 damage deposit</strong>.</p>
+  </div>
+
   <table class="pkg">
     <tr><td>Full day, no accommodation <span class="muted">(Tiny House to get ready)</span></td><td>£6,000</td></tr>
     <tr><td>+ 1 night's accommodation</td><td>£6,995</td></tr>
