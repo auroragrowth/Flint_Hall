@@ -161,7 +161,7 @@ Deno.serve(async (req: Request) => {
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px; max-width:560px;">
         <tr><td align="center" style="padding:22px 24px 8px; font-family:Georgia,serif;">
           <div style="font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#d9c48f; margin-bottom:4px;">Flint Hall Events</div>
-          <div style="font-size:12px; line-height:1.6; color:#c9b48f;">Creeting St Peter &middot; Suffolk &middot; info@flinthall.uk &middot; 07355 364401</div>
+          <div style="font-size:12px; line-height:1.6; color:#c9b48f;">Creeting St Peter &middot; Suffolk &middot; info@flinthall.uk &middot; 01449 888004 &middot; 07355 364401</div>
         </td></tr>
       </table>
     </td></tr>
