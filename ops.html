@@ -6731,51 +6731,124 @@ const App = {
     const host = document.getElementById('catering-admin');
     const { data, error } = await sb.from('catering_orders').select('*').order('created_at', { ascending: false });
     if (error) { host.innerHTML = `<div class="empty-state"><h3>Couldn’t load orders</h3><p>${this.esc(error.message)}</p></div>`; return; }
-    this.renderCateringOrdersAdmin(data || []);
+    this.state.cateringOrders = data || [];
+    this.state.cateringDrafts = {};          // start fresh; edits build a draft per order
+    this.renderCateringOrdersAdmin();
   },
 
-  renderCateringOrdersAdmin(list) {
+  // The working copy for an order — a draft the inline editors mutate. Created
+  // (cloned) on first edit so unedited orders keep rendering straight from load.
+  cateringDraft(orderId) {
+    this.state.cateringDrafts = this.state.cateringDrafts || {};
+    if (!this.state.cateringDrafts[orderId]) {
+      const o = (this.state.cateringOrders || []).find(x => x.id === orderId);
+      if (!o) return null;
+      this.state.cateringDrafts[orderId] = {
+        items: JSON.parse(JSON.stringify(o.items || [])),
+        status: o.status,
+      };
+    }
+    return this.state.cateringDrafts[orderId];
+  },
+
+  cateringEditLine(orderId, i, field, value) {
+    const d = this.cateringDraft(orderId);
+    if (!d || !d.items[i]) return;
+    if (field === 'qty' || field === 'unit_price') { const n = parseFloat(value); d.items[i][field] = isNaN(n) ? 0 : n; }
+    else { d.items[i][field] = value; }
+    this.renderCateringOrdersAdmin();
+  },
+  cateringAddLine(orderId) {
+    const d = this.cateringDraft(orderId);
+    if (!d) return;
+    d.items.push({ name: '', qty: 1, unit_price: 0, line_total: 0 });
+    this.renderCateringOrdersAdmin();
+  },
+  cateringRemoveLine(orderId, i) {
+    const d = this.cateringDraft(orderId);
+    if (!d) return;
+    d.items.splice(i, 1);
+    this.renderCateringOrdersAdmin();
+  },
+  cateringSetStatus(orderId, value) {
+    const d = this.cateringDraft(orderId);
+    if (!d) return;
+    d.status = value;
+    this.renderCateringOrdersAdmin();
+  },
+
+  renderCateringOrdersAdmin() {
     const host = document.getElementById('catering-admin');
+    if (!host) return;
+    const list = this.state.cateringOrders || [];
+    const drafts = this.state.cateringDrafts || {};
     const cnt = document.getElementById('count-catering');
     if (cnt) cnt.textContent = list.filter(o => o.status !== 'cancelled').length;
     if (!list.length) {
-      host.innerHTML = `<div class="empty-state"><div class="icon">🍽</div><h3>No catering orders yet</h3><p>Orders placed by clients in the portal appear here.</p></div>`;
+      host.innerHTML = `<div class="empty-state"><div class="icon">🍽</div><h3>No catering orders yet</h3><p>Orders placed by clients in the portal appear here — and you can edit or add lines to any of them here.</p></div>`;
       return;
     }
     const money = n => '£' + Number(n || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const inputStyle = 'background: var(--linen); border:1px solid var(--paper-edge); color: var(--brown-900); padding:6px 8px; border-radius:3px; font-family: var(--font-body); font-size:12.5px;';
+    const inp = 'background:#fff; border:1px solid var(--linen-dark); border-radius:4px; padding:6px 8px; font-family:var(--font-body); font-size:13px;';
     host.innerHTML = list.map(o => {
-      const lines = (o.items || []).map(it =>
-        `<div style="display:flex; justify-content:space-between; font-size:13px; padding:2px 0;"><span>${this.esc(it.name)} &times; ${this.esc(it.qty)} @ ${money(it.unit_price)}</span><span>${money(it.line_total)}</span></div>`).join('');
+      const d = drafts[o.id] || o;                       // draft if editing, else the loaded order
+      const dirty = !!drafts[o.id];
+      const items = d.items || [];
+      const subtotal = items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0), 0);
+      const lineRows = items.map((it, i) => {
+        const lt = (Number(it.qty) || 0) * (Number(it.unit_price) || 0);
+        return `<tr>
+          <td style="padding:2px 6px 2px 0;"><input style="${inp} width:100%;" value="${this.esc(it.name || '')}" placeholder="Item" onchange="App.cateringEditLine('${o.id}',${i},'name',this.value)"></td>
+          <td style="padding:2px 6px;"><input type="number" step="1" min="0" style="${inp} width:64px; text-align:right;" value="${this.esc(it.qty ?? 0)}" onchange="App.cateringEditLine('${o.id}',${i},'qty',this.value)"></td>
+          <td style="padding:2px 6px;"><input type="number" step="0.01" min="0" style="${inp} width:96px; text-align:right;" value="${this.esc(it.unit_price ?? 0)}" onchange="App.cateringEditLine('${o.id}',${i},'unit_price',this.value)"></td>
+          <td style="padding:2px 6px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">${money(lt)}</td>
+          <td style="padding:2px 0; text-align:center;"><button class="btn btn-ghost btn-sm" onclick="App.cateringRemoveLine('${o.id}',${i})" title="Remove line">✕</button></td>
+        </tr>`;
+      }).join('');
       return `<div class="card mb-2"><div class="card-body">
-        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start;">
           <div>
             <strong style="font-size:15px;">${this.esc(o.client_email)}</strong>
-            <div class="muted" style="font-size:12.5px;">${o.reference ? 'Ref ' + this.esc(o.reference) + ' &middot; ' : ''}ordered ${this.fmtRelative(o.created_at)}</div>
+            <div class="muted" style="font-size:12.5px;">${o.reference ? 'Ref ' + this.esc(o.reference) + ' &middot; ' : ''}ordered ${this.fmtRelative(o.created_at)}${dirty ? ' &middot; <span style="color:var(--amber);">unsaved changes</span>' : ''}</div>
           </div>
-          <div style="text-align:right;">
-            <div style="font-family:var(--font-display); font-size:16px; color:var(--brown-900);">${money(o.subtotal)}</div>
-            <select data-act="costatus" data-id="${this.esc(o.id)}" style="${inputStyle} margin-top:4px;">
-              <option value="submitted"${o.status === 'submitted' ? ' selected' : ''}>Submitted</option>
-              <option value="paid"${o.status === 'paid' ? ' selected' : ''}>Paid</option>
-              <option value="cancelled"${o.status === 'cancelled' ? ' selected' : ''}>Cancelled</option>
-            </select>
-          </div>
+          <select style="${inp} cursor:pointer;" onchange="App.cateringSetStatus('${o.id}',this.value)">
+            <option value="submitted"${d.status === 'submitted' ? ' selected' : ''}>Submitted</option>
+            <option value="paid"${d.status === 'paid' ? ' selected' : ''}>Paid</option>
+            <option value="cancelled"${d.status === 'cancelled' ? ' selected' : ''}>Cancelled</option>
+          </select>
         </div>
-        <div style="margin-top:10px; max-width:480px;">${lines}</div>
-        <div style="margin-top:10px; text-align:right;"><button class="btn btn-primary btn-sm" data-act="cosave" data-id="${this.esc(o.id)}">Save</button></div>
+        <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; max-width:560px;">
+          <thead><tr style="text-align:left; color:var(--brown-600); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">
+            <th style="padding:4px 0;">Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit £</th><th style="text-align:right;">Line</th><th></th>
+          </tr></thead>
+          <tbody>${lineRows || `<tr><td colspan="5" class="muted italic" style="padding:8px 0;">No lines — add one below.</td></tr>`}</tbody>
+        </table>
+        <div class="row gap-sm" style="margin-top:10px; align-items:center; max-width:560px;">
+          <button class="btn btn-secondary btn-sm" onclick="App.cateringAddLine('${o.id}')">+ Add line</button>
+          <span class="spacer" style="flex:1;"></span>
+          <strong style="font-size:16px; font-family:var(--font-display); color:var(--brown-900);">${money(subtotal)}</strong>
+        </div>
+        <div style="margin-top:10px; text-align:right; max-width:560px;">
+          <button class="btn btn-primary btn-sm" onclick="App.cateringOrderSave('${o.id}')">Save</button>
+        </div>
       </div></div>`;
     }).join('');
-    host.querySelectorAll('[data-act="cosave"]').forEach(b =>
-      b.addEventListener('click', () => this.cateringOrderSave(b.dataset.id, host)));
   },
 
-  async cateringOrderSave(id, host) {
+  async cateringOrderSave(orderId) {
     const sb = window.fhSupabase;
-    const status = host.querySelector(`[data-act="costatus"][data-id="${CSS.escape(id)}"]`)?.value;
-    const { error } = await sb.from('catering_orders').update({ status }).eq('id', id);
+    const src = (this.state.cateringDrafts || {})[orderId]
+      || (this.state.cateringOrders || []).find(x => x.id === orderId);
+    if (!src) return;
+    const items = (src.items || []).map(it => {
+      const qty = Number(it.qty) || 0, unit = Number(it.unit_price) || 0;
+      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100 };
+    }).filter(it => it.name || it.qty || it.unit_price);
+    const subtotal = items.reduce((s, it) => s + it.line_total, 0);
+    const { error } = await sb.from('catering_orders').update({ items, subtotal, status: src.status }).eq('id', orderId);
     if (error) { this.toast('Could not save: ' + error.message, 'error'); return; }
-    this.toast('Order updated', 'success');
+    if (this.state.cateringDrafts) delete this.state.cateringDrafts[orderId];
+    this.toast('Catering order saved', 'success');
     this.bindCateringOrders();
   },
 
