@@ -329,6 +329,11 @@ a:hover { text-decoration: underline; }
 .jt-event:hover { border-color:var(--gold); }
 .jt-event.jt-next { background:var(--moss-light); border-color:var(--moss); }
 .jt-event.jt-next:hover { border-color:var(--moss); }
+.wa-thread { max-height:460px; overflow-y:auto; display:flex; flex-direction:column; padding-right:4px; }
+.wa-daysep { text-align:center; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--brown-600); margin:14px 0 6px; }
+.wa-msg { font-size:13px; line-height:1.5; padding:4px 0; border-bottom:1px solid var(--linen); white-space:pre-wrap; }
+.wa-time { color:var(--brown-600); font-variant-numeric:tabular-nums; font-size:11.5px; margin-right:8px; }
+.wa-sender { color:var(--brown-900); }
 .jt-date { flex:0 0 50px; text-align:center; }
 .jt-day { font-size:20px; font-weight:700; color:var(--brown-700); line-height:1; }
 .jt-mon { font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--brown-600); }
@@ -3931,8 +3936,8 @@ const App = {
 
   // ─────────── BOOKING DETAIL ───────────
   viewBooking(b) {
-    const tabs = ['details','payments','invoices','comms','function','contract'];
-    const tabLabel = { details:'Details', payments:'Payments', invoices:'Quotes & Invoices', comms:'Communications', function:'Running Order', contract:'Contract' };
+    const tabs = ['details','payments','invoices','comms','whatsapp','function','contract'];
+    const tabLabel = { details:'Details', payments:'Payments', invoices:'Quotes & Invoices', comms:'Communications', whatsapp:'WhatsApp', function:'Running Order', contract:'Contract' };
     const balanceDue = this.computeBalanceDueDate(b);
     const lateFee = this.computeLateFee(b);
 
@@ -4006,6 +4011,7 @@ const App = {
       case 'payments': return this.viewBookingPayments(b);
       case 'invoices': return this.viewBookingInvoices(b);
       case 'comms': return this.viewBookingComms(b);
+      case 'whatsapp': return this.viewBookingWhatsapp(b);
       case 'function': return this.viewBookingFunctionSheet(b);
       case 'contract': return this.viewBookingContract(b);
       default: return '';
@@ -4017,6 +4023,12 @@ const App = {
     if (this.state.currentTab === 'function') this.bindFunctionSheet(b);
     if (this.state.currentTab === 'comms') this.bindOpsComms(b);
     if (this.state.currentTab === 'invoices') this.bindInvoices(b);
+    if (this.state.currentTab === 'whatsapp') {
+      document.getElementById('wa-file')?.addEventListener('change', e => this.waUpload(b, e.target.files[0]));
+      document.getElementById('wa-export')?.addEventListener('click', () => this.waExport(b));
+      document.getElementById('wa-clear')?.addEventListener('click', () => this.waClear(b));
+      this.bindBookingWhatsapp(b);
+    }
   },
 
   // -- DETAILS TAB --
@@ -4495,6 +4507,141 @@ const App = {
     await sb.storage.from('client-documents').remove([path]).catch(() => {});
     await sb.from('client_documents').delete().eq('id', id);
     this.bindOpsComms(b);
+  },
+
+  // ─────────── WHATSAPP CHAT LOG (per booking) ───────────
+  viewBookingWhatsapp(b) {
+    return `
+      <div class="card mb-2"><div class="card-body">
+        <div class="card-title" style="margin-bottom:6px;">WhatsApp chat log <span class="muted" style="font-weight:400; font-size:12px;">— internal; not shown to the client</span></div>
+        <p class="muted" style="font-size:12.5px; margin:0 0 12px;">In WhatsApp, open the chat &rarr; <strong>Export chat &rarr; Without media</strong>, then upload the <code>.txt</code> here. Re-uploading a fresh export simply adds any new messages &mdash; nothing is duplicated.</p>
+        <div class="row gap-sm" style="flex-wrap:wrap; align-items:center;">
+          <label class="btn btn-primary btn-sm" style="cursor:pointer; margin:0;">Upload WhatsApp export (.txt)<input type="file" id="wa-file" accept=".txt,text/plain" hidden></label>
+          <button class="btn btn-secondary btn-sm" id="wa-export">Download log (.txt)</button>
+          <span class="spacer" style="flex:1;"></span>
+          <button class="btn btn-ghost btn-sm" id="wa-clear" style="color:#c66;">Clear all</button>
+        </div>
+        <div id="wa-log" style="margin-top:14px;"><div class="muted italic">Loading…</div></div>
+      </div></div>`;
+  },
+
+  async bindBookingWhatsapp(b) {
+    const sb = window.fhSupabase;
+    const host = document.getElementById('wa-log');
+    const { data, error } = await sb.from('whatsapp_messages')
+      .select('*').eq('booking_id', b.id)
+      .order('sent_at', { ascending: true, nullsFirst: true });
+    if (error) { if (host) host.innerHTML = `<div class="empty-state"><h3>Couldn’t load</h3><p>${this.esc(error.message)}</p></div>`; return; }
+    this.state.waMessages = data || [];
+    this.renderWhatsapp(b, data || []);
+  },
+
+  renderWhatsapp(b, list) {
+    const host = document.getElementById('wa-log'); if (!host) return;
+    if (!list.length) { host.innerHTML = '<div class="muted italic">No WhatsApp messages yet — upload an exported chat (.txt) above.</div>'; return; }
+    const fmtDay = iso => iso ? new Date(iso).toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Undated';
+    const fmtTime = iso => iso ? new Date(iso).toLocaleTimeString('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit' }) : '';
+    let out = '', lastDay = null;
+    list.forEach(m => {
+      const day = fmtDay(m.sent_at);
+      if (day !== lastDay) { out += `<div class="wa-daysep">${this.esc(day)}</div>`; lastDay = day; }
+      out += `<div class="wa-msg"><span class="wa-time">${fmtTime(m.sent_at)}</span>${m.sender ? `<strong class="wa-sender">${this.esc(m.sender)}</strong> ` : ''}${this.esc(m.body)}</div>`;
+    });
+    host.innerHTML = `<div class="muted" style="font-size:11.5px; margin-bottom:8px;">${list.length} message${list.length === 1 ? '' : 's'} on file</div><div class="wa-thread">${out}</div>`;
+  },
+
+  // A tiny stable content hash (cyrb53) — the dedupe key across re-exports.
+  waHash(str) {
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507); h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507); h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  },
+
+  // Parse a WhatsApp "Export chat" .txt (iOS [..] and Android ".. - " formats,
+  // 24h or AM/PM, multi-line messages, system lines). Times are stored as the
+  // wall-clock captured to UTC so display never drifts by timezone.
+  waParseDate(dateStr, timeStr, ampm) {
+    const p = dateStr.split(/[.\/-]/).map(Number); let y, mo, d;
+    if (String(p[0]).length === 4) { y = p[0]; mo = p[1]; d = p[2]; }
+    else { d = p[0]; mo = p[1]; y = p[2]; if (p[1] > 12 && p[0] <= 12) { d = p[1]; mo = p[0]; } }
+    if (y < 100) y += 2000;
+    const t = timeStr.split(':').map(Number); let hh = t[0], mm = t[1] || 0, ss = t[2] || 0;
+    if (ampm) { const pm = /p/i.test(ampm); if (pm && hh < 12) hh += 12; if (!pm && hh === 12) hh = 0; }
+    const dt = new Date(Date.UTC(y, mo - 1, d, hh, mm, ss));
+    return isNaN(dt.getTime()) ? null : dt.toISOString();
+  },
+
+  waParse(text) {
+    const IOS = /^‎?\[(\d{1,4}[.\/-]\d{1,2}[.\/-]\d{1,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?)(?:\s?([APap][Mm]))?\]\s*‎?(.*)$/;
+    const AND = /^‎?(\d{1,4}[.\/-]\d{1,2}[.\/-]\d{1,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?)(?:\s?([APap][Mm]))?\s+-\s+(.*)$/;
+    const lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+    const out = []; let cur = null;
+    for (const raw of lines) {
+      const m = raw.match(IOS) || raw.match(AND);
+      if (m) {
+        if (cur) out.push(cur);
+        const iso = this.waParseDate(m[1], m[2], m[3]);
+        let rest = m[4] || '', sender = null, body = rest;
+        const ix = rest.indexOf(': ');
+        if (ix > -1 && ix <= 50) { sender = rest.slice(0, ix).replace(/^‎/, '').trim(); body = rest.slice(ix + 2); }
+        cur = { sent_at: iso, sender, body };
+      } else if (cur) { cur.body += '\n' + raw; }
+    }
+    if (cur) out.push(cur);
+    return out.map(m => ({ sent_at: m.sent_at, sender: m.sender, body: m.body.replace(/\s+$/, '') }))
+              .filter(m => m.body || m.sender);
+  },
+
+  async waUpload(b, file) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { this.toast('That file is over 10MB — export the chat “Without media”.', 'error'); return; }
+    let text = '';
+    try { text = await file.text(); } catch (e) { this.toast('Could not read that file.', 'error'); return; }
+    const parsed = this.waParse(text);
+    if (!parsed.length) { this.toast('No messages found. In WhatsApp use Export chat → Without media and upload the .txt.', 'error'); return; }
+    // de-dupe within the file, then build rows
+    const seen = new Set(); const rows = [];
+    for (const m of parsed) {
+      const key = this.waHash(`${m.sent_at || ''}|${m.sender || ''}|${m.body}`);
+      if (seen.has(key)) continue; seen.add(key);
+      rows.push({ booking_id: b.id, sent_at: m.sent_at, sender: m.sender, body: m.body, msg_key: key });
+    }
+    const sb = window.fhSupabase;
+    let inserted = 0;
+    for (let i = 0; i < rows.length; i += 400) {
+      const chunk = rows.slice(i, i + 400);
+      const { data, error } = await sb.from('whatsapp_messages')
+        .upsert(chunk, { onConflict: 'booking_id,msg_key', ignoreDuplicates: true })
+        .select('id');
+      if (error) { this.toast('Upload failed: ' + error.message, 'error'); return; }
+      inserted += (data ? data.length : 0);
+    }
+    const skipped = rows.length - inserted;
+    this.toast(`Imported ${inserted} new message${inserted === 1 ? '' : 's'}${skipped > 0 ? ` (${skipped} already on file)` : ''}`, 'success');
+    this.bindBookingWhatsapp(b);
+  },
+
+  waExport(b) {
+    const list = this.state.waMessages || [];
+    if (!list.length) { this.toast('Nothing to export yet.', 'error'); return; }
+    const fmt = iso => iso ? new Date(iso).toLocaleString('en-GB', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'undated';
+    const text = list.map(m => `[${fmt(m.sent_at)}] ${m.sender ? m.sender + ': ' : ''}${m.body}`).join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const who = String(b.client?.lastName || b.id || 'booking').replace(/[^\w.\-]+/g, '_');
+    const a = document.createElement('a');
+    a.href = url; a.download = `whatsapp-${who}.txt`; a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  async waClear(b) {
+    if (!confirm('Remove ALL WhatsApp messages stored for this booking? This can’t be undone — but you can re-upload the export afterwards.')) return;
+    const { error } = await window.fhSupabase.from('whatsapp_messages').delete().eq('booking_id', b.id);
+    if (error) { this.toast('Could not clear: ' + error.message, 'error'); return; }
+    this.toast('Cleared', 'success');
+    this.bindBookingWhatsapp(b);
   },
 
   viewBookingComms(b) {
