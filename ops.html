@@ -2475,7 +2475,10 @@ const App = {
         checkOutDate: r.event_check_out_date || null,
         bar: r.event_bar || '',
         accommodation: r.event_accommodation || '',
-        cateringType: r.event_catering_type || ''
+        cateringType: r.event_catering_type || '',
+        cateringChoice: r.event_catering_choice || '',
+        ownCaterer: r.event_own_caterer || '',
+        ownCatererDetails: r.event_own_caterer_details || ''
       },
       financial: {
         totalCost: Number(r.total_cost ?? 0),
@@ -2551,6 +2554,9 @@ const App = {
       event_bar:              e.bar          || null,
       event_accommodation:    e.accommodation|| null,
       event_catering_type:    e.cateringType || null,
+      event_catering_choice:  e.cateringChoice || null,
+      event_own_caterer:      e.ownCaterer || null,
+      event_own_caterer_details: e.ownCatererDetails || null,
       total_cost:                  f.totalCost ?? null,
       deposit_amount:              f.depositAmount ?? null,
       deposit_paid_date:           f.depositPaidDate || null,
@@ -4168,7 +4174,15 @@ const App = {
                     `<option value="${t}" ${b.event.accommodation===t?'selected':''}>${t || '— select —'}</option>`).join('')}
                 </select>
               </div>
-              <div class="field full"><label>Catering Type</label><input type="text" name="event.cateringType" value="${this.esc(b.event.cateringType || '')}" placeholder="e.g. Flint Hall — Hog Roast x50 + Pizzas, BBQ, External (Tuk Tuk), Bringing own"></div>
+              <div class="field"><label>Catering</label>
+                <select name="event.cateringChoice" onchange="App.toggleOwnCaterer(this.value)">
+                  ${['','Flint Hall catering','Bringing own caterer'].map(t =>
+                    `<option value="${t}" ${b.event.cateringChoice===t?'selected':''}>${t || '— select —'}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field own-caterer" style="${b.event.cateringChoice==='Bringing own caterer'?'':'display:none;'}"><label>Who is catering?</label><input type="text" name="event.ownCaterer" value="${this.esc(b.event.ownCaterer || '')}" placeholder="Caterer / company name"></div>
+              <div class="field full own-caterer" style="${b.event.cateringChoice==='Bringing own caterer'?'':'display:none;'}"><label>What are they providing?</label><textarea name="event.ownCatererDetails" rows="2" placeholder="What they're doing — e.g. wood-fired pizza van from 7pm, hog roast for 80, dessert table">${this.esc(b.event.ownCatererDetails || '')}</textarea></div>
+              <div class="field full"><label>Catering Type (notes)</label><input type="text" name="event.cateringType" value="${this.esc(b.event.cateringType || '')}" placeholder="e.g. Flint Hall — Hog Roast x50 + Pizzas, BBQ, External (Tuk Tuk)"></div>
               <div class="field"><label>Package / Notes</label><input type="text" name="event.package" value="${this.esc(b.event.package || '')}"></div>
               <div class="field full"><label>Notes (private)</label><textarea name="event.notes" rows="3">${this.esc(b.event.notes || '')}</textarea></div>
             </div>
@@ -4243,6 +4257,12 @@ const App = {
   },
 
   bindBookingDetailsForm(b) { /* form is captured on click */ },
+
+  // Show the "who / what" caterer fields only when the client brings their own.
+  toggleOwnCaterer(value) {
+    const show = value === 'Bringing own caterer';
+    document.querySelectorAll('#booking-form .own-caterer').forEach(el => { el.style.display = show ? '' : 'none'; });
+  },
 
   autoSplitFinancials(id) {
     const b = this.state.bookings.find(x => x.id === id);
@@ -5971,7 +5991,7 @@ const App = {
       ${isQuote
         ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">This is a quote, not a bill</strong>Nothing to pay yet. Just reply to accept and we&rsquo;ll send the invoice and hold your date.</div>`
         : (bacs ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px; white-space:pre-line;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">Pay by bank transfer</strong>${this.esc(bacs)}\nReference: ${this.esc(inv.number || '')}</div>` : '')}
-      <div style="margin-top:24px; padding-top:12px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555; text-align:center;">Flint Hall Events &middot; Creeting St Peter &middot; Suffolk &middot; info@flinthall.uk &middot; 01449 888004 &middot; 07355 364401</div>
+      <div style="margin-top:24px; padding-top:12px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555; text-align:center;">Flint Hall Events &middot; Creeting St Peter &middot; Suffolk &middot; info@flinthall.uk &middot; 01449 888004 &middot; 07355 364401<br>Flint Hall Glamping &amp; Events Ltd &middot; Registered in England, company no. 15762581</div>
     </div>`;
   },
 
@@ -7128,7 +7148,7 @@ const App = {
         <tfoot><tr style="font-weight:bold; font-size:15px;"><td colspan="4" style="padding:12px 0 0; text-align:right;">Total</td><td style="padding:12px 0 0; text-align:right;">${money(subtotal)}</td></tr></tfoot>
       </table>
       ${bacs ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px; white-space:pre-line;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">Pay by bank transfer</strong>${this.esc(bacs)}${o.reference ? '\nReference: ' + this.esc(o.reference) : ''}</div>` : ''}
-      <div style="margin-top:24px; padding-top:12px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555; text-align:center;">Flint Hall Events &middot; Creeting St Peter &middot; Suffolk &middot; info@flinthall.uk &middot; 01449 888004 &middot; 07355 364401</div>
+      <div style="margin-top:24px; padding-top:12px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555; text-align:center;">Flint Hall Events &middot; Creeting St Peter &middot; Suffolk &middot; info@flinthall.uk &middot; 01449 888004 &middot; 07355 364401<br>Flint Hall Glamping &amp; Events Ltd &middot; Registered in England, company no. 15762581</div>
     </div>`;
   },
 
