@@ -7028,6 +7028,7 @@ const App = {
           <td style="padding:2px 6px;"><input type="number" step="1" min="0" style="${inp} width:64px; text-align:right;" value="${this.esc(it.qty ?? 0)}" onchange="App.cateringEditLine('${o.id}',${i},'qty',this.value)"></td>
           <td style="padding:2px 6px;"><input type="number" step="0.01" min="0" style="${inp} width:96px; text-align:right;" value="${this.esc(it.unit_price ?? 0)}" onchange="App.cateringEditLine('${o.id}',${i},'unit_price',this.value)"></td>
           <td style="padding:2px 6px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">${money(lt)}</td>
+          <td style="padding:2px 6px;"><input type="time" style="${inp} width:96px;" value="${this.esc(it.service_time || '')}" title="Service time" onchange="App.cateringEditLine('${o.id}',${i},'service_time',this.value)"></td>
           <td style="padding:2px 0; text-align:center;"><button class="btn btn-ghost btn-sm" onclick="App.cateringRemoveLine('${o.id}',${i})" title="Remove line">✕</button></td>
         </tr>`;
       }).join('');
@@ -7045,7 +7046,7 @@ const App = {
         </div>
         <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; max-width:560px;">
           <thead><tr style="text-align:left; color:var(--brown-600); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">
-            <th style="padding:4px 0;">Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit £</th><th style="text-align:right;">Line</th><th></th>
+            <th style="padding:4px 0;">Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit £</th><th style="text-align:right;">Line</th><th style="text-align:right;">Service</th><th></th>
           </tr></thead>
           <tbody>${lineRows || `<tr><td colspan="5" class="muted italic" style="padding:8px 0;">No lines — add one below.</td></tr>`}</tbody>
         </table>
@@ -7054,7 +7055,8 @@ const App = {
           <span class="spacer" style="flex:1;"></span>
           <strong style="font-size:16px; font-family:var(--font-display); color:var(--brown-900);">${money(subtotal)}</strong>
         </div>
-        <div style="margin-top:10px; text-align:right; max-width:560px;">
+        <div class="row gap-sm" style="margin-top:10px; justify-content:flex-end; max-width:560px;">
+          <button class="btn btn-secondary btn-sm" onclick="App.cateringOrderPrint('${o.id}')">Print / PDF</button>
           <button class="btn btn-primary btn-sm" onclick="App.cateringOrderSave('${o.id}')">Save</button>
         </div>
       </div></div>`;
@@ -7068,7 +7070,7 @@ const App = {
     if (!src) return;
     const items = (src.items || []).map(it => {
       const qty = Number(it.qty) || 0, unit = Number(it.unit_price) || 0;
-      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100 };
+      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100, service_time: (it.service_time || '') || null };
     }).filter(it => it.name || it.qty || it.unit_price);
     const subtotal = items.reduce((s, it) => s + it.line_total, 0);
     const { error } = await sb.from('catering_orders').update({ items, subtotal, status: src.status }).eq('id', orderId);
@@ -7076,6 +7078,58 @@ const App = {
     if (this.state.cateringDrafts) delete this.state.cateringDrafts[orderId];
     this.toast('Catering order saved', 'success');
     this.bindCateringOrders();
+  },
+
+  // Branded, printable catering order (Print → Save as PDF). Reuses the same
+  // #printable-fs + print-stylesheet mechanism as invoices. Uses the SAVED order.
+  cateringOrderPrint(orderId) {
+    const o = (this.state.cateringOrders || []).find(x => x.id === orderId);
+    if (!o) return;
+    const b = (this.state.bookings || []).find(x => x.id === o.booking_id);
+    document.getElementById('printable-fs').innerHTML = this.buildCateringOrderHtml(o, b);
+    setTimeout(() => window.print(), 100);
+  },
+  buildCateringOrderHtml(o, b) {
+    const money = n => `£${this.fmtMoney(n)}`;
+    const items = o.items || [];
+    const lineOf = it => Number(it.line_total) || (Number(it.qty) || 0) * (Number(it.unit_price) || 0);
+    const subtotal = items.reduce((s, it) => s + lineOf(it), 0);
+    const rows = items.map(it => `
+      <tr>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd;">${this.esc(it.name || '')}</td>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${this.esc(it.qty ?? 1)}</td>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${money(it.unit_price)}</td>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${it.service_time ? this.esc(it.service_time) : '&mdash;'}</td>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${money(lineOf(it))}</td>
+      </tr>`).join('');
+    const bacs = (this.state.settings.bacsDetails || '').toString();
+    const clientName = b ? (`${b.client.firstName || ''} ${b.client.lastName || ''}`.trim() + (b.partnerName ? ' & ' + b.partnerName : '')) : '';
+    const eventLine = b ? `${this.esc(b.event.type || 'Event')} &middot; ${this.fmtDateLong(b.event.date)}` : '';
+    return `<div style="font-family:Georgia,serif; max-width:600px; margin:0 auto; color:#3a2818; background:#faf3e2; padding:32px;">
+      <div style="text-align:center; margin-bottom:6px;"><img src="https://flinthall.uk/email/flinthall-logo.png" alt="Flint Hall Events" width="150" style="max-width:150px; height:auto; border:0;"></div>
+      <div style="text-align:center; font-family:'Cinzel',Georgia,serif; letter-spacing:3px; text-transform:uppercase; color:#4a2f23; font-size:20px; margin-bottom:22px;">Catering Order</div>
+      <table style="width:100%; font-size:13px; margin-bottom:18px;"><tr>
+        <td style="vertical-align:top;">
+          <div style="color:#806555; font-size:11px; text-transform:uppercase; letter-spacing:1px;">Prepared for</div>
+          <div style="font-size:14px;">${this.esc(clientName || o.client_email || '')}</div>
+          <div style="color:#806555; font-size:12px;">${this.esc(o.client_email || '')}</div>
+        </td>
+        <td style="vertical-align:top; text-align:right;">
+          ${eventLine ? `<div>${eventLine}</div>` : ''}
+          ${o.reference ? `<div style="color:#806555; font-size:12px;">Ref ${this.esc(o.reference)}</div>` : ''}
+          <div style="color:#806555; font-size:12px;">${this.fmtDateShort(o.created_at)}</div>
+        </td>
+      </tr></table>
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead><tr style="color:#806555; font-size:11px; text-transform:uppercase; letter-spacing:1px; text-align:left; border-bottom:2px solid #4a2f23;">
+          <th style="padding:6px 0;">Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit</th><th style="text-align:right;">Service</th><th style="text-align:right;">Line</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr style="font-weight:bold; font-size:15px;"><td colspan="4" style="padding:12px 0 0; text-align:right;">Total</td><td style="padding:12px 0 0; text-align:right;">${money(subtotal)}</td></tr></tfoot>
+      </table>
+      ${bacs ? `<div style="margin-top:20px; padding:12px 14px; background:#f6efe0; border-radius:4px; font-size:13px; white-space:pre-line;"><strong style="display:block; color:#a6612f; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:5px;">Pay by bank transfer</strong>${this.esc(bacs)}${o.reference ? '\nReference: ' + this.esc(o.reference) : ''}</div>` : ''}
+      <div style="margin-top:24px; padding-top:12px; border-top:1px solid #d4ba8c; font-style:italic; font-size:12px; color:#806555; text-align:center;">Flint Hall Events &middot; Creeting St Peter &middot; Suffolk &middot; info@flinthall.uk &middot; 01449 888004 &middot; 07355 364401</div>
+    </div>`;
   },
 
   // ---- Raise a catering order from ops, on a client's behalf, linked to their event ----
@@ -7103,7 +7157,7 @@ const App = {
     let qty, unit;
     if (m.flat) { qty = 1; unit = Number(m.price); }
     else { qty = Number(b && b.event && b.event.expectedGuests) || m.min || 1; unit = Number(m.price); }
-    d.items.push({ name: m.name + (m.flat ? '' : ' (per head)'), qty, unit_price: unit, line_total: qty * unit });
+    d.items.push({ name: m.name + (m.flat ? '' : ' (per head)'), qty, unit_price: unit, line_total: qty * unit, service_time: m.serviceTime || null });
     this.renderCateringOrdersAdmin();
   },
   cateringNewBuilderHtml(money, inp) {
@@ -7124,6 +7178,7 @@ const App = {
         <td style="padding:2px 6px;"><input type="number" step="1" min="0" style="${inp} width:64px; text-align:right;" value="${this.esc(it.qty ?? 0)}" onchange="App.cateringNewEditLine(${i},'qty',this.value)"></td>
         <td style="padding:2px 6px;"><input type="number" step="0.01" min="0" style="${inp} width:96px; text-align:right;" value="${this.esc(it.unit_price ?? 0)}" onchange="App.cateringNewEditLine(${i},'unit_price',this.value)"></td>
         <td style="padding:2px 6px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">${money(lt)}</td>
+        <td style="padding:2px 6px;"><input type="time" style="${inp} width:96px;" value="${this.esc(it.service_time || '')}" title="Service time" onchange="App.cateringNewEditLine(${i},'service_time',this.value)"></td>
         <td style="padding:2px 0; text-align:center;"><button class="btn btn-ghost btn-sm" onclick="App.cateringNewRemoveLine(${i})" title="Remove line">✕</button></td>
       </tr>`;
     }).join('');
@@ -7132,7 +7187,7 @@ const App = {
       ? `<p class="muted italic" style="font-size:12.5px; margin:4px 0 0;">Choose the event first, then add lines — per-head items use that event's guest count.</p>`
       : `<table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; max-width:560px;">
           <thead><tr style="text-align:left; color:var(--brown-600); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">
-            <th style="padding:4px 0;">Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit £</th><th style="text-align:right;">Line</th><th></th>
+            <th style="padding:4px 0;">Item</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit £</th><th style="text-align:right;">Line</th><th style="text-align:right;">Service</th><th></th>
           </tr></thead>
           <tbody>${lineRows || `<tr><td colspan="5" class="muted italic" style="padding:8px 0;">No lines yet — add one below.</td></tr>`}</tbody>
         </table>
@@ -7166,7 +7221,7 @@ const App = {
     if (!d.booking_id || !d.client_email) { this.toast('Choose the event first.', 'error'); return; }
     const items = (d.items || []).map(it => {
       const qty = Number(it.qty) || 0, unit = Number(it.unit_price) || 0;
-      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100 };
+      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100, service_time: (it.service_time || '') || null };
     }).filter(it => it.name || it.qty || it.unit_price);
     if (!items.length) { this.toast('Add at least one line to the order.', 'error'); return; }
     const subtotal = items.reduce((s, it) => s + it.line_total, 0);
