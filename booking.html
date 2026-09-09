@@ -1128,7 +1128,7 @@ function renderDashboard(b) {
 }
 
 // ─────────────────── CATERING ORDERING + INVOICES ───────────────────
-const CATERING_MENU = [
+const CATERING_MENU_DEFAULT = [
   { name: 'The Hog Roast',   price: 20.00, min: 50, desc: 'Slow-roasted, with soft bread rolls, homemade apple sauce, smoky bacon jam and sage & onion stuffing.' },
   { name: 'Meat BBQ Feast',  price: 20.00, min: 40, choose: 3, special: true,
     options: [
@@ -1147,6 +1147,22 @@ const CATERING_MENU = [
   { name: 'The Tuk Tuk Bar', price: 50.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall', desc: 'Our little three-wheeled bar, parked up wherever the party needs it. £50 hire — beer is bought from Flint Hall.' },
   { name: 'Marshmallow Pack', price: 15.00, flat: true, unit: 'per pack', note: '750g of marshmallows & 10 skewers', desc: 'Fireside marshmallows — 750g with 10 wooden skewers, ready to toast over the fire.' }
 ];
+
+// The live menu is the staff-editable `catering_menu` table; this binding is
+// swapped to the DB rows once loaded (see loadCateringAndInvoices), and stays
+// on the built-in list above if the table is empty/unreachable — so the order
+// form never loses its options. All render/submit code reads CATERING_MENU.
+let CATERING_MENU = CATERING_MENU_DEFAULT;
+function menuRowToClient(r) {
+  return Object.assign(
+    { name: r.name, price: Number(r.price) || 0, min: r.min || 0 },
+    r.pricing === 'flat' ? { flat: true } : {},
+    r.unit ? { unit: r.unit } : {},
+    r.note ? { note: r.note } : {},
+    r.description ? { desc: r.description } : {},
+    r.config || {}   // choose / options / special
+  );
+}
 
 let paymentInfoCache = null;
 async function getPaymentInfo() {
@@ -1170,11 +1186,22 @@ let currentBooking = null;
 async function loadCateringAndInvoices(b) {
   currentBooking = b;
   const email = (b.client?.email || '').toLowerCase();
-  const [{ data: orders }, bacsInfo, { data: formalInvoices }] = await Promise.all([
+  const [{ data: orders }, bacsInfo, { data: formalInvoices }, { data: menuRows }] = await Promise.all([
     supabase.from('catering_orders').select('*').eq('status', 'submitted').order('created_at', { ascending: false }),
     getPaymentInfo(),
-    supabase.from('invoices').select('*').eq('doc_type', 'invoice').order('issued_date', { ascending: false })
+    supabase.from('invoices').select('*').eq('doc_type', 'invoice').order('issued_date', { ascending: false }),
+    supabase.from('catering_menu').select('*')
   ]);
+  // Swap in the staff-managed menu (active items, food then bar); keep the
+  // built-in list if the table is empty or unreachable.
+  if (menuRows && menuRows.length) {
+    CATERING_MENU = menuRows
+      .filter(r => r.active !== false)
+      .sort((a, b) => ((a.category === 'bar') - (b.category === 'bar')) || (a.sort - b.sort))
+      .map(menuRowToClient);
+  } else {
+    CATERING_MENU = CATERING_MENU_DEFAULT;
+  }
   const activeOrder = (orders && orders[0]) || null;
   renderCateringOrder(b, activeOrder);
   renderInvoices(b, activeOrder, bacsInfo?.bacs || '', formalInvoices || []);

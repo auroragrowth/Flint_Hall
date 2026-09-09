@@ -2338,16 +2338,22 @@ This agreement is made between Flint Hall Events ("The Venue") and {client_full_
 
 // Catering menu — mirrors the public portal menu (booking.html). Used to
 // pre-populate food lines on invoices via a dropdown.
+// Fallback + first-run seed for the editable catering menu. The live source of
+// truth is the `catering_menu` table (staff edit it in the Catering Menu tab);
+// this list is used only until that table is seeded, or if it can't be reached,
+// so ordering never breaks. Mirrors the client portal's menu. category: food|bar.
 const CATERING_MENU = [
-  { name: 'The Hog Roast',      price: 20.00, min: 50, perHead: true },
-  { name: 'Meat BBQ Feast',     price: 20.00, min: 40, perHead: true },
-  { name: 'Vegan BBQ Feast',    price: 18.00, min: 0,  perHead: true },
-  { name: 'Classic Pizza',      price: 18.50, min: 40, perHead: true },
-  { name: 'Gourmet Pizza',      price: 20.00, min: 40, perHead: true },
-  { name: 'Jacket Potato Bar',  price: 9.00,  min: 0,  perHead: true },
-  { name: 'The Ice Cream Bike', price: 3.80,  min: 50, perHead: true },
-  { name: 'The Tuk Tuk Bar',    price: 100.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall' },
-  { name: 'Marshmallow Pack',   price: 15.00,  flat: true, note: '750g marshmallows + 10 skewers' }
+  { name: 'The Hog Roast',    category: 'food', price: 20.00, min: 50, perHead: true, desc: 'Slow-roasted, with soft bread rolls, homemade apple sauce, smoky bacon jam and sage & onion stuffing.' },
+  { name: 'Meat BBQ Feast',   category: 'food', price: 20.00, min: 40, perHead: true, choose: 3, special: true,
+    options: [ { name: 'Butcher’s sausages' }, { name: '4oz beef burgers' }, { name: 'Peri-peri chicken thighs' }, { name: 'Chicken & chorizo skewers' }, { name: 'Slow-smoked on-site baby back ribs', extra: 2, addon: true } ],
+    desc: 'Pick any three of the meats below — served with salads, rolls and sauces.' },
+  { name: 'Vegan BBQ Feast',  category: 'food', price: 18.00, min: 0,  perHead: true, special: true, desc: 'Vegetarian Burger, Quorn vegan strips and spiced vegetable couscous, with salads, rolls and vegan sauces.' },
+  { name: 'Classic Pizza',    category: 'food', price: 18.50, min: 40, perHead: true, special: true, desc: 'Stone-baked — Margherita, Pepperoni, Vegetarian and a Flint Hall special.' },
+  { name: 'Gourmet Pizza',    category: 'food', price: 20.00, min: 40, perHead: true, special: true, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket.' },
+  { name: 'Jacket Potato Bar', category: 'food', price: 9.00, min: 0, perHead: true, desc: 'Fluffy baked potatoes with a spread of toppings.' },
+  { name: 'The Ice Cream Bike', category: 'food', price: 3.80, min: 50, perHead: true, desc: 'Scoops for the children and the young at heart — doubles as a drinks cart for the evening.' },
+  { name: 'Marshmallow Pack', category: 'food', price: 15.00, flat: true, unit: 'per pack', note: '750g marshmallows + 10 skewers', desc: 'Fireside marshmallows — 750g with 10 wooden skewers, ready to toast over the fire.' },
+  { name: 'The Tuk Tuk Bar',  category: 'bar',  price: 50.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall', desc: 'Our little three-wheeled bar, parked up wherever the party needs it. £50 hire — beer is bought from Flint Hall.' }
 ];
 
 // Staff timesheet line types. `event: true` means an event can be linked from
@@ -2372,6 +2378,7 @@ const App = {
     templates: [],
     accessRequests: [],
     galleryPhotos: [],
+    cateringMenu: [],
     contractTemplate: DEFAULT_CONTRACT,
     settings: { ...DEFAULT_SETTINGS },
     route: 'dashboard',
@@ -2666,6 +2673,65 @@ const App = {
       .order('created_at', { ascending: false });
     if (gpErr) console.warn('Could not load gallery photos:', gpErr.message);
     this.state.galleryPhotos = gpRows || [];
+
+    // Catering menu — the editable food & bar options. Best-effort: seed from the
+    // built-in CATERING_MENU on first run, and fall back to it if anything fails,
+    // so the builders and the client portal never lose their menu.
+    try {
+      const { data: menuRows, error: menuErr } = await sb
+        .from('catering_menu').select('*').order('category').order('sort');
+      if (menuErr) throw menuErr;
+      if (!menuRows || menuRows.length === 0) {
+        await sb.from('catering_menu').insert(CATERING_MENU.map((m, i) => this.menuItemToRow(m, i)));
+        const { data: seeded } = await sb.from('catering_menu').select('*').order('category').order('sort');
+        this.state.cateringMenu = (seeded || []).map(r => this.menuRowToItem(r));
+      } else {
+        this.state.cateringMenu = menuRows.map(r => this.menuRowToItem(r));
+      }
+    } catch (e) {
+      console.warn('Catering menu load failed; using built-in list:', e.message);
+      this.state.cateringMenu = CATERING_MENU.map((m, i) => ({ ...m, id: null, sort: i * 10, active: true }));
+    }
+  },
+
+  // ── Catering-menu mapping (DB row <-> in-memory item used by the builders) ──
+  menuRowToItem(r) {
+    const cfg = r.config || {};
+    return {
+      id: r.id, sort: r.sort, category: r.category || 'food', name: r.name,
+      price: Number(r.price) || 0, min: r.min || 0,
+      flat: r.pricing === 'flat', perHead: r.pricing !== 'flat',
+      unit: r.unit || null, serviceTime: r.service_time || null,
+      note: r.note || null, desc: r.description || null, active: r.active !== false,
+      choose: cfg.choose, options: cfg.options, special: cfg.special
+    };
+  },
+  menuItemToRow(m, i) {
+    const config = {};
+    if (m.choose) config.choose = m.choose;
+    if (m.options) config.options = m.options;
+    if (m.special) config.special = true;
+    return {
+      sort: (typeof m.sort === 'number' ? m.sort : i * 10),
+      category: m.category || 'food', name: m.name,
+      price: Number(m.price) || 0, pricing: m.flat ? 'flat' : 'per_head',
+      min: m.min || 0, unit: m.unit || null, service_time: m.serviceTime || null,
+      note: m.note || null, description: m.desc || null, config, active: m.active !== false
+    };
+  },
+  // The effective menu the builders read (DB-loaded, else the built-in fallback).
+  cateringMenu() {
+    return (this.state.cateringMenu && this.state.cateringMenu.length) ? this.state.cateringMenu : CATERING_MENU;
+  },
+  // <option>s for the "Food from menu…" dropdowns, grouped Food / Bar. The value
+  // is the index into cateringMenu() so the add-handlers resolve the same item.
+  cateringMenuOptions() {
+    const menu = this.cateringMenu();
+    const opt = (m, i) => `<option value="${i}">${this.esc(m.name)} — ${m.flat ? '£' + Number(m.price).toFixed(2) + (m.unit ? ' ' + m.unit : ' flat') : '£' + Number(m.price).toFixed(2) + '/head' + (m.min ? ' (min ' + m.min + ')' : '')}</option>`;
+    const inCat = c => menu.map((m, i) => ({ m, i })).filter(x => (x.m.category || 'food') === c && x.m.active !== false);
+    const food = inCat('food'), bar = inCat('bar');
+    return (food.length ? `<optgroup label="Food">${food.map(x => opt(x.m, x.i)).join('')}</optgroup>` : '')
+         + (bar.length ? `<optgroup label="Bar">${bar.map(x => opt(x.m, x.i)).join('')}</optgroup>` : '');
   },
 
   // Save the entire state to Supabase. Debounced — multiple calls in quick
@@ -5600,7 +5666,7 @@ const App = {
           <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('balance')">+ Balance</button>
           <select class="btn btn-secondary btn-sm" style="padding-right:22px; cursor:pointer;" onchange="App.invAddFood(this.value); this.value='';" title="Add a food line from the menu">
             <option value="">+ Food from menu…</option>
-            ${CATERING_MENU.map((m, i) => `<option value="${i}">${this.esc(m.name)} — ${m.flat ? '£' + m.price + ' flat' : '£' + m.price.toFixed(2) + '/head' + (m.min ? ' (min ' + m.min + ')' : '')}</option>`).join('')}
+            ${this.cateringMenuOptions()}
           </select>
           <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('catering')">+ Catering (total)</button>
           <button class="btn btn-secondary btn-sm" onclick="App.invAddPreset('blank')">+ Blank line</button>
@@ -5686,7 +5752,7 @@ const App = {
   // Add a food line from the catering menu. Per-head items default their qty
   // (covers) to the booking's expected guest count, then the menu minimum.
   invAddFood(idx) {
-    const m = CATERING_MENU[Number(idx)];
+    const m = this.cateringMenu()[Number(idx)];
     const d = this.state.invoiceDraft;
     if (!m || !d) return;
     const b = this.invCurrentBooking();
@@ -7023,7 +7089,7 @@ const App = {
   cateringNewAddLine() { const d = this.state.cateringNew; if (!d) return; d.items.push({ name: '', qty: 1, unit_price: 0, line_total: 0 }); this.renderCateringOrdersAdmin(); },
   cateringNewRemoveLine(i) { const d = this.state.cateringNew; if (!d) return; d.items.splice(i, 1); this.renderCateringOrdersAdmin(); },
   cateringNewAddFood(idx) {
-    const m = CATERING_MENU[Number(idx)]; const d = this.state.cateringNew; if (!m || !d) return;
+    const m = this.cateringMenu()[Number(idx)]; const d = this.state.cateringNew; if (!m || !d) return;
     const b = (this.state.bookings || []).find(x => x.id === d.booking_id);
     let qty, unit;
     if (m.flat) { qty = 1; unit = Number(m.price); }
@@ -7052,7 +7118,7 @@ const App = {
         <td style="padding:2px 0; text-align:center;"><button class="btn btn-ghost btn-sm" onclick="App.cateringNewRemoveLine(${i})" title="Remove line">✕</button></td>
       </tr>`;
     }).join('');
-    const menuOpts = CATERING_MENU.map((m, i) => `<option value="${i}">${this.esc(m.name)} — ${m.flat ? '£' + m.price + ' flat' : '£' + m.price.toFixed(2) + '/head' + (m.min ? ' (min ' + m.min + ')' : '')}</option>`).join('');
+    const menuOpts = this.cateringMenuOptions();
     const linesBlock = !d.booking_id
       ? `<p class="muted italic" style="font-size:12.5px; margin:4px 0 0;">Choose the event first, then add lines — per-head items use that event's guest count.</p>`
       : `<table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; max-width:560px;">
