@@ -2353,7 +2353,9 @@ const CATERING_MENU = [
   { name: 'Vegan BBQ Feast',  category: 'food', price: 18.00, min: 0,  perHead: true, special: true, desc: 'Vegetarian Burger, Quorn vegan strips and spiced vegetable couscous, with salads, rolls and vegan sauces.' },
   { name: 'Classic Pizza',    category: 'food', price: 18.50, min: 40, perHead: true, special: true, desc: 'Stone-baked — Margherita, Pepperoni, Vegetarian and a Flint Hall special.' },
   { name: 'Gourmet Pizza',    category: 'food', price: 20.00, min: 40, perHead: true, special: true, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket.' },
-  { name: 'Jacket Potato Bar', category: 'food', price: 9.00, min: 0, perHead: true, desc: 'Fluffy baked potatoes with a spread of toppings.' },
+  { name: 'Jacket Potato Bar', category: 'food', price: 9.00, min: 0, perHead: true, choose: 4,
+    options: [ { name: 'Cheese & beans' }, { name: 'Chicken curry' }, { name: 'Chilli' }, { name: 'Veg chilli' } ],
+    desc: 'Fluffy baked potatoes with a choice of fillings.' },
   { name: 'The Ice Cream Bike', category: 'food', price: 3.80, min: 50, perHead: true, desc: 'Scoops for the children and the young at heart — doubles as a drinks cart for the evening.' },
   { name: 'Marshmallow Pack', category: 'food', price: 15.00, flat: true, unit: 'per pack', note: '750g marshmallows + 10 skewers', desc: 'Fireside marshmallows — 750g with 10 wooden skewers, ready to toast over the fire.' },
   { name: 'The Tuk Tuk Bar',  category: 'bar',  price: 50.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall', desc: 'Our little three-wheeled bar, parked up wherever the party needs it. £50 hire — beer is bought from Flint Hall.' }
@@ -7023,16 +7025,75 @@ const App = {
     this.renderCateringOrdersAdmin();
   },
   // Add a preset menu item to an EXISTING order (per-head qty from the event's guests).
+  // Build an order line from a menu item, carrying its option picker (choose /
+  // options / special) so staff can select toppings/meats as a client would.
+  cateringMenuLine(m, b) {
+    let qty, unit;
+    if (m.flat) { qty = 1; unit = Number(m.price); }
+    else { qty = Number(b && b.event && b.event.expectedGuests) || m.min || 1; unit = Number(m.price); }
+    const line = { name: m.name, qty, unit_price: unit, line_total: qty * unit, service_time: m.serviceTime || null };
+    if ((m.options && m.options.length) || m.special) {
+      line.pick = { base: unit, choose: m.choose || null, options: m.options || [], special: !!m.special };
+      line.options = [];
+      if (m.special) line.special_note = '';
+    }
+    return line;
+  },
+  _cateringItems(scope) {
+    return scope === '__new__'
+      ? (this.state.cateringNew && this.state.cateringNew.items)
+      : (this.cateringDraft(scope) || {}).items;
+  },
+  // Toggle a picked option on a line and re-price (addon extras add per head).
+  cateringToggleOpt(scope, i, optIdx) {
+    const line = (this._cateringItems(scope) || [])[i];
+    if (!line || !line.pick) return;
+    const opt = (line.pick.options || [])[optIdx];
+    if (!opt) return;
+    const sel = new Set(line.options || []);
+    sel.has(opt.name) ? sel.delete(opt.name) : sel.add(opt.name);
+    line.options = Array.from(sel);
+    const extras = (line.pick.options || []).filter(o => o.addon && line.options.includes(o.name)).reduce((s, o) => s + Number(o.extra || 0), 0);
+    line.unit_price = Number(line.pick.base || 0) + extras;
+    line.line_total = (Number(line.qty) || 0) * line.unit_price;
+    this.renderCateringOrdersAdmin();
+  },
+  cateringSetSpecial(scope, i, value) {
+    const line = (this._cateringItems(scope) || [])[i];
+    if (line) line.special_note = value;
+  },
+  // A sub-row of option checkboxes (+ special-request field) beneath a line.
+  cateringPickerRow(line, i, scope, inp) {
+    if (!line.pick) return '';
+    const opts = line.pick.options || [];
+    if (!opts.length && !line.pick.special) return '';
+    const sel = line.options || [];
+    const boxes = opts.map((o, oi) =>
+      `<label style="display:inline-flex; align-items:center; gap:5px; font-size:12px; margin:0 14px 4px 0; cursor:pointer;">
+        <input type="checkbox" ${sel.includes(o.name) ? 'checked' : ''} onchange="App.cateringToggleOpt('${scope}',${i},${oi})">
+        ${this.esc(o.name)}${o.extra ? ` <span style="color:var(--rust);">+£${Number(o.extra).toFixed(2)}pp</span>` : ''}</label>`).join('');
+    const hint = line.pick.choose ? `<span style="font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--brown-600); margin-right:10px;">Choose ${line.pick.choose} — ${sel.length} selected</span>` : '';
+    const special = line.pick.special ? `<input style="${inp} width:100%; margin-top:6px;" placeholder="Special request (we price separately)" value="${this.esc(line.special_note || '')}" onchange="App.cateringSetSpecial('${scope}',${i},this.value)">` : '';
+    return `<tr><td colspan="6" style="padding:0 6px 10px;">${hint}${boxes}${special}</td></tr>`;
+  },
+  // Re-attach a line's option picker from the menu (for saved/loaded lines).
+  cateringReattachPick(items) {
+    (items || []).forEach(line => {
+      if (line.pick || !line.name) return;
+      const mi = this.cateringMenu().find(x => x.name === line.name);
+      if (mi && ((mi.options && mi.options.length) || mi.special)) {
+        line.pick = { base: Number(mi.price) || 0, choose: mi.choose || null, options: mi.options || [], special: !!mi.special };
+        if (!line.options) line.options = [];
+      }
+    });
+  },
   cateringAddFood(orderId, idx) {
     const m = this.cateringMenu()[Number(idx)];
     const d = this.cateringDraft(orderId);
     if (!m || !d) return;
     const o = (this.state.cateringOrders || []).find(x => x.id === orderId);
     const b = o ? (this.state.bookings || []).find(x => x.id === o.booking_id) : null;
-    let qty, unit;
-    if (m.flat) { qty = 1; unit = Number(m.price); }
-    else { qty = Number(b && b.event && b.event.expectedGuests) || m.min || 1; unit = Number(m.price); }
-    d.items.push({ name: m.name + (m.flat ? '' : ' (per head)'), qty, unit_price: unit, line_total: qty * unit, service_time: m.serviceTime || null });
+    d.items.push(this.cateringMenuLine(m, b));
     this.renderCateringOrdersAdmin();
   },
   // Permanently delete a whole catering order (e.g. a duplicate). Staff-confirmed;
@@ -7068,6 +7129,7 @@ const App = {
       const d = drafts[o.id] || o;                       // draft if editing, else the loaded order
       const dirty = !!drafts[o.id];
       const items = d.items || [];
+      this.cateringReattachPick(items);
       const subtotal = items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0), 0);
       const lineRows = items.map((it, i) => {
         const lt = (Number(it.qty) || 0) * (Number(it.unit_price) || 0);
@@ -7078,7 +7140,7 @@ const App = {
           <td style="padding:2px 6px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">${money(lt)}</td>
           <td style="padding:2px 6px;"><input type="time" style="${inp} width:96px;" value="${this.esc(it.service_time || '')}" title="Service time" onchange="App.cateringEditLine('${o.id}',${i},'service_time',this.value)"></td>
           <td style="padding:2px 0; text-align:center;"><button class="btn btn-ghost btn-sm" onclick="App.cateringRemoveLine('${o.id}',${i})" title="Remove line">✕</button></td>
-        </tr>`;
+        </tr>` + this.cateringPickerRow(it, i, o.id, inp);
       }).join('');
       return `<div class="card mb-2"><div class="card-body">
         <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start;">
@@ -7123,7 +7185,7 @@ const App = {
     if (!src) return;
     const items = (src.items || []).map(it => {
       const qty = Number(it.qty) || 0, unit = Number(it.unit_price) || 0;
-      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100, service_time: (it.service_time || '') || null };
+      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100, service_time: (it.service_time || '') || null, ...(it.options && it.options.length ? { options: it.options } : {}), ...(it.special_note ? { special_note: it.special_note } : {}) };
     }).filter(it => it.name || it.qty || it.unit_price);
     const subtotal = items.reduce((s, it) => s + it.line_total, 0);
     const { error } = await sb.from('catering_orders').update({ items, subtotal, status: src.status }).eq('id', orderId);
@@ -7149,7 +7211,7 @@ const App = {
     const subtotal = items.reduce((s, it) => s + lineOf(it), 0);
     const rows = items.map(it => `
       <tr>
-        <td style="padding:8px 0; border-bottom:1px solid #ece2cd;">${this.esc(it.name || '')}</td>
+        <td style="padding:8px 0; border-bottom:1px solid #ece2cd;">${this.esc(it.name || '')}${it.options && it.options.length ? `<br><span style="color:#806555; font-size:11px;">${this.esc(it.options.join(', '))}</span>` : ''}${it.special_note ? `<br><span style="color:#806555; font-size:11px; font-style:italic;">Special: ${this.esc(it.special_note)}</span>` : ''}</td>
         <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${this.esc(it.qty ?? 1)}</td>
         <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${money(it.unit_price)}</td>
         <td style="padding:8px 0; border-bottom:1px solid #ece2cd; text-align:right;">${it.service_time ? this.esc(it.service_time) : '&mdash;'}</td>
@@ -7207,10 +7269,7 @@ const App = {
   cateringNewAddFood(idx) {
     const m = this.cateringMenu()[Number(idx)]; const d = this.state.cateringNew; if (!m || !d) return;
     const b = (this.state.bookings || []).find(x => x.id === d.booking_id);
-    let qty, unit;
-    if (m.flat) { qty = 1; unit = Number(m.price); }
-    else { qty = Number(b && b.event && b.event.expectedGuests) || m.min || 1; unit = Number(m.price); }
-    d.items.push({ name: m.name + (m.flat ? '' : ' (per head)'), qty, unit_price: unit, line_total: qty * unit, service_time: m.serviceTime || null });
+    d.items.push(this.cateringMenuLine(m, b));
     this.renderCateringOrdersAdmin();
   },
   cateringNewBuilderHtml(money, inp) {
@@ -7223,6 +7282,7 @@ const App = {
       return `<option value="${this.esc(b.id)}"${d.booking_id === b.id ? ' selected' : ''}>${this.esc(label)}</option>`;
     }).join('');
     const items = d.items || [];
+    this.cateringReattachPick(items);
     const subtotal = items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.unit_price) || 0), 0);
     const lineRows = items.map((it, i) => {
       const lt = (Number(it.qty) || 0) * (Number(it.unit_price) || 0);
@@ -7233,7 +7293,7 @@ const App = {
         <td style="padding:2px 6px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">${money(lt)}</td>
         <td style="padding:2px 6px;"><input type="time" style="${inp} width:96px;" value="${this.esc(it.service_time || '')}" title="Service time" onchange="App.cateringNewEditLine(${i},'service_time',this.value)"></td>
         <td style="padding:2px 0; text-align:center;"><button class="btn btn-ghost btn-sm" onclick="App.cateringNewRemoveLine(${i})" title="Remove line">✕</button></td>
-      </tr>`;
+      </tr>` + this.cateringPickerRow(it, i, '__new__', inp);
     }).join('');
     const menuOpts = this.cateringMenuOptions();
     const linesBlock = !d.booking_id
@@ -7274,7 +7334,7 @@ const App = {
     if (!d.booking_id || !d.client_email) { this.toast('Choose the event first.', 'error'); return; }
     const items = (d.items || []).map(it => {
       const qty = Number(it.qty) || 0, unit = Number(it.unit_price) || 0;
-      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100, service_time: (it.service_time || '') || null };
+      return { name: (it.name || '').trim(), qty, unit_price: unit, line_total: Math.round(qty * unit * 100) / 100, service_time: (it.service_time || '') || null, ...(it.options && it.options.length ? { options: it.options } : {}), ...(it.special_note ? { special_note: it.special_note } : {}) };
     }).filter(it => it.name || it.qty || it.unit_price);
     if (!items.length) { this.toast('Add at least one line to the order.', 'error'); return; }
     const subtotal = items.reduce((s, it) => s + it.line_total, 0);
