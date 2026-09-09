@@ -4164,8 +4164,11 @@ const App = {
               <div class="field"><label>Evening Guests</label><input type="number" name="event.eveningGuests" value="${b.event.eveningGuests || ''}"></div>
               <div class="field"><label>Bar Arrangement</label>
                 <select name="event.bar">
-                  ${['','Flint Hall','Bringing own drink','Yes','No'].map(t =>
-                    `<option value="${t}" ${b.event.bar===t?'selected':''}>${t || '— select —'}</option>`).join('')}
+                  ${(() => {
+                    const opts = ['', "Brian's Bar", 'Flint Hall Horsebox Bar', 'Bringing own drink'];
+                    if (b.event.bar && !opts.includes(b.event.bar)) opts.push(b.event.bar); // keep any legacy value
+                    return opts.map(t => `<option value="${this.esc(t)}" ${b.event.bar===t?'selected':''}>${t || '— select —'}</option>`).join('');
+                  })()}
                 </select>
               </div>
               <div class="field"><label>Accommodation</label>
