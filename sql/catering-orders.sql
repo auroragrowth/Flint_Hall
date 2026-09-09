@@ -61,7 +61,7 @@ create policy co_select on public.catering_orders for select to authenticated
   using (lower(client_email)=lower(auth.jwt()->>'email') or public.is_team_member());
 drop policy if exists co_insert on public.catering_orders;
 create policy co_insert on public.catering_orders for insert to authenticated
-  with check (lower(client_email)=lower(auth.jwt()->>'email'));
+  with check (lower(client_email)=lower(auth.jwt()->>'email') or public.is_team_member());
 drop policy if exists co_update on public.catering_orders;
 create policy co_update on public.catering_orders for update to authenticated
   using (lower(client_email)=lower(auth.jwt()->>'email') or public.is_team_member())
