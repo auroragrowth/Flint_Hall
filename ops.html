@@ -7019,6 +7019,31 @@ const App = {
     d.status = value;
     this.renderCateringOrdersAdmin();
   },
+  // Add a preset menu item to an EXISTING order (per-head qty from the event's guests).
+  cateringAddFood(orderId, idx) {
+    const m = this.cateringMenu()[Number(idx)];
+    const d = this.cateringDraft(orderId);
+    if (!m || !d) return;
+    const o = (this.state.cateringOrders || []).find(x => x.id === orderId);
+    const b = o ? (this.state.bookings || []).find(x => x.id === o.booking_id) : null;
+    let qty, unit;
+    if (m.flat) { qty = 1; unit = Number(m.price); }
+    else { qty = Number(b && b.event && b.event.expectedGuests) || m.min || 1; unit = Number(m.price); }
+    d.items.push({ name: m.name + (m.flat ? '' : ' (per head)'), qty, unit_price: unit, line_total: qty * unit, service_time: m.serviceTime || null });
+    this.renderCateringOrdersAdmin();
+  },
+  // Permanently delete a whole catering order (e.g. a duplicate). Staff-confirmed;
+  // the booking's catering cost re-syncs via the DB trigger.
+  async cateringDeleteOrder(orderId) {
+    const o = (this.state.cateringOrders || []).find(x => x.id === orderId);
+    const who = o && o.client_email ? ` for ${o.client_email}` : '';
+    if (!confirm(`Delete this catering order${who}? This permanently removes it and cannot be undone.`)) return;
+    const { error } = await window.fhSupabase.from('catering_orders').delete().eq('id', orderId);
+    if (error) { this.toast('Could not delete: ' + error.message, 'error'); return; }
+    if (this.state.cateringDrafts) delete this.state.cateringDrafts[orderId];
+    this.toast('Catering order deleted', 'success');
+    this.bindCateringOrders();
+  },
 
   renderCateringOrdersAdmin() {
     const host = document.getElementById('catering-admin');
@@ -7070,12 +7095,17 @@ const App = {
           </tr></thead>
           <tbody>${lineRows || `<tr><td colspan="5" class="muted italic" style="padding:8px 0;">No lines — add one below.</td></tr>`}</tbody>
         </table>
-        <div class="row gap-sm" style="margin-top:10px; align-items:center; max-width:560px;">
+        <div class="row gap-sm" style="margin-top:10px; align-items:center; max-width:560px; flex-wrap:wrap;">
           <button class="btn btn-secondary btn-sm" onclick="App.cateringAddLine('${o.id}')">+ Add line</button>
+          <select class="btn btn-secondary btn-sm" style="padding-right:22px; cursor:pointer;" onchange="App.cateringAddFood('${o.id}', this.value); this.value='';" title="Add a food or bar item from the menu">
+            <option value="">+ Food from menu…</option>${this.cateringMenuOptions()}
+          </select>
           <span class="spacer" style="flex:1;"></span>
           <strong style="font-size:16px; font-family:var(--font-display); color:var(--brown-900);">${money(subtotal)}</strong>
         </div>
-        <div class="row gap-sm" style="margin-top:10px; justify-content:flex-end; max-width:560px;">
+        <div class="row gap-sm" style="margin-top:10px; align-items:center; max-width:560px;">
+          <button class="btn btn-ghost btn-sm" style="color:#c66;" onclick="App.cateringDeleteOrder('${o.id}')">Delete order</button>
+          <span class="spacer" style="flex:1;"></span>
           <button class="btn btn-secondary btn-sm" onclick="App.cateringOrderPrint('${o.id}')">Print / PDF</button>
           <button class="btn btn-primary btn-sm" onclick="App.cateringOrderSave('${o.id}')">Save</button>
         </div>
