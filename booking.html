@@ -730,6 +730,9 @@ textarea { resize: vertical; min-height: 100px; }
         .cat-item .ci-qty { display:flex; align-items:center; gap:6px; white-space:nowrap; }
         .cat-item .ci-qty input { width:64px; text-align:center; padding:8px; border:1px solid var(--paper-edge); border-radius:3px; background:var(--paper); font-family:var(--body); font-size:14px; }
         .cat-item .ci-line { min-width:78px; text-align:right; font-family:var(--body); font-size:13px; color:var(--brown-dk); }
+        .cat-cat { font-family:var(--ui); text-transform:uppercase; letter-spacing:0.18em; font-size:11px; color:var(--rust); margin:20px 0 4px; padding-top:16px; border-top:1px solid var(--paper-edge); }
+        .cat-cat:first-child { margin-top:0; padding-top:0; border-top:none; }
+        .cat-cat + .cat-item { border-top:none; }
         .cat-foot { display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:16px; border-top:2px solid var(--brown-dk); }
         .cat-foot .cat-total { font-family:var(--display); font-size:17px; color:var(--brown-dk); }
         .invoice { border:1px solid var(--paper-edge); border-radius:4px; padding:18px 20px; margin-bottom:16px; background:var(--paper); }
@@ -1144,7 +1147,7 @@ const CATERING_MENU_DEFAULT = [
   { name: 'Gourmet Pizza',   price: 20.00, min: 40, special: true, desc: 'Premium handcrafted — BBQ Chicken, Four Cheese, Buffalo Chicken, Truffle Mushroom and Prosciutto & Rocket.' },
   { name: 'Jacket Potato Bar', price: 9.00, min: 0, desc: 'Fluffy baked potatoes with a spread of toppings — cheese, beans, chilli con carne, tuna mayo, pulled pork, curry and more.' },
   { name: 'The Ice Cream Bike', price: 3.80, min: 50, desc: 'Scoops for the children and the young at heart — and it doubles as a drinks cart for the evening.' },
-  { name: 'The Tuk Tuk Bar', price: 50.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall', desc: 'Our little three-wheeled bar, parked up wherever the party needs it. £50 hire — beer is bought from Flint Hall.' },
+  { name: 'The Tuk Tuk Bar', category: 'bar', price: 50.00, flat: true, note: 'requires 80+ guests · beer bought from Flint Hall', desc: 'Our little three-wheeled bar, parked up wherever the party needs it. £50 hire — beer is bought from Flint Hall.' },
   { name: 'Marshmallow Pack', price: 15.00, flat: true, unit: 'per pack', note: '750g of marshmallows & 10 skewers', desc: 'Fireside marshmallows — 750g with 10 wooden skewers, ready to toast over the fire.' }
 ];
 
@@ -1155,7 +1158,7 @@ const CATERING_MENU_DEFAULT = [
 let CATERING_MENU = CATERING_MENU_DEFAULT;
 function menuRowToClient(r) {
   return Object.assign(
-    { name: r.name, price: Number(r.price) || 0, min: r.min || 0 },
+    { name: r.name, category: r.category || 'food', price: Number(r.price) || 0, min: r.min || 0 },
     r.pricing === 'flat' ? { flat: true } : {},
     r.unit ? { unit: r.unit } : {},
     r.note ? { note: r.note } : {},
@@ -1311,7 +1314,11 @@ function renderCateringOrder(b, activeOrder) {
   const wrap = $('dash-catering-order');
   const existing = {}, existingOpts = {}, existingSpecial = {};
   (activeOrder?.items || []).forEach(it => { existing[it.name] = it.qty; existingOpts[it.name] = it.options || []; existingSpecial[it.name] = it.special_note || ''; });
+  let lastCat = null;
   const rows = CATERING_MENU.map((m, i) => {
+    const cat = m.category || 'food';
+    const heading = cat !== lastCat ? `<div class="cat-cat">${cat === 'bar' ? 'Bar' : 'Food'}</div>` : '';
+    lastCat = cat;
     const isFlat = !!m.flat;
     const meta = [];
     if (!isFlat && m.min) meta.push(`min ${m.min} covers`);
@@ -1336,7 +1343,7 @@ function renderCateringOrder(b, activeOrder) {
         ${addons.length ? `<span style="width:100%; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faded); margin-top:4px;">Optional add-on</span>${addons.map(x => optLabel(x.o, x.oi)).join('')}` : ''}
       </div>`;
     }
-    return `<div class="cat-item">
+    return heading + `<div class="cat-item">
       <div class="ci-body">
         <div class="ci-name">${escapeHtml(m.name)} &middot; <span class="ci-price">${money(m.price)}${isFlat ? (m.unit ? ' ' + m.unit : ' hire') : ' pp'}</span>${meta.length ? ` <span style="color:var(--ink-faded); font-size:11.5px; letter-spacing:0.02em;">&middot; ${escapeHtml(meta.join(' · '))}</span>` : ''}</div>
         <div class="ci-desc">${escapeHtml(m.desc)}</div>
